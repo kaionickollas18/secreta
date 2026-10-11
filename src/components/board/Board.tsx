@@ -12,12 +12,13 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { COLUMN_PREFIX, REQUESTED_MESSAGE, STATUS_LABELS } from "../../constants/board";
 import { useBoardAccess } from "../../hooks/useBoardAccess";
 import { useTaskStore } from "../../store/taskStore";
 import { useToastStore } from "../../store/toastStore";
 import { TASK_STATUSES, type Task, type TaskStatus } from "../../types/task";
+import { taskArrivals } from "../../utils/arrivals";
 import { isTaskStatus } from "../../utils/guards";
 import { TaskCardOverlay, type CardActions } from "../task/TaskCard";
 import { Column } from "./Column";
@@ -35,7 +36,13 @@ export function Board({ grouped, totals, filtersActive, onAdd, actions }: BoardP
   const moveTask = useTaskStore((s) => s.moveTask);
   const pushToast = useToastStore((s) => s.push);
   const { role } = useBoardAccess();
+  const loaded = useTaskStore((s) => s.status === "ready");
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Os cartões da primeira carga não animam; só o que chegar ou mudar de coluna depois.
+  useEffect(() => {
+    if (loaded) taskArrivals.prime();
+  }, [loaded]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -57,18 +64,18 @@ export function Board({ grouped, totals, filtersActive, onAdd, actions }: BoardP
       return task ? STATUS_LABELS[task.status] : undefined;
     };
     return {
-      onDragStart: ({ active }) => `Tarefa "${titleOf(active.id)}" selecionada.`,
+      onDragStart: ({ active }) => `Tarefa “${titleOf(active.id)}” selecionada.`,
       onDragOver: ({ active, over }) => {
         const target = over ? targetOf(over.id) : undefined;
-        return target ? `"${titleOf(active.id)}" sobre a coluna ${target}.` : undefined;
+        return target ? `“${titleOf(active.id)}” sobre a coluna ${target}.` : undefined;
       },
       onDragEnd: ({ active, over }) => {
         const target = over ? targetOf(over.id) : undefined;
         return target
-          ? `"${titleOf(active.id)}" solta na coluna ${target}.`
-          : `"${titleOf(active.id)}" solta fora das colunas.`;
+          ? `“${titleOf(active.id)}” solta na coluna ${target}.`
+          : `“${titleOf(active.id)}” solta fora das colunas.`;
       },
-      onDragCancel: ({ active }) => `Movimento de "${titleOf(active.id)}" cancelado.`,
+      onDragCancel: ({ active }) => `Movimento de “${titleOf(active.id)}” cancelado.`,
     };
   }, [tasks]);
 

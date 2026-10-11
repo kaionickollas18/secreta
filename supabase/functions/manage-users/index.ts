@@ -107,12 +107,20 @@ async function createUser(input: {
   return data.user.id;
 }
 
+/** Apaga as fotos de perfil de quem está sendo excluído (pasta <id>/ do bucket avatars). */
+async function removeAvatars(userId: string): Promise<void> {
+  const { data: files } = await admin.storage.from("avatars").list(userId);
+  if (files && files.length > 0) {
+    await admin.storage.from("avatars").remove(files.map((file) => `${userId}/${file.name}`));
+  }
+}
+
 /** Verifica se o chamador pode gerenciar o alvo e devolve o perfil dele. */
 async function loadManageable(caller: Caller, userId: unknown) {
   const id = text(userId, "usuário", 36, 36);
   const { data: target } = await admin
     .from("profiles")
-    .select("id, role, school_id")
+    .select("id, role, school_id, full_name")
     .eq("id", id)
     .maybeSingle();
   if (!target) throw new HttpError(404, "Usuário não encontrado.");
@@ -120,7 +128,7 @@ async function loadManageable(caller: Caller, userId: unknown) {
     (caller.role === "master" && target.role === "secretary") ||
     (caller.role === "secretary" && target.role === "assistant" && target.school_id === caller.school_id);
   if (!allowed) throw new HttpError(403, "Sem permissão para este usuário.");
-  return target as { id: string; role: Role; school_id: string };
+  return target as { id: string; role: Role; school_id: string; full_name: string };
 }
 
 async function handle(action: unknown, body: Record<string, unknown>, caller: Caller) {
@@ -170,8 +178,12 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
       const authPatch: Record<string, unknown> = {};
       if (body.full_name !== undefined) {
         const fullName = text(body.full_name, "nome", 2, 120);
-        profilePatch.full_name = fullName;
-        profilePatch.last_name = lastNameOf(fullName);
+        // Só mexe no sobrenome quando o nome de fato mudou: a pessoa pode ter escolhido
+        // outro sobrenome no próprio perfil, e uma edição qualquer não deve desfazer isso.
+        if (fullName !== target.full_name) {
+          profilePatch.full_name = fullName;
+          profilePatch.last_name = lastNameOf(fullName);
+        }
       }
       if (body.password !== undefined) authPatch.password = password(body.password);
       if (body.active !== undefined) {
@@ -200,6 +212,7 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
           .update({ assignee_ids: (task.assignee_ids as string[]).filter((a) => a !== target.id) })
           .eq("id", task.id);
       }
+      await removeAvatars(target.id);
       const { error } = await admin.auth.admin.deleteUser(target.id);
       if (error) throw new HttpError(400, "Não foi possível excluir o usuário.");
       return { ok: true };
@@ -209,7 +222,10 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
       if (caller.role !== "master") throw new HttpError(403, "Somente o Master exclui escolas.");
       const schoolId = text(body.school_id, "escola", 36, 36);
       const { data: members } = await admin.from("profiles").select("id").eq("school_id", schoolId);
-      for (const member of members ?? []) await admin.auth.admin.deleteUser(member.id);
+      for (const member of members ?? []) {
+        await removeAvatars(member.id);
+        await admin.auth.admin.deleteUser(member.id);
+      }
       const { error } = await admin.from("schools").delete().eq("id", schoolId);
       if (error) throw new HttpError(400, "Não foi possível excluir a escola.");
       return { ok: true };

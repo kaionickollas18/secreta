@@ -16,7 +16,7 @@ interface AuthGateProps {
 function Message({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 px-4 text-center">
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <h1 className="panel-title">{title}</h1>
       {children}
     </main>
   );

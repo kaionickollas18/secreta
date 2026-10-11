@@ -8,8 +8,10 @@ import { useAuthStore } from "../store/authStore";
 import { useMessageStore } from "../store/messageStore";
 import { useToastStore } from "../store/toastStore";
 import type { Message } from "../types/message";
+import { messageArrivals } from "../utils/arrivals";
 import { assigneeColor } from "../utils/assignees";
 import { groupByDay, MESSAGE_MAX, MESSAGE_PAGE, timeLabel, validateMessage } from "../utils/messages";
+import { whenPageShown } from "../utils/pageLifecycle";
 import { canModerateMessages } from "../utils/roles";
 
 /** Mural da escola. O AppShell carrega e acompanha as mensagens; aqui exibimos e enviamos. */
@@ -30,8 +32,12 @@ export default function MensagensApp() {
   useEffect(() => {
     if (!userId) return;
     endRef.current?.scrollIntoView?.({ block: "end" });
-    markSeen(userId);
+    return whenPageShown(() => markSeen(userId));
   }, [messages.length, userId, markSeen]);
+
+  useEffect(() => {
+    if (status === "ready") messageArrivals.prime();
+  }, [status]);
 
   if (!profile?.schoolId) return null;
   const schoolId = profile.schoolId;
@@ -74,10 +80,10 @@ export default function MensagensApp() {
   return (
     <div className="mx-auto flex h-[calc(100dvh-5rem)] max-w-[900px] flex-col gap-4 px-4 py-5 sm:px-6 md:h-dvh">
       <header>
-        <h1 className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+        <h1 className="page-title">
           Mensagens
         </h1>
-        <p className="text-sm text-muted">
+        <p className="page-lede">
           Mural da escola: tudo o que for escrito aqui é visto pelo secretário e por todos os auxiliares.
         </p>
       </header>
@@ -103,7 +109,7 @@ export default function MensagensApp() {
             <EmptyState title="Nenhuma mensagem ainda" description="Escreva a primeira mensagem para a equipe." />
           )}
           {messages.length >= MESSAGE_PAGE && (
-            <p className="text-center text-xs text-muted">Mostrando as {MESSAGE_PAGE} mensagens mais recentes.</p>
+            <p className="mx-auto text-center caption">Mostrando as {MESSAGE_PAGE} mensagens mais recentes.</p>
           )}
 
           {groups.map((group) => (
@@ -114,7 +120,12 @@ export default function MensagensApp() {
                   const mine = message.senderId === profile.id;
                   const color = assigneeColor(message.senderId ?? message.senderName);
                   return (
-                    <li key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                    <li
+                      key={message.id}
+                      className={`flex ${mine ? "justify-end" : "justify-start"} ${
+                        messageArrivals.observe(message.id, "sent") === "new" ? "animate-enter" : ""
+                      }`}
+                    >
                       <div
                         className={`max-w-[85%] rounded-2xl border px-3 py-2 sm:max-w-[70%] ${
                           mine ? "border-accent/40 bg-accent-soft" : "border-line bg-surface"
@@ -124,7 +135,7 @@ export default function MensagensApp() {
                           <span className={`text-xs font-semibold ${mine ? "text-accent-light" : color.text}`}>
                             {mine ? "Você" : message.senderName}
                           </span>
-                          <time dateTime={message.createdAt} className="text-[11px] text-muted">
+                          <time dateTime={message.createdAt} className="text-2xs text-muted">
                             {timeLabel(message.createdAt)}
                           </time>
                           {(mine || moderator) && (
@@ -137,7 +148,7 @@ export default function MensagensApp() {
                             </IconButton>
                           )}
                         </div>
-                        <p className="mt-0.5 whitespace-pre-line break-words text-sm">{message.body}</p>
+                        <p className="mt-0.5 whitespace-pre-line break-words text-base leading-normal">{message.body}</p>
                       </div>
                     </li>
                   );
@@ -175,7 +186,7 @@ export default function MensagensApp() {
               {error}
             </p>
           ) : (
-            <p id="message-hint" className="mt-1 hidden text-xs text-muted sm:block">
+            <p id="message-hint" className="mt-1 hidden caption sm:block">
               Enter envia · Shift+Enter quebra a linha
             </p>
           )}

@@ -46,7 +46,7 @@ export function AssistantsPanel() {
   return (
     <section aria-labelledby="h-assistants" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="h-assistants" className="text-lg font-semibold">
+        <h2 id="h-assistants" className="panel-title">
           Auxiliares administrativos
         </h2>
         <div className="flex flex-wrap items-center gap-3">
@@ -91,10 +91,10 @@ export function AssistantsPanel() {
         {shown.map((member) => (
           <li key={member.id} className="glass rounded-3xl p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-base font-semibold">{member.fullName}</h3>
+              <h3 className="section-title">{member.fullName}</h3>
               <ActiveBadge active={member.active} />
             </div>
-            <p className="text-xs text-muted">{member.email}</p>
+            <p className="caption">{member.email}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button onClick={() => setModal({ kind: "edit", member })}>Editar</Button>
               <Button variant="danger" onClick={() => setToDelete(member)}>
@@ -146,7 +146,7 @@ export function AssistantsPanel() {
         title="Excluir auxiliar?"
         message={
           toDelete
-            ? `${toDelete.fullName} perderá o acesso e será removido(a) dos responsáveis das tarefas. Esta ação não pode ser desfeita. Para apenas bloquear o acesso, use Editar e desmarque "Acesso ativo".`
+            ? `${toDelete.fullName} perderá o acesso e será removido(a) dos responsáveis das tarefas. Esta ação não pode ser desfeita. Para apenas bloquear o acesso, use Editar e desmarque “Acesso ativo”.`
             : ""
         }
         confirmLabel="Excluir"

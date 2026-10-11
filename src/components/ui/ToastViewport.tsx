@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useToastStore, type Toast } from "../../store/toastStore";
 import { Button } from "./Button";
+import { AlertIcon, CheckIcon, InfoIcon } from "./Icons";
 
-const TONE: Record<Toast["tone"], string> = {
-  success: "border-l-prio-low",
-  error: "border-l-prio-urgent",
-  info: "border-l-accent",
+/** O tipo do aviso aparece por ícone e cor, nunca só pela cor. */
+const TONE: Record<Toast["tone"], { edge: string; icon: string; Icon: () => JSX.Element }> = {
+  success: { edge: "border-prio-low/50", icon: "text-prio-low", Icon: CheckIcon },
+  error: { edge: "border-prio-urgent/70", icon: "text-prio-urgent", Icon: AlertIcon },
+  info: { edge: "border-accent/60", icon: "text-accent-light", Icon: InfoIcon },
 };
 
 function ToastItem({ toast }: { toast: Toast }) {
@@ -16,10 +18,15 @@ function ToastItem({ toast }: { toast: Toast }) {
     return () => window.clearTimeout(timer);
   }, [toast.id, toast.onAction, dismiss]);
 
+  const { edge, icon, Icon } = TONE[toast.tone];
+
   return (
     <div
-      className={`flex items-center gap-3 glass rounded-2xl border-l-4 bg-raised px-4 py-3 text-sm text-white shadow-card ${TONE[toast.tone]}`}
+      className={`flex animate-toast-in items-center gap-3 glass rounded-2xl bg-raised px-4 py-3 text-sm text-white shadow-card ${edge}`}
     >
+      <span className={`shrink-0 ${icon}`}>
+        <Icon />
+      </span>
       <span className="flex-1">{toast.message}</span>
       {toast.actionLabel && toast.onAction && (
         <Button

@@ -6,6 +6,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PlusIcon } from "../components/ui/Icons";
 import { Modal } from "../components/ui/Modal";
+import { Skeleton } from "../components/ui/Skeleton";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAuthStore } from "../store/authStore";
 import { useReminderStore } from "../store/reminderStore";
@@ -54,10 +55,10 @@ export default function LembretesApp() {
     <div className="mx-auto flex min-h-screen max-w-[1100px] flex-col gap-5 px-4 py-5 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+          <h1 className="page-title">
             Lembretes
           </h1>
-          <p className="text-sm text-muted">
+          <p className="page-lede">
             {dueCount > 0
               ? `${dueCount} ${dueCount === 1 ? "lembrete pede" : "lembretes pedem"} atenção agora.`
               : "Prazos e rotinas que se repetem na secretaria."}
@@ -73,9 +74,17 @@ export default function LembretesApp() {
 
       <main className="flex-1">
         {status === "loading" && (
-          <p role="status" className="text-sm text-muted">
-            Carregando lembretes…
-          </p>
+          <>
+            <p role="status" className="sr-only">
+              Carregando lembretes…
+            </p>
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Skeleton className="h-32 rounded-2xl" />
+              <Skeleton className="h-32 rounded-2xl" />
+              <Skeleton className="hidden h-32 rounded-2xl lg:block" />
+              <Skeleton className="hidden h-32 rounded-2xl lg:block" />
+            </div>
+          </>
         )}
         {status === "error" && (
           <p role="alert" className="text-sm text-prio-urgent">
@@ -137,7 +146,7 @@ export default function LembretesApp() {
         open={toDelete !== null}
         title="Excluir lembrete?"
         message={
-          toDelete ? `"${toDelete.title}" deixará de aparecer para toda a escola. Esta ação não pode ser desfeita.` : ""
+          toDelete ? `“${toDelete.title}” deixará de aparecer para toda a escola. Esta ação não pode ser desfeita.` : ""
         }
         confirmLabel="Excluir"
         onConfirm={() => void handleDelete()}

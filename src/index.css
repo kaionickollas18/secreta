@@ -13,6 +13,44 @@
       radial-gradient(60rem 36rem at 12% -10%, rgba(139, 92, 246, 0.22), transparent 60%),
       radial-gradient(48rem 30rem at 100% 0%, rgba(192, 38, 211, 0.16), transparent 60%);
     background-attachment: fixed;
+    /* Sem negrito/itálico "falsos" quando o peso não carregou; kerning e ligaduras ligados. */
+    font-synthesis: none;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+  }
+  /* Títulos não deixam uma palavra sozinha na última linha; textos evitam "viúvas". */
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  p,
+  li,
+  dd,
+  figcaption {
+    text-wrap: pretty;
+  }
+  /* Números de tabelas e horários alinham em coluna. */
+  table,
+  time {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Superfícies que o navegador desenha sozinho também seguem a paleta. */
+  html {
+    scrollbar-color: rgba(167, 139, 250, 0.35) transparent;
+  }
+  input,
+  textarea,
+  select {
+    caret-color: theme(colors.accent.light);
+    accent-color: theme(colors.accent.DEFAULT);
+  }
+  /* Sublinhado afastado das letras, na espessura que a fonte define. */
+  a,
+  button {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: from-font;
   }
   :focus-visible {
     outline: 2px solid #c4b5fd;
@@ -28,13 +66,127 @@
     @apply border border-line bg-surface/70 backdrop-blur-md;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
+
+  /* Hierarquia de títulos: um lugar só para tamanho, peso, entrelinha e espaçamento. */
+
+  /* Título da página (h1): cor sólida; a ênfase vem do tamanho e do peso. */
+  .page-title {
+    @apply text-[1.75rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-3xl sm:leading-[1.15];
+  }
+  /* Frase de apoio abaixo do título da página, com largura confortável de leitura. */
+  .page-lede {
+    @apply max-w-[65ch] text-sm leading-relaxed text-muted;
+  }
+  /* Título de painel ou de janela (h2 de destaque). */
+  .panel-title {
+    @apply text-lg font-semibold leading-snug tracking-[-0.01em];
+  }
+  /* Título de seção. */
+  .section-title {
+    @apply text-base font-semibold leading-snug tracking-[-0.005em];
+  }
+  /* Título de cartão, coluna ou bloco pequeno: mesmo tamanho do corpo, separado pelo peso. */
+  .card-title {
+    @apply text-sm font-semibold leading-snug;
+  }
+  /* Legenda, dica ou metadado em parágrafo: linha limitada a ~75 caracteres e um pouco mais de
+     entrelinha, porque texto claro pequeno sobre fundo escuro fecha visualmente. */
+  .caption {
+    @apply max-w-[75ch] text-xs leading-[1.5] text-muted;
+  }
 }
 
+/*
+ * No celular, campos com menos de 16px fazem o iPhone dar zoom ao focar.
+ * Fica fora das camadas e com !important para valer sobre o text-sm dos campos.
+ */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem !important;
+  }
+}
+
+/*
+ * Navegação contínua. Cada área é uma página separada; estas regras fazem a troca parecer
+ * uma só tela: o conteúdo se funde, e o destaque da barra desliza do item antigo ao novo.
+ * É melhoria progressiva: navegador sem suporte troca de página como sempre.
+ */
+@view-transition {
+  navigation: auto;
+}
+.nav-pill {
+  view-transition-name: nav-pill;
+}
+.nav-items {
+  view-transition-name: nav-items;
+}
+.page-view {
+  view-transition-name: page-view;
+}
+/* O destaque viaja por baixo dos ícones e rótulos, que ficam sempre legíveis. */
+::view-transition-group(nav-pill) {
+  z-index: 1;
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+::view-transition-group(nav-items) {
+  z-index: 2;
+}
+/* O conteúdo antigo sai rápido; o novo chega com um leve avanço. */
+::view-transition-old(page-view) {
+  animation: 140ms ease-out both page-out;
+}
+::view-transition-new(page-view) {
+  animation: 320ms cubic-bezier(0.16, 1, 0.3, 1) both page-in;
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/*
+ * Quem pede menos movimento continua recebendo o retorno visual, só sem deslocamento:
+ * o que entrava deslizando ou crescendo apenas aparece; o contorno do cartão que chegou
+ * e as trocas de cor permanecem, porque informam o que mudou.
+ */
+@keyframes fade-only {
+  from {
+    opacity: 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+  [class*="animate-dialog-in"],
+  [class*="animate-sheet-in"],
+  [class*="animate-toast-in"],
+  [class*="animate-enter"] {
+    animation-name: fade-only !important;
+    animation-duration: 160ms !important;
+  }
+  [class*="animate-pop"],
+  [class*="animate-bar"],
+  [class*="animate-attention"],
+  [class*="animate-pulse"] {
+    animation: none !important;
+  }
+  /* A troca de página volta a ser direta, sem fusão nem deslize. */
+  @view-transition {
+    navigation: none;
+  }
+  /* Botões deixam de "afundar" ao clicar; a mudança de cor continua. */
+  button,
+  a {
+    transform: none !important;
+  }
+  html {
+    scroll-behavior: auto !important;
   }
 }

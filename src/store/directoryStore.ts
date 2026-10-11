@@ -2,6 +2,7 @@ import { FunctionsHttpError } from "@supabase/supabase-js";
 import { create } from "zustand";
 import type { Member, School } from "../types/directory";
 import { isUserRole } from "../utils/guards";
+import { avatarUrlOf } from "./profileApi";
 import { supabase } from "./supabaseClient";
 
 const GENERIC_ERROR = "Não foi possível concluir a operação. Tente novamente.";
@@ -69,7 +70,7 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
       set((s) => ({ status: s.status === "ready" ? "ready" : "loading" }));
       const [schools, profiles] = await Promise.all([
         supabase.from("schools").select("id, name"),
-        supabase.from("profiles").select("id, role, school_id, full_name, last_name, email, active"),
+        supabase.from("profiles").select("id, role, school_id, full_name, last_name, email, active, avatar_path"),
       ]);
       if (schools.error || profiles.error) return set({ status: "error" });
       set({
@@ -86,6 +87,7 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
                   lastName: p.last_name,
                   email: p.email ?? "",
                   active: p.active,
+                  avatarUrl: avatarUrlOf(p.avatar_path),
                 },
               ]
             : [],

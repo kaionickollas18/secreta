@@ -11,10 +11,10 @@ export default function GestaoApp() {
   return (
     <div className="mx-auto flex min-h-screen max-w-[1100px] flex-col gap-5 px-4 py-5 sm:px-6">
       <header>
-        <h1 className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+        <h1 className="page-title">
           {isMaster ? "Gestão de escolas" : "Equipe da secretaria"}
         </h1>
-        <p className="text-sm text-muted">
+        <p className="page-lede">
           {isMaster
             ? "Cadastre escolas e o secretário responsável por cada uma."
             : "Cadastre e gerencie os auxiliares administrativos da sua escola."}

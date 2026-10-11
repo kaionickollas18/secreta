@@ -29,10 +29,13 @@ export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
   const absencesText = (n: number) => `${n} ${n === 1 ? "falta" : "faltas"}`;
 
   return (
-    <article aria-labelledby="h-report" className="rounded-3xl border border-accent/40 bg-accent-soft/40 p-4 sm:p-5">
+    <article
+      aria-labelledby="h-report"
+      className="animate-enter rounded-3xl border border-accent/40 bg-accent-soft/40 p-4 sm:p-5"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 id="h-report" className="break-words text-lg font-semibold">
+          <h3 id="h-report" className="break-words panel-title">
             {report.name}
           </h3>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
@@ -71,9 +74,9 @@ export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
         </p>
       )}
 
-      <h4 className="mb-2 mt-5 text-sm font-semibold">Frequência por mês</h4>
+      <h4 className="mb-2 mt-5 card-title">Frequência por mês</h4>
       <ul className="space-y-2">
-        {report.months.map((month) => {
+        {report.months.map((month, index) => {
           const worst = month.month === report.worstMonth;
           return (
             <li
@@ -84,7 +87,7 @@ export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
                 <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
                   {month.label}
                   {worst && (
-                    <span className="rounded-full bg-prio-urgent px-2 py-0.5 text-[11px] font-bold text-canvas">
+                    <span className="rounded-full bg-prio-urgent px-2 py-0.5 text-2xs font-bold text-canvas">
                       Pior mês
                     </span>
                   )}
@@ -104,12 +107,16 @@ export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
                 className="mt-2 h-2.5 overflow-hidden rounded-full bg-raised"
               >
                 <div
-                  className={`h-full rounded-full ${BAR[month.risk]}`}
-                  style={{ width: `${Math.round(month.presenceRate * 100)}%` }}
+                  className={`h-full origin-left animate-bar rounded-full ${BAR[month.risk]}`}
+                  style={{
+                    width: `${Math.round(month.presenceRate * 100)}%`,
+                    // Sequência curta: no máximo 300 ms de espera, mesmo com muitos meses.
+                    animationDelay: `${Math.min(index * 60, 300)}ms`,
+                  }}
                 />
               </div>
               {month.dates.length > 0 && (
-                <p className="mt-2 text-xs text-muted">
+                <p className="mt-2 caption">
                   Faltou em: {month.dates.map((date) => formatDay(date).slice(0, 5)).join(", ")}
                 </p>
               )}
@@ -117,7 +124,7 @@ export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
           );
         })}
       </ul>
-      <p className="mt-3 text-xs text-muted">
+      <p className="mt-3 caption">
         A frequência considera os dias de chamada registrados para a turma. Regular: até 15% de faltas ·
         Atenção: de 15% a 25% · Crítico: mais de 25%.
       </p>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { LIMITS, MAX_ASSIGNEES, PRIORITY_LABELS, STATUS_LABELS } from "../../constants/board";
 import { useBoardAccess } from "../../hooks/useBoardAccess";
+import type { Member } from "../../types/directory";
 import {
   TASK_PRIORITIES,
   TASK_STATUSES,
@@ -10,11 +11,10 @@ import {
   type TaskInput,
   type TaskStatus,
 } from "../../types/task";
-import { assigneeColor } from "../../utils/assignees";
 import { isTaskPriority, isTaskStatus } from "../../utils/guards";
 import { validateTaskForm } from "../../utils/validation";
 import { Button } from "../ui/Button";
-import { AssigneeBadge } from "./AssigneeBadge";
+import { Avatar } from "../ui/Avatar";
 
 interface TaskFormProps {
   /** Tarefa sendo editada. Sem ela, o formulário cria uma nova. */
@@ -37,15 +37,24 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
     dueDate: task?.dueDate ?? "",
   });
   const [errors, setErrors] = useState<FieldErrors>({});
-  const { canManage, canApprove, people, nameOf } = useBoardAccess();
+  const { canManage, canApprove, people, personOf } = useBoardAccess();
 
   // Quem já é responsável continua na lista mesmo que tenha sido desativado depois.
+  const toOption = (p: Member) => ({
+    id: p.id,
+    name: p.lastName,
+    fullName: p.fullName,
+    avatarUrl: p.avatarUrl,
+  });
   const options = [
-    ...people.map((p) => ({ id: p.id, name: p.lastName })),
-    ...(task?.assignees ?? []).flatMap((id) =>
-      people.some((p) => p.id === id) || !nameOf(id) ? [] : [{ id, name: nameOf(id) }],
-    ),
+    ...people.map(toOption),
+    ...(task?.assignees ?? []).flatMap((id) => {
+      const person = personOf(id);
+      return !person || people.some((p) => p.id === id) ? [] : [toOption(person)];
+    }),
   ];
+  /** Responsáveis atuais, na ordem em que foram marcados (visão somente leitura). */
+  const assigned = values.assignees.flatMap((id) => options.find((o) => o.id === id) ?? []);
   // O Auxiliar não conclui nem reabre: "Concluído" só aparece se a tarefa já estiver lá.
   const lockedDone = !canApprove && task?.status === "done";
   // Tarefa nova também não nasce concluída (o banco recusa).
@@ -139,7 +148,7 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
             ))}
           </select>
           {!canApprove && (
-            <p id="task-status-hint" className="mt-1 text-xs text-muted">
+            <p id="task-status-hint" className="mt-1 caption">
               {lockedDone
                 ? "Só o secretário reabre uma tarefa concluída."
                 : "Para concluir, use “Pedir conclusão” no cartão."}
@@ -171,36 +180,42 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
       {canManage ? (
         <fieldset aria-describedby="task-assignees-hint">
           <legend className="mb-1 text-sm font-medium">Responsáveis</legend>
-          <div className="flex flex-wrap gap-2">
+          <ul className="space-y-1.5">
             {options.map((person) => {
               const checked = values.assignees.includes(person.id);
               const blocked = !checked && values.assignees.length >= MAX_ASSIGNEES;
               return (
-                <label
-                  key={person.id}
-                  className={`inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-light ${
-                    checked ? assigneeColor(person.id).badge : "border-line text-muted hover:bg-raised"
-                  } ${blocked ? "cursor-not-allowed opacity-40" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={checked}
-                    disabled={blocked}
-                    onChange={() =>
-                      set(
-                        "assignees",
-                        checked
-                          ? values.assignees.filter((id) => id !== person.id)
-                          : [...values.assignees, person.id],
-                      )
-                    }
-                  />
-                  @{person.name}
-                </label>
+                <li key={person.id}>
+                  <label
+                    className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-xl border px-3 py-1.5 transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent-light ${
+                      checked ? "border-accent/60 bg-accent-soft" : "border-line hover:bg-raised/50"
+                    } ${blocked ? "cursor-not-allowed opacity-40" : ""}`}
+                  >
+                    <Avatar id={person.id} name={person.name} url={person.avatarUrl} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">@{person.name}</span>
+                      <span className="block truncate text-xs text-muted">{person.fullName}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      aria-label={`@${person.name}`}
+                      className="h-4 w-4 shrink-0"
+                      checked={checked}
+                      disabled={blocked}
+                      onChange={() =>
+                        set(
+                          "assignees",
+                          checked
+                            ? values.assignees.filter((id) => id !== person.id)
+                            : [...values.assignees, person.id],
+                        )
+                      }
+                    />
+                  </label>
+                </li>
               );
             })}
-          </div>
+          </ul>
           <p id="task-assignees-hint" className="mt-1 text-xs text-muted">
             {options.length === 0
               ? "Nenhuma pessoa cadastrada. Cadastre auxiliares em Equipe."
@@ -215,11 +230,15 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
       ) : (
         <div>
           <p className="mb-1 text-sm font-medium">Responsáveis</p>
-          {values.assignees.some(nameOf) ? (
-            <ul className="flex flex-wrap gap-1.5">
-              {values.assignees.filter(nameOf).map((id) => (
-                <li key={id}>
-                  <AssigneeBadge id={id} name={nameOf(id)} />
+          {assigned.length > 0 ? (
+            <ul className="space-y-1.5">
+              {assigned.map((person) => (
+                <li key={person.id} className="flex min-h-[52px] items-center gap-3 rounded-xl border border-line px-3 py-1.5">
+                  <Avatar id={person.id} name={person.name} url={person.avatarUrl} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">@{person.name}</span>
+                    <span className="block truncate text-xs text-muted">{person.fullName}</span>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -229,7 +248,6 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
           <p className="mt-1 text-xs text-muted">Só o secretário define os responsáveis.</p>
         </div>
       )}
-
       <div>
         <label htmlFor="task-due" className="mb-1 block text-sm font-medium">
           Data de vencimento

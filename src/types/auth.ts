@@ -9,6 +9,10 @@ export interface Profile {
   schoolId: string | null;
   fullName: string;
   lastName: string;
+  /** Caminho da foto no bucket `avatars` (para trocar ou remover). */
+  avatarPath?: string;
+  /** Endereço público da foto. */
+  avatarUrl?: string;
 }
 
 export type AuthStatus = "loading" | "signedOut" | "signedIn";

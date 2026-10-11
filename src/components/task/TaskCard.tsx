@@ -1,13 +1,23 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { PRIORITY_STYLES } from "../../constants/board";
 import { useBoardAccess } from "../../hooks/useBoardAccess";
 import type { Task, TaskPriority } from "../../types/task";
+import { taskArrivals } from "../../utils/arrivals";
+import { Avatar } from "../ui/Avatar";
 import { formatDueDate, isOverdue } from "../../utils/date";
-import { GripIcon, PencilIcon, TrashIcon } from "../ui/Icons";
-import { Button, IconButton } from "../ui/Button";
-import { AssigneeBadge } from "./AssigneeBadge";
+import { DELETE_BUTTON, EDIT_BUTTON, IconButton } from "../ui/Button";
+import {
+  CalendarIcon,
+  CheckIcon,
+  ClockIcon,
+  FlagIcon,
+  GripIcon,
+  PencilIcon,
+  TrashIcon,
+  UsersIcon,
+} from "../ui/Icons";
 import { PriorityBadge } from "./PriorityBadge";
 import { PrioritySelect } from "./PrioritySelect";
 
@@ -29,118 +39,186 @@ interface TaskCardBodyProps {
   actions?: CardActions;
 }
 
-const SMALL_BUTTON = "!min-h-[32px] px-2.5 text-xs";
+/** Ação do rodapé: ocupa a largura do cartão, com fundo tingido pela intenção. */
+const FOOTER_ACTION =
+  "inline-flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors";
 
-/** Visual do cartão. Também é usado no DragOverlay (sem ações). */
+/** Quanto mais responsáveis, menores os avatares, para o título não ficar espremido. */
+const AVATAR_SIZE: Record<number, string> = {
+  1: "h-10 w-10 text-sm",
+  2: "h-9 w-9 text-sm",
+  3: "h-8 w-8 text-xs",
+};
+
+/** Linha do corpo: ícone e rótulo à esquerda, valor à direita. */
+function CardRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-h-[36px] items-center justify-between gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-raised/50">
+      <span className="flex items-center gap-2 text-sm font-medium text-muted">
+        <span aria-hidden="true">{icon}</span>
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Visual do cartão: cabeçalho (quem faz e o quê), linhas de informação e a ação do momento
+ * no rodapé. Também é usado no DragOverlay (sem ações).
+ */
 export function TaskCardBody({ task, handle, actions }: TaskCardBodyProps) {
-  const { canManage, canApprove, nameOf } = useBoardAccess();
+  const { canManage, canApprove, personOf } = useBoardAccess();
   const overdue = isOverdue(task.dueDate, task.status);
   const assignees = task.assignees.flatMap((id) => {
-    const name = nameOf(id);
-    return name ? [{ id, name }] : [];
+    const person = personOf(id);
+    return person ? [{ id, name: person.lastName, avatarUrl: person.avatarUrl }] : [];
   });
+  const canRequest = Boolean(actions) && !canApprove && !task.completionRequested && task.status !== "done";
+  const canRespond = Boolean(actions) && canApprove && task.completionRequested;
 
   return (
     <article
-      className={`rounded-2xl border border-line border-l-4 bg-surface p-3 shadow-card transition-colors hover:bg-raised ${PRIORITY_STYLES[task.priority].stripe}`}
+      className="overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-300 hover:shadow-card"
     >
-      <div className="flex items-start gap-1">
+      <header className="flex items-start gap-2 border-b border-line p-3">
         {handle}
-        <h3 className="min-w-0 flex-1 break-words pt-1.5 text-sm font-semibold leading-snug">
-          {task.title}
-        </h3>
+
+        {assignees.length > 0 ? (
+          <div className="flex shrink-0 -space-x-2 pt-0.5">
+            {assignees.map((person) => (
+              <Avatar
+                key={person.id}
+                id={person.id}
+                name={person.name}
+                url={person.avatarUrl}
+                className={`ring-2 ring-surface ${AVATAR_SIZE[assignees.length] ?? AVATAR_SIZE[3]}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <span
+            aria-hidden="true"
+            className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-dashed border-line text-muted"
+          >
+            <UsersIcon />
+          </span>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words card-title">{task.title}</h3>
+          {assignees.length > 0 ? (
+            <ul aria-label="Responsáveis" className="mt-0.5 flex flex-wrap gap-x-2 text-xs text-muted">
+              {assignees.map((person) => (
+                <li key={person.id}>@{person.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-0.5 text-xs italic text-muted">Sem responsável</p>
+          )}
+        </div>
+
         {actions && (
-          <div className="flex shrink-0">
-            <IconButton aria-label={`Editar ${task.title}`} onClick={() => actions.onEdit(task)}>
+          <div className="-mr-1 -mt-1 flex shrink-0">
+            <IconButton
+              aria-label={`Editar ${task.title}`}
+              className={EDIT_BUTTON}
+              onClick={() => actions.onEdit(task)}
+            >
               <PencilIcon />
             </IconButton>
             {canManage && (
-              <IconButton aria-label={`Excluir ${task.title}`} onClick={() => actions.onDelete(task)}>
+              <IconButton
+                aria-label={`Excluir ${task.title}`}
+                className={DELETE_BUTTON}
+                onClick={() => actions.onDelete(task)}
+              >
                 <TrashIcon />
               </IconButton>
             )}
           </div>
         )}
-      </div>
+      </header>
 
-      {task.description && (
-        <p className="mt-1 line-clamp-3 whitespace-pre-line break-words pl-9 text-sm text-muted">
-          {task.description}
-        </p>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 pl-9">
-        {assignees.length > 0 ? (
-          <ul aria-label="Responsáveis" className="flex flex-wrap gap-1.5">
-            {assignees.map((person) => (
-              <li key={person.id}>
-                <AssigneeBadge id={person.id} name={person.name} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <span className="text-xs italic text-muted">Sem responsável</span>
+      <div className="space-y-0.5 p-2">
+        {task.description && (
+          <p className="line-clamp-3 whitespace-pre-line break-words px-2 pb-1 pt-0.5 text-sm text-muted">
+            {task.description}
+          </p>
         )}
-      </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2 pl-9">
-        {actions ? (
-          <PrioritySelect
-            value={task.priority}
-            label={`Prioridade de ${task.title}`}
-            onChange={(priority) => actions.onPriorityChange(task.id, priority)}
-          />
-        ) : (
-          <PriorityBadge priority={task.priority} />
-        )}
-        {task.dueDate && (
-          <span
-            className={`text-xs ${overdue ? "font-semibold text-prio-urgent" : "text-muted"}`}
-          >
-            {overdue ? "Atrasada: " : "Vence "}
-            {formatDueDate(task.dueDate)}
-          </span>
-        )}
-      </div>
-
-      {task.completionRequested && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 pl-9">
-          <span className="rounded-full border border-prio-medium bg-prio-medium-tint px-2 py-0.5 text-xs font-semibold text-prio-medium">
-            Aguardando aprovação
-          </span>
-          {actions && canApprove && (
-            <>
-              <Button
-                variant="primary"
-                className={SMALL_BUTTON}
-                aria-label={`Aprovar conclusão de ${task.title}`}
-                onClick={() => actions.onRespond(task, true)}
-              >
-                Aprovar
-              </Button>
-              <Button
-                className={SMALL_BUTTON}
-                aria-label={`Devolver ${task.title}`}
-                onClick={() => actions.onRespond(task, false)}
-              >
-                Devolver
-              </Button>
-            </>
+        <CardRow icon={<FlagIcon />} label="Prioridade">
+          {actions ? (
+            <PrioritySelect
+              value={task.priority}
+              label={`Prioridade de ${task.title}`}
+              onChange={(priority) => actions.onPriorityChange(task.id, priority)}
+            />
+          ) : (
+            <PriorityBadge priority={task.priority} />
           )}
-        </div>
-      )}
+        </CardRow>
 
-      {actions && !canApprove && !task.completionRequested && task.status !== "done" && (
-        <div className="mt-3 pl-9">
-          <Button
-            className={SMALL_BUTTON}
-            aria-label={`Pedir conclusão de ${task.title}`}
-            onClick={() => actions.onRequestCompletion(task)}
-          >
-            Pedir conclusão
-          </Button>
-        </div>
-      )}
+        {task.dueDate && (
+          <CardRow icon={<CalendarIcon />} label={overdue ? "Atrasada" : "Vence"}>
+            <span
+              className={`rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${
+                overdue ? "bg-prio-urgent-tint text-prio-urgent" : "text-ink"
+              }`}
+            >
+              {formatDueDate(task.dueDate)}
+            </span>
+          </CardRow>
+        )}
+
+        {task.completionRequested && (
+          <CardRow icon={<ClockIcon />} label="Conclusão">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-prio-medium-tint px-2 py-1 text-xs font-semibold text-prio-medium">
+              <span aria-hidden="true" className="h-1.5 w-1.5 animate-attention rounded-full bg-prio-medium" />
+              Aguardando aprovação
+            </span>
+          </CardRow>
+        )}
+
+        {actions && canRespond && (
+          <div className="flex gap-2 px-1 pb-1 pt-1.5">
+            <button
+              type="button"
+              aria-label={`Aprovar conclusão de ${task.title}`}
+              onClick={() => actions.onRespond(task, true)}
+              className={`${FOOTER_ACTION} bg-prio-low-tint text-prio-low hover:bg-prio-low/25`}
+            >
+              <CheckIcon />
+              Aprovar
+            </button>
+            <button
+              type="button"
+              aria-label={`Devolver ${task.title}`}
+              onClick={() => actions.onRespond(task, false)}
+              className={`${FOOTER_ACTION} bg-raised/70 text-ink hover:bg-raised`}
+            >
+              Devolver
+            </button>
+          </div>
+        )}
+
+        {actions && canRequest && (
+          <div className="flex px-1 pb-1 pt-1.5">
+            <button
+              type="button"
+              aria-label={`Pedir conclusão de ${task.title}`}
+              onClick={() => actions.onRequestCompletion(task)}
+              className={`${FOOTER_ACTION} bg-accent-soft text-accent-light hover:bg-accent/30`}
+            >
+              <CheckIcon />
+              Pedir conclusão
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Faixa de prioridade na base do cartão; o nome da prioridade está no selo acima. */}
+      <div aria-hidden="true" className={`h-1.5 ${PRIORITY_STYLES[task.priority].band}`} />
     </article>
   );
 }
@@ -153,12 +231,16 @@ interface TaskCardProps {
 export function TaskCard({ task, actions }: TaskCardProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id });
+  // Decidido uma vez, ao montar: o cartão é novo, chegou de outra coluna ou já estava aqui.
+  const [arrival] = useState(() => taskArrivals.observe(task.id, task.status));
+  const arrivalClass =
+    arrival === "moved" ? "animate-arrive" : arrival === "new" ? "animate-enter" : "";
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? "opacity-40" : undefined}
+      className={`rounded-2xl ${arrivalClass} ${isDragging ? "opacity-40" : ""}`}
     >
       <TaskCardBody
         task={task}
@@ -168,7 +250,7 @@ export function TaskCard({ task, actions }: TaskCardProps) {
             ref={setActivatorNodeRef}
             type="button"
             aria-label={`Arrastar ${task.title}`}
-            className="inline-flex h-9 w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted hover:bg-canvas/60 hover:text-ink active:cursor-grabbing"
+            className="-ml-1 inline-flex h-10 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted hover:bg-canvas/60 hover:text-ink active:cursor-grabbing"
             {...attributes}
             {...listeners}
           >
@@ -186,7 +268,7 @@ export function TaskCardOverlay({ task }: { task: Task }) {
       <TaskCardBody
         task={task}
         handle={
-          <span className="inline-flex h-9 w-8 shrink-0 items-center justify-center text-muted">
+          <span className="-ml-1 inline-flex h-10 w-6 shrink-0 items-center justify-center text-muted">
             <GripIcon />
           </span>
         }

@@ -13,6 +13,7 @@ import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAttendanceData } from "../hooks/useAttendanceData";
 import { useAuthStore } from "../store/authStore";
 import type { AttendanceStatus, ClassData } from "../types/attendance";
+import { prefersReducedMotion } from "../utils/arrivals";
 import { canConfigureDashboard } from "../utils/roles";
 import {
   buildInsights,
@@ -42,9 +43,9 @@ function Kpi({
 }) {
   return (
     <div className={`${CARD} !p-4`}>
-      <p className="text-xs text-muted">{label}</p>
+      <p className="caption">{label}</p>
       <p className={`mt-1 text-3xl font-bold tabular-nums ${tone}`}>{value}</p>
-      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
+      {hint && <p className="mt-1 caption">{hint}</p>}
     </div>
   );
 }
@@ -115,7 +116,10 @@ export default function FrequenciaApp() {
 
   // Ao escolher um aluno (inclusive pela tabela, lá embaixo), leva a tela até o resumo.
   useEffect(() => {
-    if (selected) searchRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+    if (selected) searchRef.current?.scrollIntoView?.({
+        block: "start",
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+      });
   }, [selected]);
 
   const needle = normalizeText(query.trim());
@@ -139,15 +143,15 @@ export default function FrequenciaApp() {
     <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-5 px-4 py-5 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+          <h1 className="page-title">
             Frequência dos alunos
           </h1>
-          <p className="text-sm text-muted">
+          <p className="page-lede">
             {first && last
               ? `Faltas registradas de ${formatDay(first)} a ${formatDay(last)}`
               : "Sem registros"}
           </p>
-          <p className="text-xs text-muted" role="status" aria-live="polite">
+          <p className="caption" role="status" aria-live="polite">
             {statusText(status, data?.generatedAt)}
           </p>
         </div>
@@ -232,13 +236,17 @@ export default function FrequenciaApp() {
           </section>
 
           <section ref={searchRef} className={`${CARD} scroll-mt-4`} aria-labelledby="h-search">
-            <h2 id="h-search" className="mb-3 text-base font-semibold">
+            <h2 id="h-search" className="mb-3 section-title">
               Pesquisar aluno
             </h2>
             <StudentSearch students={allStudents} onSelect={setSelected} />
             {report && (
               <div className="mt-4">
-                <StudentReportCard report={report} onClose={() => setSelected(null)} />
+                <StudentReportCard
+                  key={`${report.className}-${report.name}`}
+                  report={report}
+                  onClose={() => setSelected(null)}
+                />
               </div>
             )}
             {selected && !report && (
@@ -250,14 +258,14 @@ export default function FrequenciaApp() {
 
           <div className="grid gap-5 lg:grid-cols-3">
             <section className={`${CARD} lg:col-span-2`} aria-labelledby="h-trend">
-              <h2 id="h-trend" className="mb-3 text-base font-semibold">
+              <h2 id="h-trend" className="mb-3 section-title">
                 Faltas por dia
               </h2>
               <TrendChart points={view.series} />
             </section>
 
             <section className={CARD} aria-labelledby="h-insights">
-              <h2 id="h-insights" className="mb-3 text-base font-semibold">
+              <h2 id="h-insights" className="mb-3 section-title">
                 Destaques
               </h2>
               {view.insights.length === 0 ? (
@@ -282,10 +290,10 @@ export default function FrequenciaApp() {
 
           <div className="grid gap-5 lg:grid-cols-2">
             <section className={CARD} aria-labelledby="h-classes">
-              <h2 id="h-classes" className="mb-1 text-base font-semibold">
+              <h2 id="h-classes" className="mb-1 section-title">
                 Média de faltas por dia, por turma
               </h2>
-              <p className="mb-4 text-xs text-muted">
+              <p className="mb-4 caption">
                 Comparar pela média evita distorção entre turmas com mais ou menos dias de
                 chamada.
               </p>
@@ -296,10 +304,10 @@ export default function FrequenciaApp() {
             </section>
 
             <section className={CARD} aria-labelledby="h-weekday">
-              <h2 id="h-weekday" className="mb-1 text-base font-semibold">
+              <h2 id="h-weekday" className="mb-1 section-title">
                 Faltas por dia da semana
               </h2>
-              <p className="mb-4 text-xs text-muted">
+              <p className="mb-4 caption">
                 Média de faltas por dia de chamada. O dia mais crítico está em destaque.
               </p>
               <WeekdayChart stats={view.weekdays} />
@@ -309,10 +317,10 @@ export default function FrequenciaApp() {
           <section className={CARD} aria-labelledby="h-students">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 id="h-students" className="text-base font-semibold">
+                <h2 id="h-students" className="section-title">
                   Alunos que mais faltam
                 </h2>
-                <p className="text-xs text-muted">
+                <p className="caption">
                   Crítico: mais de 25% dos dias · Atenção: de 15% a 25% · Seguidas: faltas
                   consecutivas até o último dia. Clique em um nome para ver o resumo.
                 </p>
@@ -335,7 +343,7 @@ export default function FrequenciaApp() {
           </section>
 
           <section className={CARD} aria-labelledby="h-summary">
-            <h2 id="h-summary" className="mb-3 text-base font-semibold">
+            <h2 id="h-summary" className="mb-3 section-title">
               Resumo por turma
             </h2>
             <ClassesTable classes={view.classSummaries} />

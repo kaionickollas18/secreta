@@ -1,14 +1,15 @@
 import type { Reminder, ReminderState, ReminderStatus } from "../../types/reminder";
 import { describeSchedule, occurrenceLabel, statusLabel } from "../../utils/reminders";
-import { Button, IconButton } from "../ui/Button";
+import { Button, DELETE_BUTTON, EDIT_BUTTON, IconButton } from "../ui/Button";
 import { CheckIcon, PencilIcon, TrashIcon } from "../ui/Icons";
 
-const STATE_STYLES: Record<ReminderState, { stripe: string; chip: string }> = {
-  overdue: { stripe: "border-l-prio-urgent", chip: "bg-prio-urgent-tint text-prio-urgent" },
-  active: { stripe: "border-l-prio-medium", chip: "bg-prio-medium-tint text-prio-medium" },
-  upcoming: { stripe: "border-l-accent", chip: "bg-accent-soft text-accent-light" },
-  done: { stripe: "border-l-prio-low", chip: "bg-prio-low-tint text-prio-low" },
-  finished: { stripe: "border-l-line", chip: "bg-raised/60 text-muted" },
+/** `edge`: contorno do cartão (1px), forte só no que pede ação. `chip`: o selo com a situação. */
+const STATE_STYLES: Record<ReminderState, { edge: string; chip: string }> = {
+  overdue: { edge: "border-prio-urgent/75", chip: "bg-prio-urgent-tint text-prio-urgent" },
+  active: { edge: "border-prio-medium/55", chip: "bg-prio-medium-tint text-prio-medium" },
+  upcoming: { edge: "border-line", chip: "bg-accent-soft text-accent-light" },
+  done: { edge: "border-prio-low/30", chip: "bg-prio-low-tint text-prio-low" },
+  finished: { edge: "border-line", chip: "bg-raised/60 text-muted" },
 };
 
 interface ReminderCardProps {
@@ -28,18 +29,18 @@ export function ReminderCard({ reminder, status, canManage, onToggleDone, onEdit
   const completed = state === "done" || state === "finished";
 
   return (
-    <li className={`glass rounded-2xl border-l-4 p-4 ${styles.stripe}`}>
+    <li className={`glass rounded-2xl p-4 ${styles.edge}`}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="break-words text-base font-semibold leading-snug">{reminder.title}</h3>
-          <p className="mt-0.5 text-xs text-muted">{describeSchedule(reminder.schedule)}</p>
+          <h3 className="break-words section-title">{reminder.title}</h3>
+          <p className="mt-0.5 caption">{describeSchedule(reminder.schedule)}</p>
         </div>
         {canManage && (
           <div className="flex shrink-0">
-            <IconButton aria-label={`Editar ${reminder.title}`} onClick={() => onEdit(reminder)}>
+            <IconButton aria-label={`Editar ${reminder.title}`} className={EDIT_BUTTON} onClick={() => onEdit(reminder)}>
               <PencilIcon />
             </IconButton>
-            <IconButton aria-label={`Excluir ${reminder.title}`} onClick={() => onDelete(reminder)}>
+            <IconButton aria-label={`Excluir ${reminder.title}`} className={DELETE_BUTTON} onClick={() => onDelete(reminder)}>
               <TrashIcon />
             </IconButton>
           </div>

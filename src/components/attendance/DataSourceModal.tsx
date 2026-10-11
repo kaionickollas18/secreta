@@ -121,7 +121,7 @@ export function DataSourceModal({ open, schoolId, onClose }: DataSourceModalProp
           noValidate
           className={`mt-4 space-y-3 ${SECTION}`}
         >
-          <h3 className="text-sm font-semibold">Planilha online (Google Sheets)</h3>
+          <h3 className="card-title">Planilha online (Google Sheets)</h3>
           <div>
             <label htmlFor="source-url" className="mb-1 block text-sm font-medium">
               Link da planilha
@@ -146,7 +146,7 @@ export function DataSourceModal({ open, schoolId, onClose }: DataSourceModalProp
                 {errors.sheetUrl}
               </p>
             ) : (
-              <p id="source-url-hint" className="mt-1 text-xs text-muted">
+              <p id="source-url-hint" className="mt-1 caption">
                 A planilha precisa estar compartilhada como “qualquer pessoa com o link
                 pode ver”. Atenção: quem tiver o link consegue ver os nomes dos alunos.
               </p>
@@ -177,7 +177,7 @@ export function DataSourceModal({ open, schoolId, onClose }: DataSourceModalProp
                 {errors.classNames}
               </p>
             ) : (
-              <p id="source-classes-hint" className="mt-1 text-xs text-muted">
+              <p id="source-classes-hint" className="mt-1 caption">
                 Escreva o nome exatamente como aparece na aba. Um nome errado pode trazer
                 os dados de outra aba.
               </p>
@@ -189,10 +189,10 @@ export function DataSourceModal({ open, schoolId, onClose }: DataSourceModalProp
         </form>
 
         <section aria-labelledby="h-offline" className={`mt-4 space-y-3 ${SECTION}`}>
-          <h3 id="h-offline" className="text-sm font-semibold">
+          <h3 id="h-offline" className="card-title">
             Base offline (arquivos CSV)
           </h3>
-          <p className="text-xs text-muted">
+          <p className="caption">
             Envie um arquivo .csv por turma. O nome do arquivo vira o nome da turma (ex.:
             “5 ano A.csv”). Enviar de novo uma turma substitui a anterior. Com a planilha
             online em uso, esta base serve de reserva se o link falhar.
@@ -222,7 +222,7 @@ export function DataSourceModal({ open, schoolId, onClose }: DataSourceModalProp
 
           {settings.hasFile ? (
             <>
-              <p className="text-xs text-muted">
+              <p className="caption">
                 {offlineClasses.length} {offlineClasses.length === 1 ? "turma" : "turmas"}{" "}
                 na base
                 {settings.fileUpdatedAt

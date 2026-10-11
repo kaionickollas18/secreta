@@ -35,6 +35,10 @@ export function ButtonLink({ variant = "secondary", className = "", ...rest }: B
   return <a className={buttonClasses(variant, className)} {...rest} />;
 }
 
+/** Editar é verde e excluir é vermelho em todo o sistema (o rótulo acessível diz a ação). */
+export const EDIT_BUTTON = "!text-prio-low hover:!bg-prio-low-tint";
+export const DELETE_BUTTON = "!text-prio-urgent hover:!bg-prio-urgent-tint";
+
 export function IconButton({
   className = "",
   type = "button",

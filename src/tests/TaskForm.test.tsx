@@ -44,8 +44,10 @@ describe("TaskForm", () => {
 
   it("lista o secretário primeiro e não oferece Concluído em tarefa nova", () => {
     render(<TaskForm onSubmit={() => {}} onCancel={() => {}} />);
-    const names = screen.getAllByRole("checkbox").map((box) => box.parentElement?.textContent);
+    const names = screen.getAllByRole("checkbox").map((box) => box.getAttribute("aria-label"));
     expect(names).toEqual(["@Lopes", "@Dias", "@Souza"]);
+    // Cada pessoa aparece com o nome completo abaixo do sobrenome.
+    expect(screen.getByText("Rita Lopes")).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Concluído" })).not.toBeInTheDocument();
   });
 

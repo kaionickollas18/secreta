@@ -1,4 +1,5 @@
 import { StrictMode } from "react";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { AuthGate } from "./components/auth/AuthGate";
@@ -9,7 +10,9 @@ import { SCHOOL_ROLES } from "./utils/roles";
 const root = document.getElementById("root");
 if (!root) throw new Error("Elemento #root não encontrado.");
 
-createRoot(root).render(
+// Desenha já no primeiro quadro: a transição entre páginas fotografa a tela nesse instante.
+const app = createRoot(root);
+flushSync(() => app.render(
   <StrictMode>
     <AuthGate allow={SCHOOL_ROLES} redirects={{ master: "gestao.html" }}>
       <AppShell active="quadro">
@@ -17,4 +20,4 @@ createRoot(root).render(
       </AppShell>
     </AuthGate>
   </StrictMode>,
-);
+));

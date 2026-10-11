@@ -1,4 +1,5 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../store/supabaseClient", () => ({ supabase: null }));
@@ -9,6 +10,7 @@ import { useMessageStore } from "../store/messageStore";
 import { useReminderStore } from "../store/reminderStore";
 import type { Profile } from "../types/auth";
 import { todayISO } from "../utils/date";
+import { NAV_PREFERENCE_KEY, parseNavCollapsed } from "../utils/navPreference";
 import { ASSISTANT, SECRETARY } from "./helpers";
 
 const MASTER: Profile = { id: "m", role: "master", schoolId: null, fullName: "Kaio Ribeiro", lastName: "Ribeiro" };
@@ -24,7 +26,10 @@ function renderShell(profile: Profile, active: Parameters<typeof AppShell>[0]["a
 }
 
 const linkNames = (nav: HTMLElement) =>
-  within(nav).getAllByRole("link").map((link) => link.textContent?.replace(/\d+|\(.*\)/g, "").trim());
+  // O rótulo visível de cada item da lista (sem o ícone, o avatar nem o contador).
+  within(within(nav).getByRole("list"))
+    .getAllByRole("link")
+    .map((link) => link.querySelector("span.truncate")?.textContent);
 
 describe("AppShell", () => {
   beforeEach(() => {
@@ -34,16 +39,49 @@ describe("AppShell", () => {
 
   it("secretário vê todas as áreas, com a página atual marcada", () => {
     const nav = within(renderShell(SECRETARY, "dashboard"));
-    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Quadro", "Lembretes", "Mensagens", "Dashboard", "Equipe"]);
+    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Quadro", "Lembretes", "Mensagens", "Dashboard", "Equipe", "Perfil"]);
     expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
     expect(nav.getByRole("link", { name: "Quadro" })).not.toHaveAttribute("aria-current");
     expect(screen.getByText("conteúdo")).toBeInTheDocument();
   });
 
   it("auxiliar não vê Equipe; Master só vê Escolas", () => {
-    expect(linkNames(renderShell(ASSISTANT))).toEqual(["Quadro", "Lembretes", "Mensagens", "Dashboard"]);
+    expect(linkNames(renderShell(ASSISTANT))).toEqual(["Quadro", "Lembretes", "Mensagens", "Dashboard", "Perfil"]);
     cleanup();
-    expect(linkNames(renderShell(MASTER, "gestao"))).toEqual(["Escolas"]);
+    expect(linkNames(renderShell(MASTER, "gestao"))).toEqual(["Escolas", "Perfil"]);
+  });
+
+  it("o topo do menu mostra quem está usando e leva ao perfil", () => {
+    const nav = within(renderShell(SECRETARY, "perfil"));
+    const link = nav.getByRole("link", { name: "Meu perfil: Rita Lopes, Secretário" });
+    expect(link).toHaveAttribute("href", "perfil.html");
+    expect(link).toHaveAttribute("aria-current", "page");
+    expect(within(link).getByText("Lopes")).toBeInTheDocument();
+  });
+
+  it("retrai e estende o menu, lembrando a escolha", async () => {
+    const nav = within(renderShell(SECRETARY));
+    const retract = nav.getByRole("button", { name: "Retrair o menu" });
+    expect(retract).toHaveAttribute("aria-expanded", "true");
+
+    await userEvent.click(retract);
+    const extend = nav.getByRole("button", { name: "Estender o menu" });
+    expect(extend).toHaveAttribute("aria-expanded", "false");
+    expect(window.localStorage.getItem(NAV_PREFERENCE_KEY)).toBe("retraido");
+    // Retraído, os itens continuam com nome (para leitor de tela) e ganham dica ao passar o mouse.
+    expect(nav.getByRole("link", { name: "Quadro" })).toHaveAttribute("title", "Quadro");
+
+    // Uma página aberta depois já começa retraída.
+    cleanup();
+    expect(
+      within(renderShell(SECRETARY)).getByRole("button", { name: "Estender o menu" }),
+    ).toBeInTheDocument();
+  });
+
+  it("começa estendido quando não há escolha guardada ou ela é inválida", () => {
+    expect(parseNavCollapsed(null)).toBe(false);
+    expect(parseNavCollapsed("qualquer coisa")).toBe(false);
+    expect(parseNavCollapsed("retraido")).toBe(true);
   });
 
   it("avisa sobre lembretes que pedem atenção e mensagens novas", () => {

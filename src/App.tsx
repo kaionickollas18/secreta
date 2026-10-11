@@ -94,10 +94,10 @@ export default function App() {
     <div className="mx-auto flex min-h-screen max-w-[1800px] flex-col gap-5 px-4 py-5 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+          <h1 className="page-title">
             SECRETA
           </h1>
-          <p className="text-sm text-muted">
+          <p className="page-lede">
             {total === 0
               ? canManage
                 ? "Crie sua primeira tarefa para começar."
@@ -136,7 +136,7 @@ export default function App() {
         </div>
       )}
       {status === "loading" && (
-        <p role="status" className="text-sm text-muted">
+        <p role="status" className="sr-only">
           Carregando tarefas…
         </p>
       )}
@@ -160,7 +160,7 @@ export default function App() {
         title="Excluir tarefa?"
         message={
           taskToDelete
-            ? `"${taskToDelete.title}" será removida do quadro e não poderá ser recuperada. Se ela já foi concluída, o registro continua no Histórico.`
+            ? `“${taskToDelete.title}” será removida do quadro e não poderá ser recuperada. Se ela já foi concluída, o registro continua no Histórico.`
             : ""
         }
         confirmLabel="Excluir"

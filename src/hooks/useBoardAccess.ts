@@ -25,6 +25,8 @@ export function useBoardAccess() {
       people: assignableMembers(members),
       /** Sobrenome do responsável ("" se a pessoa não existe mais). */
       nameOf: (id: string) => byId.get(id)?.lastName ?? "",
+      /** Dados completos da pessoa (nome, foto), ou `undefined` se ela não existe mais. */
+      personOf: (id: string) => byId.get(id),
     };
   }, [profile, members]);
 }

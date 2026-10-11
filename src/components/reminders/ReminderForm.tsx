@@ -59,7 +59,7 @@ function Field({
         {label}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-muted">{hint}</p>}
+      {hint && !error && <p className="mt-1 caption">{hint}</p>}
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-1 text-sm text-prio-urgent">
           {error}

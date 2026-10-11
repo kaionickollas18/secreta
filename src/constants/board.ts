@@ -41,9 +41,10 @@ export const PRIORITY_LABELS: Record<TaskPriority, string> = {
   urgent: "Urgente",
 };
 
-export const PRIORITY_STYLES: Record<TaskPriority, { stripe: string; badge: string }> = {
-  low: { stripe: "border-l-prio-low", badge: "bg-prio-low-tint text-prio-low" },
-  medium: { stripe: "border-l-prio-medium", badge: "bg-prio-medium-tint text-prio-medium" },
-  high: { stripe: "border-l-prio-high", badge: "bg-prio-high-tint text-prio-high" },
-  urgent: { stripe: "border-l-prio-urgent", badge: "bg-prio-urgent-tint text-prio-urgent" },
+/** `band`: faixa na base do cartão, na cor da prioridade. `badge`: o selo com o nome. */
+export const PRIORITY_STYLES: Record<TaskPriority, { band: string; badge: string }> = {
+  low: { band: "bg-prio-low", badge: "bg-prio-low-tint text-prio-low" },
+  medium: { band: "bg-prio-medium", badge: "bg-prio-medium-tint text-prio-medium" },
+  high: { band: "bg-prio-high", badge: "bg-prio-high-tint text-prio-high" },
+  urgent: { band: "bg-prio-urgent", badge: "bg-prio-urgent-tint text-prio-urgent" },
 };

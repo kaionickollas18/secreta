@@ -107,7 +107,7 @@ export function MasterPanel() {
   return (
     <section aria-labelledby="h-schools" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="h-schools" className="text-lg font-semibold">
+        <h2 id="h-schools" className="panel-title">
           Escolas
         </h2>
         <Button variant="primary" onClick={() => setModal({ kind: "createSchool" })}>
@@ -138,7 +138,7 @@ export function MasterPanel() {
           const secretary = secretaryOf(school.id, members);
           return (
             <li key={school.id} className="glass rounded-3xl p-4">
-              <h3 className="text-base font-semibold">{school.name}</h3>
+              <h3 className="section-title">{school.name}</h3>
               {secretary ? (
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                   <span>
@@ -219,7 +219,7 @@ export function MasterPanel() {
         title="Excluir escola?"
         message={
           schoolToDelete
-            ? `"${schoolToDelete.name}" será excluída junto com o secretário, os auxiliares e todas as tarefas. Esta ação não pode ser desfeita.`
+            ? `“${schoolToDelete.name}” será excluída junto com o secretário, os auxiliares e todas as tarefas. Esta ação não pode ser desfeita.`
             : ""
         }
         confirmLabel="Excluir"

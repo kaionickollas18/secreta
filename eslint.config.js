@@ -5,7 +5,8 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage", "supabase"] },
+  // .agents e .claude: skills de ferramentas de IA instaladas no projeto (código de terceiros).
+  { ignores: ["dist", "coverage", "supabase", ".agents", ".claude"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -74,17 +74,17 @@ export function parseCsvFiles(files: CsvFile[]): { classes: ClassData[]; errors:
   const errors: string[] = [];
   for (const file of files) {
     const className = classNameFromFile(file.name);
-    if (!/\.csv$/i.test(file.name)) errors.push(`"${file.name}": envie arquivos .csv.`);
-    else if (file.size > MAX_CSV_BYTES) errors.push(`"${file.name}": arquivo maior que 2 MB.`);
-    else if (!className) errors.push(`"${file.name}": não foi possível identificar a turma pelo nome do arquivo.`);
+    if (!/\.csv$/i.test(file.name)) errors.push(`“${file.name}”: envie arquivos .csv.`);
+    else if (file.size > MAX_CSV_BYTES) errors.push(`“${file.name}”: arquivo maior que 2 MB.`);
+    else if (!className) errors.push(`“${file.name}”: não foi possível identificar a turma pelo nome do arquivo.`);
     else if (classes.some((c) => c.name === className))
-      errors.push(`"${file.name}": a turma "${className}" apareceu em mais de um arquivo.`);
+      errors.push(`“${file.name}”: a turma “${className}” apareceu em mais de um arquivo.`);
     else {
       try {
         classes.push(parseClassCsv(className, file.text));
       } catch {
         errors.push(
-          `"${file.name}": colunas não reconhecidas. O arquivo precisa ter "Data", "Relação de Alunos" e "Mensagem".`,
+          `“${file.name}”: colunas não reconhecidas. O arquivo precisa ter “Data”, “Relação de Alunos” e “Mensagem”.`,
         );
       }
     }

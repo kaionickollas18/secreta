@@ -74,7 +74,15 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 6. Com a planilha em uso e a base offline enviada, usar um link de planilha inexistente: o dashboard mostra a base offline com o aviso.
 7. **Pesquisar aluno**: digitar parte do nome (com e sem acento); escolher um resultado; conferir frequência geral, faltas, última falta e a frequência de cada mês (o pior mês vem destacado). Clicar em um nome na tabela "Alunos que mais faltam" abre o mesmo resumo.
 
-### 8. Responsivo e acessibilidade
+### 8. Perfil
+1. Abrir **Perfil** na barra; enviar uma foto (JPG do celular): ela aparece no perfil, na barra e nos cartões em que a pessoa é responsável.
+2. Em outra conta da mesma escola, a foto aparece no cartão e na lista de responsáveis ao abrir a tarefa.
+3. Trocar o sobrenome: muda nos cartões. Editar a mesma pessoa em Equipe (ex.: desativar e reativar) não desfaz o sobrenome escolhido.
+4. Trocar a senha: senha atual errada mostra o erro no campo; com a certa, sair e entrar com a nova.
+5. Remover a foto: volta a inicial.
+6. Arquivo que não é imagem (PDF) é recusado com explicação.
+
+### 9. Responsivo e acessibilidade
 1. Largura de 360 px: a barra vai para baixo; colunas rolam; modais abrem como gaveta.
 2. Só com teclado: Tab/Shift+Tab, Enter, Esc; mover cartão (espaço, setas, espaço).
 3. Foco visível; foco volta ao botão de origem ao fechar um modal; zoom de 200%.

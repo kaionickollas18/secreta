@@ -61,6 +61,61 @@ export const CheckIcon = () => (
     <path d="m5 12 5 5 9-10" />
   </Icon>
 );
+export const AlertIcon = () => (
+  <Icon>
+    <path d="M12 4 2.5 20h19L12 4zM12 10v4.5M12 17.5v.01" />
+  </Icon>
+);
+export const InfoIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5.5M12 7.5v.01" />
+  </Icon>
+);
+export const FlagIcon = () => (
+  <Icon>
+    <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+  </Icon>
+);
+export const CalendarIcon = () => (
+  <Icon>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+    <path d="M3.5 10h17M8 3v4M16 3v4" />
+  </Icon>
+);
+export const ClockIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5.5l3.5 2" />
+  </Icon>
+);
+export const ChevronLeftIcon = () => (
+  <Icon>
+    <path d="m14.5 6-6 6 6 6" />
+  </Icon>
+);
+export const FilmIcon = () => (
+  <Icon>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21" />
+  </Icon>
+);
+export const TvIcon = () => (
+  <Icon>
+    <rect x="3" y="6" width="18" height="12.5" rx="2" />
+    <path d="M8.5 21.5h7M9 2.5l3 3.5 3-3.5" />
+  </Icon>
+);
+export const StarIcon = () => (
+  <Icon fill="currentColor" strokeWidth="1.5">
+    <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.8L12 3.5z" />
+  </Icon>
+);
+export const ExternalIcon = () => (
+  <Icon>
+    <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+  </Icon>
+);
 export const SendIcon = () => (
   <Icon>
     <path d="M4 12 20 4l-6 16-3-7-7-1z" />

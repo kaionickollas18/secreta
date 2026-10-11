@@ -86,12 +86,12 @@ export function HistoryModal({ open, onClose }: HistoryModalProps) {
           {entries.map((entry) => (
             <li key={entry.id} className="rounded-2xl border border-line bg-canvas/50 p-3">
               <p className="break-words text-sm font-semibold">{entry.title}</p>
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 caption">
                 Concluída em {formatDateTime(entry.completedAt)}
                 {entry.completedByName ? ` por ${entry.completedByName}` : ""} · Prioridade{" "}
                 {PRIORITY_LABELS[entry.priority].toLowerCase()}
               </p>
-              <p className="text-xs text-muted">
+              <p className="caption">
                 Responsáveis:{" "}
                 {entry.assigneeNames.length > 0 ? entry.assigneeNames.join(", ") : "sem responsável"}
               </p>

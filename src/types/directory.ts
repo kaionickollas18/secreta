@@ -14,6 +14,8 @@ export interface Member {
   lastName: string;
   email: string;
   active: boolean;
+  /** Endereço público da foto de perfil, se a pessoa enviou uma. */
+  avatarUrl?: string;
 }
 
 /** Valores crus do formulário de cadastro/edição. */

@@ -23,6 +23,7 @@ Escopo: site estático + Supabase. Três perfis (Master, Secretário, Auxiliar);
 |---|---|
 | Project URL e publishable key | `.env`, front-end e repositório (públicas por desenho) |
 | Service role key | Só dentro da Edge Function (variável automática do Supabase) |
+| Token de leitura do TMDB (destaques do login) | Só no segredo `TMDB_READ_TOKEN` das Edge Functions do Supabase; a função `login-movies` é a única que o usa |
 | Senha do banco, tokens pessoais `sbp_…` | Nunca no repositório nem no front-end; variável de ambiente local, se preciso |
 
 Se um segredo for exposto (chat, print, commit), revogue e gere outro.
@@ -37,8 +38,9 @@ Se um segredo for exposto (chat, print, commit), revogue e gere outro.
 ## Dados pessoais
 - A base offline do dashboard fica num bucket **privado**, em uma pasta por escola, com leitura restrita à escola.
 - A planilha online exige compartilhamento "qualquer pessoa com o link": quem tiver o link vê os nomes dos alunos. A tela avisa disso; quando for um problema, usar só a base offline.
+- **Fotos de perfil** ficam num bucket de leitura pública: quem tiver o endereço exato da imagem consegue abri-la, mesmo sem login. O nome do arquivo é aleatório e o endereço só é entregue a quem está logado na escola. Cada pessoa só grava na própria pasta. Se isso deixar de ser aceitável, o caminho é tornar o bucket privado e usar endereços assinados.
 - Não versionar dados reais (alunos, funcionários) no repositório, nem em testes.
-- O navegador guarda a sessão do Supabase e o horário da última visita ao mural no `localStorage`. Em computador compartilhado, usar **Sair**.
+- O navegador guarda no `localStorage` a sessão do Supabase, o horário da última visita ao mural e o perfil da última sessão (nome, papel e escola), usado só para desenhar a tela mais cedo. O perfil é validado ao ler, conferido no servidor a cada página e apagado ao sair; alterá-lo à mão não dá acesso a nada, porque as regras valem no banco. Em computador compartilhado, usar **Sair**.
 
 ## Dependências e build
 - Poucas dependências, versões fixadas pelo lockfile; rodar `npm audit` periodicamente.

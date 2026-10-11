@@ -31,7 +31,7 @@ export function StudentSearch({ students, onSelect }: StudentSearchProps) {
           className="glass min-h-[48px] w-full rounded-full py-2 pl-12 pr-4 text-base placeholder:text-muted"
         />
       </div>
-      <p id="student-search-hint" className="mt-1 px-1 text-xs text-muted">
+      <p id="student-search-hint" className="mt-1 px-1 caption">
         Aparecem os alunos com pelo menos uma falta registrada (a planilha guarda só os ausentes).
       </p>
 
