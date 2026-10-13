@@ -102,6 +102,30 @@ describe("taskStore", () => {
     expect(db.tasks.find((t) => t.id === "c")?.position).toBeLessThan(1);
   });
 
+  it("trocar a prioridade leva o cartão para o lugar dele na coluna", async () => {
+    db.tasks = [
+      makeTask({ id: "a", priority: "high", position: 1 }),
+      makeTask({ id: "b", priority: "medium", position: 2 }),
+      makeTask({ id: "c", priority: "low", position: 3 }),
+    ];
+    await store().load();
+    expect(store().tasks.map((t) => t.id)).toEqual(["a", "b", "c"]);
+
+    await store().setPriority("c", "urgent");
+    expect(store().tasks.map((t) => t.id)).toEqual(["c", "a", "b"]);
+  });
+
+  it("arrastar para junto de outra prioridade não tira o cartão do grupo dele", async () => {
+    db.tasks = [
+      makeTask({ id: "u", priority: "urgent", position: 1 }),
+      makeTask({ id: "m", priority: "medium", position: 2 }),
+    ];
+    await store().load();
+    const result = await store().moveTask("m", "todo", "u", "secretary");
+    expect(result).toEqual({ error: null, outcome: "unchanged" });
+    expect(store().tasks.map((t) => t.id)).toEqual(["u", "m"]);
+  });
+
   it("desfaz o movimento quando o banco recusa", async () => {
     db.tasks = [makeTask({ id: "t1", status: "todo" })];
     await store().load();

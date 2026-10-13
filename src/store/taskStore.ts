@@ -8,7 +8,7 @@ import {
   nextPosition,
   positionFor,
   resolveStatusChange,
-  sortByPosition,
+  sortBoard,
   type StatusChange,
 } from "../utils/tasks";
 import { fetchTasks, insertTask, patchTask, removeTask, subscribeTasks } from "./taskApi";
@@ -43,7 +43,7 @@ interface TaskState {
 
 export const useTaskStore = create<TaskState>((set, get) => {
   const replace = (task: Task) =>
-    set((s) => ({ tasks: sortByPosition(s.tasks.map((t) => (t.id === task.id ? task : t))) }));
+    set((s) => ({ tasks: sortBoard(s.tasks.map((t) => (t.id === task.id ? task : t))) }));
 
   /** Salva o patch e troca a tarefa pela versão do banco. */
   async function save(id: string, patch: Record<string, unknown>): Promise<string | null> {
@@ -61,7 +61,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       set((s) => ({ status: s.status === "ready" ? "ready" : "loading" }));
       const result = await fetchTasks();
       if (result.error !== null) return set({ status: "error" });
-      set({ status: "ready", tasks: sortByPosition(result.data) });
+      set({ status: "ready", tasks: sortBoard(result.data) });
     },
 
     watch: () => subscribeTasks(() => void get().load()),
@@ -70,7 +70,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const result = await insertTask(schoolId, input, nextPosition(get().tasks));
       if (result.error !== null) return result.error;
       const task = result.data;
-      set((s) => ({ tasks: sortByPosition([...s.tasks.filter((t) => t.id !== task.id), task]) }));
+      set((s) => ({ tasks: sortBoard([...s.tasks.filter((t) => t.id !== task.id), task]) }));
       return null;
     },
 
@@ -115,10 +115,14 @@ export const useTaskStore = create<TaskState>((set, get) => {
 
       // Atualização otimista: o cartão muda na hora e volta atrás se o banco recusar.
       set({
-        tasks: reordered.map((t) =>
-          t.id === id
-            ? { ...t, position, completionRequested: change.completionRequested }
-            : t,
+        // Reordena já aqui: se a pessoa soltou o cartão fora do grupo da prioridade dele,
+        // ele aparece direto no lugar certo, sem "pular" depois que o banco responde.
+        tasks: sortBoard(
+          reordered.map((t) =>
+            t.id === id
+              ? { ...t, position, completionRequested: change.completionRequested }
+              : t,
+          ),
         ),
       });
       const error = await save(id, {

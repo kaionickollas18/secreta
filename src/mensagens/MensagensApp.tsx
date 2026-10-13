@@ -12,7 +12,7 @@ import { messageArrivals } from "../utils/arrivals";
 import { assigneeColor } from "../utils/assignees";
 import { groupByDay, MESSAGE_MAX, MESSAGE_PAGE, timeLabel, validateMessage } from "../utils/messages";
 import { whenPageShown } from "../utils/pageLifecycle";
-import { canModerateMessages } from "../utils/roles";
+import { canModerateMessages, effectiveRole } from "../utils/roles";
 
 /** Mural da escola. O AppShell carrega e acompanha as mensagens; aqui exibimos e enviamos. */
 export default function MensagensApp() {
@@ -41,7 +41,7 @@ export default function MensagensApp() {
 
   if (!profile?.schoolId) return null;
   const schoolId = profile.schoolId;
-  const moderator = canModerateMessages(profile.role);
+  const moderator = canModerateMessages(effectiveRole(profile));
 
   async function submit() {
     const result = validateMessage(draft);

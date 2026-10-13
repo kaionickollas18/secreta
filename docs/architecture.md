@@ -25,7 +25,7 @@ UI (components) ──► Estado (Zustand stores) ──► Domínio (utils puro
 
 ## Páginas
 Uma página HTML por área, cada uma com sua entrada em `src/<área>/main.tsx`:
-`index.html` (quadro) · `lembretes.html` · `mensagens.html` · `frequencia.html` (dashboard) · `gestao.html`.
+`index.html` (quadro) · `lembretes.html` · `calendario.html` · `mensagens.html` · `frequencia.html` (dashboard) · `gestao.html`.
 Todas são envolvidas por `AuthGate` (login e perfis permitidos) e `AppShell` (barra de navegação e avisos).
 
 ## Decisões e trade-offs
@@ -39,6 +39,7 @@ Todas são envolvidas por `AuthGate` (login e perfis permitidos) e `AppShell` (b
 - **Atualização otimista ao mover**: o cartão muda na hora e volta atrás, com aviso, se o banco recusar.
 - **Histórico em tabela própria** (`task_history`, gravada por trigger): sobrevive à exclusão da tarefa e das pessoas, pois guarda nomes como texto.
 - **Lembretes sem agendador**: a situação de cada lembrete é calculada na hora por funções puras (`utils/reminders.ts`) a partir da regra de repetição e dos ciclos marcados como feitos. Não há tarefa em segundo plano nem notificação fora do site.
+- **Calendário e avisos sem agendador**: o calendário é montado na hora (`utils/calendar.ts`) com as tarefas, os ciclos dos lembretes e os feriados; os nacionais são calculados (`utils/holidays.ts`), sem tabela nem serviço externo. Os avisos do Quadro (`utils/notices.ts`) usam o relógio do navegador (`useClock`, a cada minuto) para aparecer às 8h e às 12h.
 - **Dashboard**: os CSVs são lidos no navegador e gravados como um único JSON no Storage, validado ao carregar.
 - **dnd-kit**: acessível (teclado, anúncios) e leve. Arraste só pela alça; o drop é resolvido em `onDragEnd`.
 - **Tailwind 3 com tokens no `tailwind.config.js`**: paleta e prioridades centralizadas.

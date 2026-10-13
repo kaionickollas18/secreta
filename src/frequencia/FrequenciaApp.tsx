@@ -14,7 +14,7 @@ import { useAttendanceData } from "../hooks/useAttendanceData";
 import { useAuthStore } from "../store/authStore";
 import type { AttendanceStatus, ClassData } from "../types/attendance";
 import { prefersReducedMotion } from "../utils/arrivals";
-import { canConfigureDashboard } from "../utils/roles";
+import { canConfigureDashboard, effectiveRole } from "../utils/roles";
 import {
   buildInsights,
   dailySeries,
@@ -88,7 +88,7 @@ export default function FrequenciaApp() {
   const [selected, setSelected] = useState<{ className: string; name: string } | null>(null);
   const searchRef = useRef<HTMLElement>(null);
   const allClasses = data?.classes ?? NO_CLASSES;
-  const canConfigure = profile ? canConfigureDashboard(profile.role) : false;
+  const canConfigure = profile ? canConfigureDashboard(effectiveRole(profile)) : false;
 
   const view = useMemo(() => {
     const classes = selectClasses(allClasses, className);

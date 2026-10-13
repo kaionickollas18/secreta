@@ -6,8 +6,9 @@ import {
   filterTasks,
   nextPosition,
   positionFor,
+  PRIORITY_RANK,
   resolveStatusChange,
-  sortByPosition,
+  sortBoard,
 } from "../utils/tasks";
 import { taskFromRow, type TaskRow } from "../utils/taskRows";
 import { validateTaskForm } from "../utils/validation";
@@ -77,8 +78,33 @@ describe("posição dos cartões", () => {
     expect(positionFor([other, moved], "m")).toBe(9);
   });
 
+  it("a prioridade mais alta fica em cima; na mesma prioridade, vale a posição", () => {
+    const list = [
+      makeTask({ id: "baixa", priority: "low", position: 1 }),
+      makeTask({ id: "urgente-2", priority: "urgent", position: 9 }),
+      makeTask({ id: "media", priority: "medium", position: 2 }),
+      makeTask({ id: "alta", priority: "high", position: 5 }),
+      makeTask({ id: "urgente-1", priority: "urgent", position: 3 }),
+    ];
+    expect(sortBoard(list).map((t) => t.id)).toEqual(["urgente-1", "urgente-2", "alta", "media", "baixa"]);
+    expect(PRIORITY_RANK).toEqual({ low: 0, medium: 1, high: 2, urgent: 3 });
+  });
+
+  it("ao reordenar, só as vizinhas de mesma prioridade definem a posição", () => {
+    const urgent = makeTask({ id: "u", priority: "urgent", position: 1 });
+    const m1 = makeTask({ id: "m1", priority: "medium", position: 4 });
+    const m2 = makeTask({ id: "m2", priority: "medium", position: 6 });
+    const moved = makeTask({ id: "m", priority: "medium", position: 9 });
+    // Solta entre as duas médias: fica no meio delas.
+    expect(positionFor([urgent, m1, moved, m2], "m")).toBe(5);
+    // Solta acima da urgente: a urgente não conta; vai para antes da primeira média.
+    expect(positionFor([moved, urgent, m1, m2], "m")).toBe(3);
+    // Única da sua prioridade na coluna: mantém a posição (arrastar não muda nada).
+    expect(positionFor([moved, urgent], "m")).toBe(9);
+  });
+
   it("ordena por posição e calcula a próxima", () => {
-    expect(sortByPosition([b, a]).map((t) => t.id)).toEqual(["a", "b"]);
+    expect(sortBoard([b, a]).map((t) => t.id)).toEqual(["a", "b"]);
     expect(nextPosition([a, b])).toBe(3);
     expect(nextPosition([])).toBe(1);
   });

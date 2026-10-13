@@ -29,6 +29,7 @@ export default defineConfig({
       input: {
         main: "index.html",
         lembretes: "lembretes.html",
+        calendario: "calendario.html",
         mensagens: "mensagens.html",
         frequencia: "frequencia.html",
         gestao: "gestao.html",

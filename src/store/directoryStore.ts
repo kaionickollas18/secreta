@@ -18,6 +18,8 @@ interface MemberPatch {
   /** Vazio ou ausente mantém a senha atual. */
   password?: string;
   active?: boolean;
+  /** Acesso especial do auxiliar (só o secretário altera). */
+  elevated?: boolean;
 }
 
 interface DirectoryState {
@@ -70,7 +72,7 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
       set((s) => ({ status: s.status === "ready" ? "ready" : "loading" }));
       const [schools, profiles] = await Promise.all([
         supabase.from("schools").select("id, name"),
-        supabase.from("profiles").select("id, role, school_id, full_name, last_name, email, active, avatar_path"),
+        supabase.from("profiles").select("id, role, school_id, full_name, last_name, email, active, avatar_path, elevated"),
       ]);
       if (schools.error || profiles.error) return set({ status: "error" });
       set({
@@ -88,6 +90,7 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
                   email: p.email ?? "",
                   active: p.active,
                   avatarUrl: avatarUrlOf(p.avatar_path),
+                  elevated: p.role === "assistant" && p.elevated === true,
                 },
               ]
             : [],
@@ -130,6 +133,7 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
           ...(patch.fullName !== undefined && { full_name: patch.fullName.trim() }),
           ...(patch.password ? { password: patch.password } : {}),
           ...(patch.active !== undefined && { active: patch.active }),
+          ...(patch.elevated !== undefined && { elevated: patch.elevated }),
         }),
       ),
 

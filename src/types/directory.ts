@@ -16,6 +16,8 @@ export interface Member {
   active: boolean;
   /** Endereço público da foto de perfil, se a pessoa enviou uma. */
   avatarUrl?: string;
+  /** Auxiliar com acesso especial, concedido pelo secretário. */
+  elevated?: boolean;
 }
 
 /** Valores crus do formulário de cadastro/edição. */

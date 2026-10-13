@@ -2,6 +2,8 @@
 // Quem pode o quê:
 //   master    → create_school (escola + secretário), delete_school, update_user/delete_user de secretários
 //   secretary → create_assistant, update_user/delete_user de auxiliares da própria escola
+// "Quem chama" é sempre o papel real (coluna role): um auxiliar com acesso especial age como
+// secretário no quadro, mas não gerencia a equipe.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const CORS = {
@@ -190,6 +192,14 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
         const active = body.active === true;
         profilePatch.active = active;
         authPatch.ban_duration = active ? "none" : "876000h";
+      }
+      // Acesso especial: só o secretário concede, e só a auxiliares da própria escola
+      // (loadManageable já garantiu as duas coisas quando quem chama é secretário).
+      if (body.elevated !== undefined) {
+        if (caller.role !== "secretary" || target.role !== "assistant") {
+          throw new HttpError(403, "Somente o Secretário define o acesso especial de um auxiliar.");
+        }
+        profilePatch.elevated = body.elevated === true;
       }
       if (Object.keys(profilePatch).length > 0) {
         const { error } = await admin.from("profiles").update(profilePatch).eq("id", target.id);

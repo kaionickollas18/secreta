@@ -13,7 +13,7 @@ import { useReminderStore } from "../store/reminderStore";
 import { useToastStore } from "../store/toastStore";
 import type { Reminder } from "../types/reminder";
 import { reminderStatus, sortByUrgency } from "../utils/reminders";
-import { canManageReminders } from "../utils/roles";
+import { canManageReminders, effectiveRole } from "../utils/roles";
 
 type ModalState = { mode: "create" } | { mode: "edit"; reminder: Reminder } | null;
 
@@ -32,7 +32,7 @@ export default function LembretesApp() {
 
   if (!profile?.schoolId) return null;
   const schoolId = profile.schoolId;
-  const canManage = canManageReminders(profile.role);
+  const canManage = canManageReminders(effectiveRole(profile));
   const dueCount = items.filter((i) => i.status.state === "active" || i.status.state === "overdue").length;
 
   async function handleToggle(reminder: Reminder, periodKey: string, done: boolean) {

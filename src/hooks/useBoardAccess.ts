@@ -3,7 +3,7 @@ import { useAuthStore } from "../store/authStore";
 import { useDirectoryStore } from "../store/directoryStore";
 import type { UserRole } from "../types/auth";
 import { assignableMembers, membersById } from "../utils/assignees";
-import { canApproveCompletion, canManageTasks } from "../utils/roles";
+import { canApproveCompletion, canManageTasks, effectiveRole } from "../utils/roles";
 
 /** Papel do usuário logado, o que ele pode fazer no quadro e quem pode ser responsável. */
 export function useBoardAccess() {
@@ -12,7 +12,7 @@ export function useBoardAccess() {
 
   return useMemo(() => {
     // Sem perfil (não deveria ocorrer atrás do AuthGate), vale o menor privilégio.
-    const role: UserRole = profile?.role ?? "assistant";
+    const role: UserRole = profile ? effectiveRole(profile) : "assistant";
     const byId = membersById(members);
     return {
       role,

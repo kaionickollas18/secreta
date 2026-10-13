@@ -6,6 +6,8 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel: string;
+  /** `danger` (padrão) para ações que apagam; `primary` para as que só pedem certeza. */
+  confirmVariant?: "danger" | "primary";
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -15,6 +17,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  confirmVariant = "danger",
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -25,7 +28,7 @@ export function ConfirmDialog({
         <Button data-autofocus onClick={onCancel}>
           Cancelar
         </Button>
-        <Button variant="danger" onClick={onConfirm}>
+        <Button variant={confirmVariant} onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>

@@ -102,6 +102,30 @@ export function cyclesAround(
   };
 }
 
+/** Ciclos que tocam o intervalo `from`–`to` (inclusive), em ordem. Usado pelo calendário. */
+export function occurrencesBetween(schedule: Schedule, from: string, to: string): Occurrence[] {
+  if (schedule.kind === "once") {
+    const { dueDate } = schedule;
+    return dueDate >= from && dueDate <= to ? [{ periodKey: "once", start: dueDate, end: dueDate }] : [];
+  }
+
+  const found: Occurrence[] = [];
+  if (schedule.kind === "weekly") {
+    const ahead = (schedule.weekday - toDate(from).getUTCDay() + 7) % 7;
+    for (let day = addDays(from, ahead); day <= to; day = addDays(day, 7)) {
+      found.push({ periodKey: day, start: day, end: day });
+    }
+    return found;
+  }
+
+  const elapsed = monthIndex(from.slice(0, 7)) - monthIndex(schedule.startMonth);
+  for (let n = Math.max(0, Math.floor(elapsed / schedule.intervalMonths)); ; n += 1) {
+    const cycle = monthlyCycle(schedule, n);
+    if (cycle.start > to) return found;
+    if (cycle.end >= from) found.push(cycle);
+  }
+}
+
 export function completionKey(reminderId: string, periodKey: string): string {
   return `${reminderId}|${periodKey}`;
 }

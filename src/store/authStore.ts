@@ -56,7 +56,7 @@ async function fetchProfile(userId: string): Promise<Profile | null | "unreachab
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, role, school_id, full_name, last_name, active, avatar_path")
+    .select("id, role, school_id, full_name, last_name, active, avatar_path, elevated")
     .eq("id", userId)
     .maybeSingle();
   if (error) return "unreachable";
@@ -68,6 +68,7 @@ async function fetchProfile(userId: string): Promise<Profile | null | "unreachab
     fullName: data.full_name,
     lastName: data.last_name,
     ...(data.avatar_path ? { avatarPath: data.avatar_path, avatarUrl: avatarUrlOf(data.avatar_path) } : {}),
+    ...(data.role === "assistant" && data.elevated === true ? { elevated: true } : {}),
   };
 }
 
@@ -165,6 +166,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         schoolId: profile.schoolId,
         fullName: profile.fullName,
         lastName: profile.lastName,
+        ...(profile.elevated ? { elevated: true } : {}),
       });
     }
     return error;

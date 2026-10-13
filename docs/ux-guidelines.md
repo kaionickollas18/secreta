@@ -88,6 +88,7 @@ Cada área é uma página separada, mas a troca deve parecer uma tela só.
 
 ## Cor como informação
 - **Título de página**: cor sólida. A ênfase vem do tamanho e do peso, não de degradê.
+- **Ordem dentro da coluna**: a prioridade mais alta fica em cima (urgente 3, alta 2, média 1, baixa 0; `sortBoard` em `utils/tasks.ts`). Entre tarefas de mesma prioridade vale a ordem do arraste. Arrastar não leva um cartão para o meio de outra prioridade: para subir uma tarefa, aumenta-se a prioridade dela.
 - **Prioridade da tarefa**: uma faixa na base do cartão, na cor da prioridade (verde, amarelo, laranja, vermelho), e o selo traz o nome. Definido em `PRIORITY_STYLES` (`constants/board.ts`).
 - **Editar é verde, excluir é vermelho** em todos os cartões (`EDIT_BUTTON` e `DELETE_BUTTON` em `ui/Button.tsx`); o rótulo acessível continua dizendo a ação.
 - **Situação do lembrete**: mesmo princípio; só o que pede ação (no prazo, atrasado) ganha contorno forte.

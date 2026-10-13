@@ -17,6 +17,7 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `history.test.ts` | Períodos e CSV (escape e proteção contra fórmulas) |
 | `reminders.test.ts` | Ciclos mensais/bimestrais/semanais/únicos, atraso, virada de ano, validação |
 | `messages.test.ts` | Validação, agrupamento por dia, não lidas |
+| `calendar.test.ts`, `CalendarioApp.test.tsx` | Feriados nacionais, validação de feriados, grade do mês, lembretes e tarefas por dia, horários e regras dos avisos; tela do calendário por perfil |
 | `AppShell.test.tsx` | Itens da barra por perfil e avisos |
 | `attendance.test.ts`, `sheetParser.test.ts`, `attendanceSource.test.ts` | Indicadores, leitura da planilha, link, arquivos CSV e base offline |
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
@@ -27,7 +28,7 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 ### 1. Login e perfis
 1. Senha errada mostra "E-mail ou senha incorretos."
 2. Master entra e cai em **Gestão de escolas**; a barra mostra só "Escolas".
-3. Secretário vê Quadro, Lembretes, Mensagens, Dashboard e Equipe. Auxiliar não vê Equipe.
+3. Secretário vê Quadro, Lembretes, Calendário, Mensagens, Dashboard e Equipe. Auxiliar não vê Equipe.
 4. Auxiliar abrindo `gestao.html` direto vê "Sem acesso a esta página".
 5. **Sair** volta ao login.
 
@@ -59,6 +60,14 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 3. **Marcar como feito** e **Desfazer**; o contador na barra acompanha.
 4. Auxiliar vê os lembretes, sem botões de criar, editar, excluir ou marcar.
 
+### 5b. Calendário e avisos
+1. Abrir **Calendário**: o mês atual aparece com o dia de hoje marcado; os feriados nacionais já estão lá (ex.: 12/10, 02/11, 15/11).
+2. Uma tarefa com prazo aparece no dia do prazo; um lembrete "do dia 15 ao 20" aparece em cada um desses dias.
+3. Secretário: **Novo feriado** com um dia só e um recesso de vários dias; editar; excluir. Recarregar e conferir.
+4. Auxiliar vê os feriados da escola, sem botões de criar, editar ou excluir. Com duas escolas: o feriado de uma não aparece na outra.
+5. No **Quadro**, quem é responsável por uma tarefa que vence hoje ou está atrasada vê "Suas tarefas" no topo; quem não é responsável não vê. **Ver minhas** filtra o quadro. Concluída a tarefa, o aviso some.
+6. Com um lembrete pendente: antes das 8h não há aviso; a partir das 8h ele aparece; ao dispensar, some e volta às 12h; marcado como feito, não volta.
+
 ### 6. Mensagens
 1. Enviar uma mensagem em uma janela: aparece na outra sem recarregar.
 2. Em outra página, a barra mostra o contador de mensagens novas; ao abrir o mural, some.
@@ -73,6 +82,13 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 5. Arquivo fora do formato é recusado com explicação, sem afetar os demais.
 6. Com a planilha em uso e a base offline enviada, usar um link de planilha inexistente: o dashboard mostra a base offline com o aviso.
 7. **Pesquisar aluno**: digitar parte do nome (com e sem acento); escolher um resultado; conferir frequência geral, faltas, última falta e a frequência de cada mês (o pior mês vem destacado). Clicar em um nome na tabela "Alunos que mais faltam" abre o mesmo resumo.
+
+### 7b. Acesso de secretário
+1. Secretário, em Equipe: **Dar acesso de secretário** a um auxiliar (confirma) e ver o selo no cartão.
+2. Esse auxiliar recarrega a página: passa a ver "Nova tarefa", a lixeira, "Aprovar/Devolver", os botões de lembrete e "Base de dados" no dashboard; **não** vê a aba Equipe.
+3. Ele cria uma tarefa, aprova um pedido e marca um lembrete como feito: tudo é aceito pelo banco.
+4. Abrindo `gestao.html` direto, ele vê "Sem acesso a esta página".
+5. Secretário retira o acesso: depois de recarregar, o auxiliar volta ao normal; uma tentativa de criar tarefa com a tela antiga aberta é recusada.
 
 ### 8. Perfil
 1. Abrir **Perfil** na barra; enviar uma foto (JPG do celular): ela aparece no perfil, na barra e nos cartões em que a pessoa é responsável.

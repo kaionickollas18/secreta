@@ -10,6 +10,7 @@ import { Avatar } from "../ui/Avatar";
 import {
   BellIcon,
   BoardIcon,
+  CalendarIcon,
   ChartIcon,
   ChatIcon,
   ChevronLeftIcon,
@@ -17,7 +18,7 @@ import {
   UsersIcon,
 } from "../ui/Icons";
 
-export type NavKey = "quadro" | "lembretes" | "mensagens" | "dashboard" | "gestao" | "perfil";
+export type NavKey = "quadro" | "lembretes" | "calendario" | "mensagens" | "dashboard" | "gestao" | "perfil";
 
 interface NavItem {
   key: NavKey;
@@ -96,6 +97,13 @@ export function AppShell({ active, children }: AppShellProps) {
   // Lido já no primeiro desenho, para o menu não abrir num modo e mudar em seguida.
   const [collapsed, setCollapsed] = useState(readNavCollapsed);
 
+  const currentLink = useRef<HTMLAnchorElement>(null);
+
+  // Na barra do celular, o item da página atual fica à vista mesmo quando a barra rola.
+  useEffect(() => {
+    currentLink.current?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [active]);
+
   const userId = profile?.id;
   const inSchool = profile ? isSchoolRole(profile.role) : false;
 
@@ -145,6 +153,7 @@ export function AppShell({ active, children }: AppShellProps) {
           badge: due,
           badgeLabel: `${due} ${due === 1 ? "lembrete pede" : "lembretes pedem"} atenção`,
         },
+        { key: "calendario", label: "Calendário", href: "calendario.html", icon: <CalendarIcon /> },
         {
           key: "mensagens",
           label: "Mensagens",
@@ -212,16 +221,18 @@ export function AppShell({ active, children }: AppShellProps) {
             </span>
           </a>
 
-          <ul className="nav-items flex flex-1 items-stretch justify-around gap-1 md:flex-none md:flex-col">
+          {/* No celular os itens têm largura mínima e a barra rola de lado quando não cabem todos. */}
+          <ul className="nav-items flex flex-1 items-stretch gap-1 overflow-x-auto [scrollbar-width:none] md:flex-none md:flex-col md:overflow-visible">
             {items.map((item) => {
               const current = item.key === active;
               return (
                 <li
                   key={item.key}
-                  className={`min-w-0 flex-1 md:flex-none ${item.mobileOnly ? "md:hidden" : ""}`}
+                  className={`min-w-[62px] flex-1 md:min-w-0 md:flex-none ${item.mobileOnly ? "md:hidden" : ""}`}
                 >
                   <a
                     href={item.href}
+                    ref={current ? currentLink : undefined}
                     aria-current={current ? "page" : undefined}
                     title={collapsed ? item.label : undefined}
                     className={`${ITEM} ${current ? "text-white" : "text-muted hover:bg-raised hover:text-ink"}`}

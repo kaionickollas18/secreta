@@ -1,6 +1,6 @@
 # SECRETA
 
-Sistema web para a secretaria de escolas: quadro Kanban de tarefas, lembretes de prazos que se repetem, mural de mensagens da equipe e dashboard de frequência dos alunos. Cada escola enxerga apenas os próprios dados.
+Sistema web para a secretaria de escolas: quadro Kanban de tarefas, lembretes de prazos que se repetem, calendário com feriados, mural de mensagens da equipe e dashboard de frequência dos alunos. Cada escola enxerga apenas os próprios dados.
 
 O site é estático (pode ser publicado no GitHub Pages) e usa o [Supabase](https://supabase.com) para login, banco de dados, arquivos e atualização ao vivo.
 
@@ -8,7 +8,7 @@ O site é estático (pode ser publicado no GitHub Pages) e usa o [Supabase](http
 | Perfil | O que faz |
 |---|---|
 | **Master** | Cadastra, renomeia e exclui escolas; cadastra e edita o secretário de cada uma. Não vê tarefas. |
-| **Secretário** | Cadastra auxiliares. Cria e exclui tarefas, define responsáveis, conclui e aprova pedidos de conclusão. Cria lembretes. Configura a base de dados do dashboard. Modera o mural. |
+| **Secretário** | Cadastra auxiliares. Cria e exclui tarefas, define responsáveis, conclui e aprova pedidos de conclusão. Cria lembretes e cadastra feriados. Configura a base de dados do dashboard. Modera o mural. |
 | **Auxiliar Administrativo** | Edita e move tarefas, pede a conclusão ao secretário. Vê lembretes e dashboard. Participa do mural. |
 
 As regras valem no banco (RLS e triggers), não só na tela. Detalhes em [docs/v2-supabase.md](docs/v2-supabase.md).
@@ -55,7 +55,7 @@ O `vite.config.ts` usa `base: "./"`, então o site funciona em qualquer nome de 
 
 ## Estrutura de pastas
 ```
-index.html, lembretes.html, mensagens.html, frequencia.html, gestao.html   uma página por área
+index.html, lembretes.html, calendario.html, mensagens.html, frequencia.html, gestao.html   uma página por área
 src/
   components/
     auth/        LoginPage, AuthGate

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Board } from "./components/board/Board";
 import { FilterBar } from "./components/board/FilterBar";
 import { HistoryModal } from "./components/board/HistoryModal";
+import { NoticeStrip } from "./components/board/NoticeStrip";
 import type { CardActions } from "./components/task/TaskCard";
 import { TaskModal, type TaskModalState } from "./components/task/TaskModal";
 import { Button } from "./components/ui/Button";
@@ -111,6 +112,8 @@ export default function App() {
             )}
           </p>
         </div>
+        {/* No celular os avisos ocupam a linha de baixo; no computador, o meio do cabeçalho. */}
+        <NoticeStrip className="order-last w-full lg:order-none lg:w-auto lg:max-w-2xl lg:flex-1" />
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="depth" onClick={() => setHistoryOpen(true)}>
             Histórico

@@ -14,7 +14,8 @@ Escopo: site estático + Supabase. Três perfis (Master, Secretário, Auxiliar);
 - Isolamento por escola: as policies comparam `school_id` com `current_school_id()` (derivado da sessão).
 - Regras por papel em policies e no trigger `tasks_guard` (o auxiliar não conclui, não reabre, não cria, não exclui e não altera responsáveis).
 - Campos sensíveis são carimbados pelo servidor: autor da tarefa, autor/nome/horário da mensagem, data de conclusão.
-- `profiles` não aceita escrita direta do cliente; só a Edge Function (service role) escreve.
+- `profiles`: o cliente só altera o próprio `last_name` e `avatar_path`. Papel, escola, situação e o acesso especial (`elevated`) só mudam pela Edge Function (service role).
+- **Acesso especial**: um auxiliar com `elevated` vale como secretário nas regras do banco (via `current_role_name()`), exceto na gestão da equipe, que confere o papel real. Só o secretário concede ou retira.
 - A Edge Function valida o token, carrega o perfil de quem chama e confere papel e escola antes de cada ação.
 - A interface espelha as permissões (`utils/roles.ts`) apenas por usabilidade.
 

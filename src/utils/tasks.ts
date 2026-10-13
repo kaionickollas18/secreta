@@ -1,5 +1,11 @@
 import type { UserRole } from "../types/auth";
-import { TASK_STATUSES, type Task, type TaskFilters, type TaskStatus } from "../types/task";
+import {
+  TASK_STATUSES,
+  type Task,
+  type TaskFilters,
+  type TaskPriority,
+  type TaskStatus,
+} from "../types/task";
 import { isOverdue, todayISO } from "./date";
 import { canApproveCompletion } from "./roles";
 
@@ -61,10 +67,24 @@ export function groupByStatus(tasks: Task[]): Record<TaskStatus, Task[]> {
   return grouped;
 }
 
-/** Ordem do quadro: posição crescente; empate decide pela mais antiga. */
-export function sortByPosition(tasks: Task[]): Task[] {
+/** Peso de cada prioridade na ordem do quadro: baixa 0, média 1, alta 2, urgente 3. */
+export const PRIORITY_RANK: Record<TaskPriority, number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  urgent: 3,
+};
+
+/**
+ * Ordem do quadro: a prioridade mais alta fica em cima. Entre tarefas de mesma prioridade,
+ * vale a posição escolhida ao arrastar; no empate, a mais antiga primeiro.
+ */
+export function sortBoard(tasks: Task[]): Task[] {
   return [...tasks].sort(
-    (a, b) => a.position - b.position || a.createdAt.localeCompare(b.createdAt),
+    (a, b) =>
+      PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority] ||
+      a.position - b.position ||
+      a.createdAt.localeCompare(b.createdAt),
   );
 }
 
@@ -106,14 +126,16 @@ export function moveTask(
 }
 
 /**
- * Posição a salvar para a tarefa `id` depois de reordenada em `tasks`:
- * o meio entre as vizinhas da mesma coluna (ou ±1 quando está em uma ponta).
+ * Posição a salvar para a tarefa `id` depois de reordenada em `tasks`: o meio entre as
+ * vizinhas da mesma coluna e da mesma prioridade (ou ±1 quando está em uma ponta).
+ * Vizinhas de outra prioridade não contam: a prioridade sempre vem antes da posição, então
+ * arrastar só reordena dentro do próprio grupo.
  */
 export function positionFor(tasks: Task[], id: string): number {
   const index = tasks.findIndex((t) => t.id === id);
   const task = tasks[index];
   if (!task) return 0;
-  const sameColumn = (t: Task) => t.status === task.status;
+  const sameColumn = (t: Task) => t.status === task.status && t.priority === task.priority;
   const prev = tasks.slice(0, index).reverse().find(sameColumn);
   const next = tasks.slice(index + 1).find(sameColumn);
   if (prev && next) return (prev.position + next.position) / 2;

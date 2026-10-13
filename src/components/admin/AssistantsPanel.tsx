@@ -3,6 +3,7 @@ import { useDirectoryStore } from "../../store/directoryStore";
 import { useToastStore } from "../../store/toastStore";
 import type { Member } from "../../types/directory";
 import { assistantsOf, filterMembers } from "../../utils/directory";
+import { ELEVATED_LABEL } from "../../utils/roles";
 import { Button } from "../ui/Button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { EmptyState } from "../ui/EmptyState";
@@ -19,6 +20,7 @@ export function AssistantsPanel() {
   const pushToast = useToastStore((s) => s.push);
   const [modal, setModal] = useState<ModalState>(null);
   const [toDelete, setToDelete] = useState<Member | null>(null);
+  const [toElevate, setToElevate] = useState<Member | null>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -41,6 +43,22 @@ export function AssistantsPanel() {
     const error = await deleteMember(toDelete.id);
     setToDelete(null);
     pushToast(error ? { tone: "error", message: error } : { tone: "success", message: "Auxiliar excluído." });
+  }
+
+  /** Dá ou retira o acesso especial. Conceder pede confirmação antes; retirar é imediato. */
+  async function setElevated(member: Member, elevated: boolean) {
+    setToElevate(null);
+    const error = await updateMember(member.id, { elevated });
+    pushToast(
+      error
+        ? { tone: "error", message: error }
+        : {
+            tone: "success",
+            message: elevated
+              ? `${member.fullName} agora tem acesso de secretário.`
+              : `${member.fullName} voltou ao acesso de auxiliar.`,
+          },
+    );
   }
 
   return (
@@ -92,11 +110,33 @@ export function AssistantsPanel() {
           <li key={member.id} className="glass rounded-3xl p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="section-title">{member.fullName}</h3>
-              <ActiveBadge active={member.active} />
+              <div className="flex flex-wrap items-center gap-1.5">
+                {member.elevated && (
+                  <span className="rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-light">
+                    {ELEVATED_LABEL}
+                  </span>
+                )}
+                <ActiveBadge active={member.active} />
+              </div>
             </div>
             <p className="caption">{member.email}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button onClick={() => setModal({ kind: "edit", member })}>Editar</Button>
+              {member.elevated ? (
+                <Button
+                  aria-label={`Retirar o acesso de secretário de ${member.fullName}`}
+                  onClick={() => void setElevated(member, false)}
+                >
+                  Retirar acesso de secretário
+                </Button>
+              ) : (
+                <Button
+                  aria-label={`Dar acesso de secretário a ${member.fullName}`}
+                  onClick={() => setToElevate(member)}
+                >
+                  Dar acesso de secretário
+                </Button>
+              )}
               <Button variant="danger" onClick={() => setToDelete(member)}>
                 Excluir
               </Button>
@@ -140,6 +180,20 @@ export function AssistantsPanel() {
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={toElevate !== null}
+        title="Dar acesso de secretário?"
+        message={
+          toElevate
+            ? `${toElevate.fullName} poderá criar e excluir tarefas, definir responsáveis, concluir e aprovar pedidos, criar lembretes, configurar a base do dashboard e apagar mensagens do mural. Não poderá cadastrar pessoas nem mudar este acesso. Você pode retirar o acesso quando quiser.`
+            : ""
+        }
+        confirmLabel="Dar acesso"
+        confirmVariant="primary"
+        onConfirm={() => toElevate && void setElevated(toElevate, true)}
+        onCancel={() => setToElevate(null)}
+      />
 
       <ConfirmDialog
         open={toDelete !== null}

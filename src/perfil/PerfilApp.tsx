@@ -15,7 +15,7 @@ import {
   type PasswordErrors,
   type PasswordForm,
 } from "../utils/profileForm";
-import { ROLE_LABELS } from "../utils/roles";
+import { roleLabel } from "../utils/roles";
 import { PASSWORD_MIN } from "../utils/userValidation";
 
 const FIELD =
@@ -112,7 +112,7 @@ export default function PerfilApp() {
       <header>
         <h1 className="page-title">Meu perfil</h1>
         <p className="page-lede">
-          {profile.fullName} · {ROLE_LABELS[profile.role]}
+          {profile.fullName} · {roleLabel(profile)}
         </p>
       </header>
 

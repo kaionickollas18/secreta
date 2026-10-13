@@ -12,6 +12,7 @@ import { useFilterStore } from "../store/filterStore";
 import { useTaskStore } from "../store/taskStore";
 import { useToastStore } from "../store/toastStore";
 import type { Profile } from "../types/auth";
+import { todayISO } from "../utils/date";
 import { db, resetDb } from "./fakeTaskApi";
 import { ASSISTANT, makeTask, SECRETARY, TEAM } from "./helpers";
 
@@ -125,6 +126,21 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: /^Aprovar/ })).not.toBeInTheDocument();
   });
 
+  it("auxiliar com acesso de secretário cria, exclui e aprova", async () => {
+    const user = userEvent.setup();
+    signInAs({ ...ASSISTANT, elevated: true });
+    db.tasks = [makeTask({ id: "t1", title: "Arquivar pastas", status: "review", completionRequested: true })];
+    render(<App />);
+    await screen.findByRole("heading", { name: "Arquivar pastas" });
+
+    expect(screen.getByRole("button", { name: "Nova tarefa" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Excluir Arquivar pastas" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Pedir conclusão/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Aprovar conclusão de Arquivar pastas" }));
+    await waitFor(() => expect(db.tasks[0]).toMatchObject({ status: "done", completionRequested: false }));
+  });
+
   it("secretário vê o pedido e aprova a conclusão", async () => {
     const user = userEvent.setup();
     db.tasks = [makeTask({ id: "t1", title: "Arquivar pastas", status: "review", completionRequested: true })];
@@ -134,6 +150,30 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Aprovar conclusão de Arquivar pastas" }));
     await waitFor(() => expect(db.tasks[0]).toMatchObject({ status: "done", completionRequested: false }));
     await waitFor(() => expect(screen.queryByText("Aguardando aprovação")).not.toBeInTheDocument());
+  });
+
+  it("avisa o responsável sobre as tarefas dele que vencem hoje ou atrasaram", async () => {
+    const user = userEvent.setup();
+    db.tasks = [
+      makeTask({ title: "Minha de hoje", assignees: ["sec"], dueDate: todayISO() }),
+      makeTask({ title: "Minha atrasada", assignees: ["sec", "ana"], dueDate: "2020-01-01" }),
+      makeTask({ title: "De outra pessoa", assignees: ["beto"], dueDate: "2020-01-01" }),
+    ];
+    render(<App />);
+
+    const notices = within(await screen.findByRole("region", { name: "Avisos" }));
+    expect(notices.getByText("1 atrasada · 1 vence hoje")).toBeInTheDocument();
+
+    await user.click(notices.getByRole("button", { name: "Ver minhas" }));
+    expect(screen.getByRole("heading", { name: "Minha de hoje" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "De outra pessoa" })).not.toBeInTheDocument();
+  });
+
+  it("sem tarefas para avisar, a faixa de avisos não aparece", async () => {
+    db.tasks = [makeTask({ title: "De outra pessoa", assignees: ["beto"], dueDate: "2020-01-01" })];
+    render(<App />);
+    await screen.findByRole("heading", { name: "De outra pessoa" });
+    expect(screen.queryByRole("region", { name: "Avisos" })).not.toBeInTheDocument();
   });
 
   it("mostra o histórico de concluídas com opção de baixar", async () => {
