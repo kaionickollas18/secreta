@@ -18,6 +18,7 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `reminders.test.ts` | Ciclos mensais/bimestrais/semanais/únicos, atraso, virada de ano, validação |
 | `messages.test.ts` | Validação, agrupamento por dia, não lidas |
 | `calendar.test.ts`, `CalendarioApp.test.tsx` | Feriados nacionais, validação de feriados, grade do mês, lembretes e tarefas por dia, horários e regras dos avisos; tela do calendário por perfil |
+| `notes.test.tsx` | Validação e itens das notas, conversão do banco, vínculos, quem exclui; tela de notas e notas dentro de tarefa/lembrete |
 | `AppShell.test.tsx` | Itens da barra por perfil e avisos |
 | `attendance.test.ts`, `sheetParser.test.ts`, `attendanceSource.test.ts` | Indicadores, leitura da planilha, link, arquivos CSV e base offline |
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
@@ -28,7 +29,7 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 ### 1. Login e perfis
 1. Senha errada mostra "E-mail ou senha incorretos."
 2. Master entra e cai em **Gestão de escolas**; a barra mostra só "Escolas".
-3. Secretário vê Quadro, Lembretes, Calendário, Mensagens, Dashboard e Equipe. Auxiliar não vê Equipe.
+3. Secretário vê Quadro, Lembretes, Calendário, Notas, Mensagens, Dashboard e Equipe. Auxiliar não vê Equipe.
 4. Auxiliar abrindo `gestao.html` direto vê "Sem acesso a esta página".
 5. **Sair** volta ao login.
 
@@ -67,6 +68,15 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 4. Auxiliar vê os feriados da escola, sem botões de criar, editar ou excluir. Com duas escolas: o feriado de uma não aparece na outra.
 5. No **Quadro**, quem é responsável por uma tarefa que vence hoje ou está atrasada vê "Suas tarefas" no topo; quem não é responsável não vê. **Ver minhas** filtra o quadro. Concluída a tarefa, o aviso some.
 6. Com um lembrete pendente: antes das 8h não há aviso; a partir das 8h ele aparece; ao dispensar, some e volta às 12h; marcado como feito, não volta.
+
+### 5c. Notas
+1. Criar uma **lista de marcação** (um item por linha) e uma nota de **texto**. Marcar e desmarcar itens; recarregar e conferir.
+2. Em duas janelas (Secretário e Auxiliar): marcar um item em uma aparece na outra sem recarregar; cada um marcando um item diferente ao mesmo tempo, as duas marcações ficam.
+3. Editar a lista acrescentando uma linha: os itens já marcados continuam marcados.
+4. Vincular a uma tarefa: abrir a tarefa no Quadro e ver a nota, marcar um item ali; o cartão mostra "faltam N itens". **Nova nota** dentro da tarefa abre o formulário já vinculado.
+5. Vincular a um lembrete: a nota aparece no cartão do lembrete.
+6. Auxiliar não vê a lixeira nas notas dos outros; o Secretário vê em todas. Excluir a tarefa vinculada: a nota continua, sem vínculo.
+7. Com duas escolas: as notas de uma não aparecem na outra.
 
 ### 6. Mensagens
 1. Enviar uma mensagem em uma janela: aparece na outra sem recarregar.

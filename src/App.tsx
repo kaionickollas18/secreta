@@ -13,6 +13,7 @@ import { REQUESTED_MESSAGE } from "./constants/board";
 import { useBoardAccess } from "./hooks/useBoardAccess";
 import { useFilteredTasks } from "./hooks/useFilteredTasks";
 import { useDirectoryStore } from "./store/directoryStore";
+import { useNoteStore } from "./store/noteStore";
 import { useTaskStore } from "./store/taskStore";
 import { useToastStore } from "./store/toastStore";
 import type { Task, TaskInput, TaskStatus } from "./types/task";
@@ -30,6 +31,8 @@ export default function App() {
   const moveTask = useTaskStore((s) => s.moveTask);
   const respondCompletion = useTaskStore((s) => s.respondCompletion);
   const loadDirectory = useDirectoryStore((s) => s.load);
+  const loadNotes = useNoteStore((s) => s.load);
+  const watchNotes = useNoteStore((s) => s.watch);
   const pushToast = useToastStore((s) => s.push);
 
   const [modal, setModal] = useState<TaskModalState>(null);
@@ -39,8 +42,14 @@ export default function App() {
   useEffect(() => {
     void load();
     void loadDirectory();
-    return watch();
-  }, [load, loadDirectory, watch]);
+    void loadNotes();
+    const stopTasks = watch();
+    const stopNotes = watchNotes();
+    return () => {
+      stopTasks();
+      stopNotes();
+    };
+  }, [load, loadDirectory, loadNotes, watch, watchNotes]);
 
   const openCreate = useCallback((status: TaskStatus = "todo") => {
     setModal({ mode: "create", status });

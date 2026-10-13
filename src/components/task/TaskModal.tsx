@@ -1,4 +1,5 @@
 import type { Task, TaskInput, TaskStatus } from "../../types/task";
+import { LinkedNotes } from "../notes/LinkedNotes";
 import { Modal } from "../ui/Modal";
 import { TaskForm } from "./TaskForm";
 
@@ -27,6 +28,13 @@ export function TaskModal({ state, onSubmit, onClose }: TaskModalProps) {
           defaultStatus={state.mode === "create" ? state.status : undefined}
           onSubmit={onSubmit}
           onCancel={onClose}
+        />
+      )}
+      {state?.mode === "edit" && (
+        <LinkedNotes
+          link={{ type: "task", id: state.task.id }}
+          showAdd
+          className="mt-5 border-t border-line pt-4"
         />
       )}
     </Modal>

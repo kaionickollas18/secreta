@@ -56,6 +56,11 @@ export function canManageHolidays(role: UserRole): boolean {
   return role === "secretary";
 }
 
+/** Qualquer pessoa da escola cria e edita notas; excluir, só quem escreveu ou o Secretário. */
+export function canDeleteNote(role: UserRole, isAuthor: boolean): boolean {
+  return isAuthor || role === "secretary";
+}
+
 /** O Secretário modera o mural: pode apagar mensagens de qualquer pessoa da escola. */
 export function canModerateMessages(role: UserRole): boolean {
   return role === "secretary";

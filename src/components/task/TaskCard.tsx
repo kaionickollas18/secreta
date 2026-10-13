@@ -1,12 +1,14 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { PRIORITY_STYLES } from "../../constants/board";
 import { useBoardAccess } from "../../hooks/useBoardAccess";
+import { useNoteStore } from "../../store/noteStore";
 import type { Task, TaskPriority } from "../../types/task";
 import { taskArrivals } from "../../utils/arrivals";
 import { Avatar } from "../ui/Avatar";
 import { formatDueDate, isOverdue } from "../../utils/date";
+import { notesLinkedTo, pendingItems } from "../../utils/notes";
 import { DELETE_BUTTON, EDIT_BUTTON, IconButton } from "../ui/Button";
 import {
   CalendarIcon,
@@ -14,6 +16,7 @@ import {
   ClockIcon,
   FlagIcon,
   GripIcon,
+  NoteIcon,
   PencilIcon,
   TrashIcon,
   UsersIcon,
@@ -69,6 +72,9 @@ function CardRow({ icon, label, children }: { icon: ReactNode; label: string; ch
  */
 export function TaskCardBody({ task, handle, actions }: TaskCardBodyProps) {
   const { canManage, canApprove, personOf } = useBoardAccess();
+  const notes = useNoteStore((s) => s.notes);
+  const linkedNotes = useMemo(() => notesLinkedTo(notes, { type: "task", id: task.id }), [notes, task.id]);
+  const missing = pendingItems(linkedNotes);
   const overdue = isOverdue(task.dueDate, task.status);
   const assignees = task.assignees.flatMap((id) => {
     const person = personOf(id);
@@ -167,6 +173,18 @@ export function TaskCardBody({ task, handle, actions }: TaskCardBodyProps) {
               }`}
             >
               {formatDueDate(task.dueDate)}
+            </span>
+          </CardRow>
+        )}
+
+        {linkedNotes.length > 0 && (
+          <CardRow icon={<NoteIcon />} label="Notas">
+            <span
+              className={`rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${
+                missing > 0 ? "bg-prio-medium-tint text-prio-medium" : "text-ink"
+              }`}
+            >
+              {missing > 0 ? (missing === 1 ? "falta 1 item" : `faltam ${missing} itens`) : linkedNotes.length}
             </span>
           </CardRow>
         )}

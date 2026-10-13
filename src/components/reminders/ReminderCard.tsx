@@ -1,5 +1,6 @@
 import type { Reminder, ReminderState, ReminderStatus } from "../../types/reminder";
 import { describeSchedule, occurrenceLabel, statusLabel } from "../../utils/reminders";
+import { LinkedNotes } from "../notes/LinkedNotes";
 import { Button, DELETE_BUTTON, EDIT_BUTTON, IconButton } from "../ui/Button";
 import { CheckIcon, PencilIcon, TrashIcon } from "../ui/Icons";
 
@@ -60,6 +61,8 @@ export function ReminderCard({ reminder, status, canManage, onToggleDone, onEdit
           <span className="text-xs text-muted">Período: {occurrenceLabel(occurrence)}</span>
         )}
       </div>
+
+      <LinkedNotes link={{ type: "reminder", id: reminder.id }} className="mt-3 border-t border-line pt-3" />
 
       {canManage && occurrence && (pending || completed) && (
         <div className="mt-3">

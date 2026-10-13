@@ -83,6 +83,11 @@ export const CalendarIcon = () => (
     <path d="M3.5 10h17M8 3v4M16 3v4" />
   </Icon>
 );
+export const NoteIcon = () => (
+  <Icon>
+    <path d="M6 3.5h9l4 4V20a.5.5 0 0 1-.5.5h-12A.5.5 0 0 1 6 20V3.5zM14.5 3.5V8H19M9 12.5h6M9 16h4" />
+  </Icon>
+);
 export const ClockIcon = () => (
   <Icon>
     <circle cx="12" cy="12" r="9" />

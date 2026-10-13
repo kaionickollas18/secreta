@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ReminderCard } from "../components/reminders/ReminderCard";
 import { ReminderForm } from "../components/reminders/ReminderForm";
 import { Button } from "../components/ui/Button";
@@ -9,6 +9,7 @@ import { Modal } from "../components/ui/Modal";
 import { Skeleton } from "../components/ui/Skeleton";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAuthStore } from "../store/authStore";
+import { useNoteStore } from "../store/noteStore";
 import { useReminderStore } from "../store/reminderStore";
 import { useToastStore } from "../store/toastStore";
 import type { Reminder } from "../types/reminder";
@@ -24,6 +25,14 @@ export default function LembretesApp() {
   const pushToast = useToastStore((s) => s.push);
   const [modal, setModal] = useState<ModalState>(null);
   const [toDelete, setToDelete] = useState<Reminder | null>(null);
+  const loadNotes = useNoteStore((s) => s.load);
+  const watchNotes = useNoteStore((s) => s.watch);
+
+  // Notas vinculadas aparecem nos cartões dos lembretes.
+  useEffect(() => {
+    void loadNotes();
+    return watchNotes();
+  }, [loadNotes, watchNotes]);
 
   const items = useMemo(
     () => sortByUrgency(reminders.map((reminder) => ({ reminder, status: reminderStatus(reminder, doneKeys) }))),

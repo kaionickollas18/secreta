@@ -15,10 +15,11 @@ import {
   ChatIcon,
   ChevronLeftIcon,
   LogoutIcon,
+  NoteIcon,
   UsersIcon,
 } from "../ui/Icons";
 
-export type NavKey = "quadro" | "lembretes" | "calendario" | "mensagens" | "dashboard" | "gestao" | "perfil";
+export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "mensagens" | "dashboard" | "gestao" | "perfil";
 
 interface NavItem {
   key: NavKey;
@@ -154,6 +155,7 @@ export function AppShell({ active, children }: AppShellProps) {
           badgeLabel: `${due} ${due === 1 ? "lembrete pede" : "lembretes pedem"} atenção`,
         },
         { key: "calendario", label: "Calendário", href: "calendario.html", icon: <CalendarIcon /> },
+        { key: "notas", label: "Notas", href: "notas.html", icon: <NoteIcon /> },
         {
           key: "mensagens",
           label: "Mensagens",
@@ -228,7 +230,7 @@ export function AppShell({ active, children }: AppShellProps) {
               return (
                 <li
                   key={item.key}
-                  className={`min-w-[62px] flex-1 md:min-w-0 md:flex-none ${item.mobileOnly ? "md:hidden" : ""}`}
+                  className={`min-w-[72px] flex-1 shrink-0 md:min-w-0 md:flex-none ${item.mobileOnly ? "md:hidden" : ""}`}
                 >
                   <a
                     href={item.href}

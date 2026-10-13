@@ -25,7 +25,7 @@ UI (components) ──► Estado (Zustand stores) ──► Domínio (utils puro
 
 ## Páginas
 Uma página HTML por área, cada uma com sua entrada em `src/<área>/main.tsx`:
-`index.html` (quadro) · `lembretes.html` · `calendario.html` · `mensagens.html` · `frequencia.html` (dashboard) · `gestao.html`.
+`index.html` (quadro) · `lembretes.html` · `calendario.html` · `notas.html` · `mensagens.html` · `frequencia.html` (dashboard) · `gestao.html`.
 Todas são envolvidas por `AuthGate` (login e perfis permitidos) e `AppShell` (barra de navegação e avisos).
 
 ## Decisões e trade-offs
