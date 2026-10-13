@@ -36,28 +36,49 @@ describe("feriados nacionais", () => {
 
 describe("feriados da escola", () => {
   it("valida nome, datas e duração", () => {
-    expect(validateHolidayForm({ name: " Aniversário da cidade ", start: "2026-08-10", end: "" })).toEqual({
+    expect(validateHolidayForm({ kind: "holiday", name: " Aniversário da cidade ", start: "2026-08-10", end: "" })).toEqual({
       valid: true,
-      value: { name: "Aniversário da cidade", start: "2026-08-10", end: "2026-08-10" },
+      value: { kind: "holiday", name: "Aniversário da cidade", start: "2026-08-10", end: "2026-08-10" },
     });
-    expect(validateHolidayForm({ name: "Recesso", start: "2026-07-13", end: "2026-07-24" }).valid).toBe(true);
+    expect(validateHolidayForm({ kind: "holiday", name: "Recesso", start: "2026-07-13", end: "2026-07-24" }).valid).toBe(true);
+    expect(validateHolidayForm({ kind: "recess", name: "", start: "2026-07-13", end: "2026-07-24" })).toMatchObject({
+      value: { kind: "recess", name: "Recesso" },
+    });
+    // Os outros tipos já dizem o que são: sem nome, vale o nome do tipo.
+    expect(validateHolidayForm({ kind: "council", name: "", start: "2026-08-10", end: "" })).toEqual({
+      valid: true,
+      value: { kind: "council", name: "Conselho de Classe", start: "2026-08-10", end: "2026-08-10" },
+    });
+    expect(validateHolidayForm({ kind: "semec", name: "3º bimestre", start: "2026-08-10", end: "" })).toMatchObject({
+      value: { kind: "semec", name: "3º bimestre" },
+    });
 
     const errorsOf = (values: Parameters<typeof validateHolidayForm>[0]) => {
       const result = validateHolidayForm(values);
       return result.valid ? {} : result.errors;
     };
-    expect(errorsOf({ name: "", start: "2026-02-30", end: "" })).toMatchObject({
+    expect(errorsOf({ kind: "holiday", name: "", start: "2026-02-30", end: "" })).toMatchObject({
       name: expect.any(String),
       start: expect.any(String),
     });
-    expect(errorsOf({ name: "Recesso", start: "2026-07-13", end: "2026-07-01" }).end).toContain("antes");
-    expect(errorsOf({ name: "Recesso", start: "2026-01-01", end: "2026-12-31" }).end).toContain("93 dias");
+    expect(errorsOf({ kind: "holiday", name: "Recesso", start: "2026-07-13", end: "2026-07-01" }).end).toContain("antes");
+    expect(errorsOf({ kind: "holiday", name: "Recesso", start: "2026-01-01", end: "2026-12-31" }).end).toContain("93 dias");
   });
 
   it("converte a linha do banco e ignora as inválidas", () => {
-    const row = { id: "h1", name: "Recesso", starts_on: "2026-07-13", ends_on: "2026-07-24" };
+    const row = { id: "h1", name: "Recesso", starts_on: "2026-07-13", ends_on: "2026-07-24", kind: "holiday" };
     const holiday = holidayFromRow(row);
-    expect(holiday).toEqual({ id: "h1", name: "Recesso", start: "2026-07-13", end: "2026-07-24", source: "school" });
+    expect(holiday).toEqual({
+      id: "h1",
+      name: "Recesso",
+      start: "2026-07-13",
+      end: "2026-07-24",
+      source: "school",
+      kind: "holiday",
+    });
+    expect(holidayFromRow({ ...row, kind: "training" })?.kind).toBe("training");
+    expect(holidayFromRow({ ...row, kind: "recess" })?.kind).toBe("recess");
+    expect(holidayFromRow({ ...row, kind: "passeio" })).toBeNull();
     expect(holiday && holidayToForm(holiday).end).toBe("2026-07-24");
     expect(holidayFromRow({ ...row, ends_on: "2026-07-01" })).toBeNull();
     expect(holidayFromRow({ ...row, starts_on: null })).toBeNull();
@@ -112,7 +133,7 @@ describe("lembretes no calendário", () => {
   });
 
   it("junta feriados, tarefas e lembretes por dia", () => {
-    const recess: Holiday = { id: "h1", name: "Recesso", start: "2026-10-12", end: "2026-10-14", source: "school" };
+    const recess: Holiday = { id: "h1", name: "Recesso", start: "2026-10-12", end: "2026-10-14", source: "school", kind: "holiday" };
     const reminder: Reminder = {
       id: "r1",
       title: "Memorando",

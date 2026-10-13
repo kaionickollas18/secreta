@@ -32,6 +32,8 @@ export default {
           light: "#C4B5FD",
         },
         magenta: "#E879F9",
+        // Amarelo "Lápis" da marca: o ponto do logotipo.
+        pencil: "#F5B82E",
         "prio-low": { DEFAULT: "#4ADE80", tint: "rgba(34, 197, 94, 0.16)" },
         "prio-medium": { DEFAULT: "#FBBF24", tint: "rgba(251, 191, 36, 0.16)" },
         "prio-high": { DEFAULT: "#FB923C", tint: "rgba(251, 146, 60, 0.16)" },

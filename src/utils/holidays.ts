@@ -1,9 +1,11 @@
-import type {
-  Holiday,
-  HolidayFormErrors,
-  HolidayFormValues,
-  HolidayInput,
-  HolidaySource,
+import {
+  EVENT_KINDS,
+  type EventKind,
+  type Holiday,
+  type HolidayFormErrors,
+  type HolidayFormValues,
+  type HolidayInput,
+  type HolidaySource,
 } from "../types/calendar";
 import { isValidISODate } from "./date";
 import { addDays, diffDays } from "./reminders";
@@ -17,6 +19,21 @@ export const HOLIDAY_SOURCE_LABELS: Record<HolidaySource, string> = {
   optional: "Ponto facultativo",
   school: "Da escola",
 };
+
+export const EVENT_KIND_LABELS: Record<EventKind, string> = {
+  holiday: "Feriado",
+  recess: "Recesso",
+  planning: "Planejamento Pedagógico",
+  meeting: "Reunião Administrativa",
+  training: "Formação Pedagógica",
+  council: "Conselho de Classe",
+  semec: "Entrega das Atas e Índices Bimestrais na SEMEC",
+  grades: "Entrega das Notas na Secretaria da Escola",
+};
+
+function isEventKind(value: unknown): value is EventKind {
+  return (EVENT_KINDS as readonly unknown[]).includes(value);
+}
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -63,6 +80,7 @@ export function nationalHolidays(year: number): Holiday[] {
     start: date,
     end: date,
     source,
+    kind: "holiday",
   });
   return [
     ...FIXED.map(([m, d, name]) => day(`${year}-${pad(m)}-${pad(d)}`, name, "national")),
@@ -78,6 +96,7 @@ interface HolidayRow {
   name: unknown;
   starts_on: unknown;
   ends_on: unknown;
+  kind: unknown;
 }
 
 /** Converte a linha do banco. Devolve `null` se algum campo não for o esperado. */
@@ -86,15 +105,17 @@ export function holidayFromRow(row: HolidayRow): Holiday | null {
   if (typeof id !== "string" || typeof name !== "string") return null;
   if (typeof start !== "string" || typeof end !== "string") return null;
   if (!isValidISODate(start) || !isValidISODate(end) || end < start) return null;
-  return { id, name, start, end, source: "school" };
+  if (!isEventKind(row.kind)) return null;
+  return { id, name, start, end, source: "school", kind: row.kind };
 }
 
 export function emptyHolidayForm(date = ""): HolidayFormValues {
-  return { name: "", start: date, end: "" };
+  return { kind: "holiday", name: "", start: date, end: "" };
 }
 
 export function holidayToForm(holiday: Holiday): HolidayFormValues {
   return {
+    kind: holiday.kind,
     name: holiday.name,
     start: holiday.start,
     end: holiday.end === holiday.start ? "" : holiday.end,
@@ -105,13 +126,17 @@ export type HolidayValidation =
   | { valid: true; value: HolidayInput }
   | { valid: false; errors: HolidayFormErrors };
 
-/** A data final é opcional: em branco, o feriado dura um dia só. */
+/**
+ * A data final é opcional: em branco, o evento dura um dia só. O nome também, menos para
+ * feriado: os outros tipos já dizem o que são e usam o próprio nome quando ele fica em branco.
+ */
 export function validateHolidayForm(values: HolidayFormValues): HolidayValidation {
   const errors: HolidayFormErrors = {};
-  const name = sanitizeText(values.name);
+  const typed = sanitizeText(values.name);
+  const name = typed === "" && values.kind !== "holiday" ? EVENT_KIND_LABELS[values.kind] : typed;
   const end = values.end === "" ? values.start : values.end;
 
-  if (name.length === 0) errors.name = "Informe o nome do feriado ou recesso.";
+  if (name.length === 0) errors.name = "Informe o nome do feriado.";
   else if (name.length > HOLIDAY_LIMITS.name)
     errors.name = `Use no máximo ${HOLIDAY_LIMITS.name} caracteres no nome.`;
 
@@ -119,8 +144,8 @@ export function validateHolidayForm(values: HolidayFormValues): HolidayValidatio
   else if (!isValidISODate(end)) errors.end = "Informe uma data válida ou deixe em branco.";
   else if (end < values.start) errors.end = "O último dia não pode vir antes do primeiro.";
   else if (diffDays(end, values.start) > HOLIDAY_LIMITS.days)
-    errors.end = `Um recesso pode ter no máximo ${HOLIDAY_LIMITS.days + 1} dias.`;
+    errors.end = `Um evento pode ter no máximo ${HOLIDAY_LIMITS.days + 1} dias.`;
 
   if (Object.keys(errors).length > 0) return { valid: false, errors };
-  return { valid: true, value: { name, start: values.start, end } };
+  return { valid: true, value: { kind: values.kind, name, start: values.start, end } };
 }

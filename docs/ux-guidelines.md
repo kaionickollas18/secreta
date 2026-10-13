@@ -101,3 +101,5 @@ Cada área é uma página separada, mas a troca deve parecer uma tela só.
 - **Perfil**: a foto no topo leva à página de perfil. No celular, o perfil é um item da barra.
 - **Celular**: barra inferior com ícone sobre o rótulo; não há modo retraído.
 - Retraído, cada item mantém o nome para leitores de tela.
+## Marca
+O logotipo fica em `src/components/ui/Logo.tsx`: o símbolo (`LogoMark`, um S de cinco cartões com o ponto amarelo "Lápis" `#F5B82E`) e o nome em minúsculas. Aparece no topo do menu, no título do Quadro e na tela de login (versão empilhada, com a frase da marca). O ícone da aba é `public/favicon.svg`, na versão principal do manual (fundo "Tinta" `#16213E`). O sistema mantém a paleta escura em violeta; da marca entram o símbolo, o nome e o amarelo do ponto.

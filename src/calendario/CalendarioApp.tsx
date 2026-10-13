@@ -81,7 +81,7 @@ export default function CalendarioApp() {
     if (!toDelete) return;
     const error = await remove(toDelete.id);
     setToDelete(null);
-    pushToast(error ? { tone: "error", message: error } : { tone: "success", message: "Feriado excluído." });
+    pushToast(error ? { tone: "error", message: error } : { tone: "success", message: "Evento excluído." });
   }
 
   return (
@@ -89,19 +89,19 @@ export default function CalendarioApp() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="page-title">Calendário</h1>
-          <p className="page-lede">Feriados, prazos das tarefas e lembretes da escola em um só lugar.</p>
+          <p className="page-lede">Feriados, eventos da escola, prazos das tarefas e lembretes em um só lugar.</p>
         </div>
         {canManage && (
           <Button variant="primary" onClick={() => setModal({ mode: "create", date: selected })}>
             <PlusIcon />
-            Novo feriado
+            Novo evento
           </Button>
         )}
       </header>
 
       {status === "error" && (
         <p role="alert" className="text-sm text-prio-urgent">
-          Não foi possível carregar os feriados da escola.{" "}
+          Não foi possível carregar os eventos da escola.{" "}
           <button className="underline" onClick={() => void load()}>
             Tentar de novo
           </button>
@@ -154,7 +154,7 @@ export default function CalendarioApp() {
 
       <Modal
         open={modal !== null}
-        title={modal?.mode === "edit" ? "Editar feriado" : "Novo feriado ou recesso"}
+        title={modal?.mode === "edit" ? "Editar evento" : "Novo evento no calendário"}
         onClose={() => setModal(null)}
       >
         {modal && (
@@ -169,7 +169,7 @@ export default function CalendarioApp() {
               if (!error) {
                 setModal(null);
                 select(input.start);
-                pushToast({ tone: "success", message: editing ? "Feriado atualizado." : "Feriado adicionado." });
+                pushToast({ tone: "success", message: editing ? "Evento atualizado." : "Evento adicionado." });
               }
               return error;
             }}
@@ -179,7 +179,7 @@ export default function CalendarioApp() {
 
       <ConfirmDialog
         open={toDelete !== null}
-        title="Excluir feriado?"
+        title="Excluir evento?"
         message={toDelete ? `“${toDelete.name}” sairá do calendário de toda a escola.` : ""}
         confirmLabel="Excluir"
         onConfirm={() => void handleDelete()}

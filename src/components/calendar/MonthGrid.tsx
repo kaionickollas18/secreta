@@ -1,5 +1,7 @@
-import type { DayEvents } from "../../types/calendar";
+import { EVENT_KINDS, type DayEvents } from "../../types/calendar";
 import { longDate, WEEKDAY_SHORT } from "../../utils/calendar";
+import { EVENT_KIND_LABELS } from "../../utils/holidays";
+import { dayFill, KIND_STYLES, KindChip, KindIcon, ON_FILL } from "./KindIcon";
 
 interface MonthGridProps {
   /** Semanas do mês (`monthGrid`). */
@@ -25,10 +27,10 @@ function describeDay(date: string, events: DayEvents | undefined): string {
   return parts.join(", ");
 }
 
-function Count({ count, dot, label }: { count: number; dot: string; label: string }) {
+function Count({ count, dot, label, tone }: { count: number; dot: string; label: string; tone: string }) {
   if (count === 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-2xs font-semibold tabular-nums text-muted">
+    <span className={`inline-flex items-center gap-1 text-2xs font-semibold tabular-nums ${tone}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
       {count}
       <span className="hidden font-medium lg:inline">{label}</span>
@@ -41,16 +43,28 @@ export function MonthGrid({ weeks, month, today, selected, events, onSelect }: M
   return (
     <div className="glass overflow-hidden rounded-2xl">
       <div aria-hidden="true" className="grid grid-cols-7 border-b border-line">
-        {WEEKDAY_SHORT.map((day) => (
-          <span key={day} className="py-2 text-center text-2xs font-semibold uppercase tracking-wider text-muted">
+        {WEEKDAY_SHORT.map((day, index) => (
+          <span
+            key={day}
+            className={`py-2 text-center text-2xs uppercase tracking-wider ${
+              index === 0 || index === 6 ? "font-bold text-red-400" : "font-semibold text-muted"
+            }`}
+          >
             {day}
           </span>
         ))}
       </div>
       <div className="grid grid-cols-7">
-        {weeks.flat().map((date) => {
+        {weeks.flat().map((date, index) => {
           const dayEvents = events.get(date);
-          const holiday = dayEvents?.holidays[0];
+          const marks = dayEvents?.holidays ?? [];
+          const first = marks[0];
+          // Feriado, recesso e os eventos em verde preenchem o quadro do dia com a cor pastel.
+          const fill = dayFill(marks.map((mark) => mark.kind));
+          const filled = fill !== "";
+          const tone = filled ? ON_FILL : "text-muted";
+          // Sábado e domingo: número em vermelho e mais pesado.
+          const weekend = index % 7 === 0 || index % 7 === 6;
           const outside = date.slice(0, 7) !== month;
           const isToday = date === today;
           const isSelected = date === selected;
@@ -62,31 +76,53 @@ export function MonthGrid({ weeks, month, today, selected, events, onSelect }: M
               aria-current={isToday ? "date" : undefined}
               aria-label={describeDay(date, dayEvents)}
               onClick={() => onSelect(date)}
-              className={`relative flex min-h-[58px] flex-col items-start gap-1 border-b border-r border-line p-1.5 text-left transition-colors hover:bg-raised/60 focus-visible:z-10 sm:min-h-[92px] sm:p-2 ${
-                isSelected ? "bg-accent-soft ring-2 ring-inset ring-accent" : holiday ? "bg-magenta/10" : ""
-              } ${outside ? "opacity-40" : ""}`}
+              className={`relative flex min-h-[62px] flex-col items-start gap-1 border-b border-r border-line p-1.5 text-left transition-[background-color,filter] focus-visible:z-10 sm:min-h-[96px] sm:p-2 ${
+                filled ? `${fill} hover:brightness-110` : `hover:bg-raised/60 ${isSelected ? "bg-accent-soft" : ""}`
+              } ${isSelected ? "z-[1] ring-[3px] ring-inset ring-accent" : ""} ${outside ? "opacity-40" : ""}`}
             >
-              <span
-                className={`flex h-6 min-w-[24px] items-center justify-center rounded-full px-1 text-xs font-semibold tabular-nums ${
-                  isToday ? "bg-accent text-white" : holiday ? "text-magenta" : "text-ink"
-                }`}
-              >
-                {Number(date.slice(8, 10))}
+              <span className="flex w-full flex-wrap items-center gap-x-1 gap-y-0.5">
+                <span
+                  className={`flex h-6 min-w-[24px] items-center justify-center rounded-full px-1 text-xs tabular-nums ${
+                    weekend ? "font-bold" : "font-semibold"
+                  } ${
+                    isToday
+                      ? "bg-accent text-white"
+                      : weekend
+                        ? filled
+                          ? "text-red-700"
+                          : "text-red-400"
+                        : filled
+                          ? ON_FILL
+                          : "text-ink"
+                  }`}
+                >
+                  {Number(date.slice(8, 10))}
+                </span>
+                {marks.slice(0, 3).map((mark) => (
+                  <KindIcon key={mark.id} kind={mark.kind} size="h-4 w-4 sm:h-[18px] sm:w-[18px]" onFill={filled} />
+                ))}
+                {marks.length > 3 && <span className={`text-2xs font-semibold ${tone}`}>+{marks.length - 3}</span>}
               </span>
-              {holiday && (
-                <span className="hidden w-full truncate text-2xs font-medium text-magenta sm:block">
-                  {holiday.name}
+              {first && (
+                <span
+                  className={`hidden w-full truncate text-2xs sm:block ${
+                    filled ? `font-semibold ${ON_FILL}` : `font-medium ${KIND_STYLES[first.kind].text}`
+                  }`}
+                >
+                  {first.name}
                 </span>
               )}
               <span className="mt-auto flex flex-wrap gap-x-2 gap-y-0.5">
                 <Count
                   count={dayEvents?.tasks.length ?? 0}
-                  dot="bg-accent-light"
+                  dot={filled ? "bg-violet-700" : "bg-accent-light"}
+                  tone={tone}
                   label={dayEvents?.tasks.length === 1 ? "tarefa" : "tarefas"}
                 />
                 <Count
                   count={dayEvents?.reminders.length ?? 0}
-                  dot="bg-prio-medium"
+                  dot={filled ? "bg-amber-700" : "bg-prio-medium"}
+                  tone={tone}
                   label={dayEvents?.reminders.length === 1 ? "lembrete" : "lembretes"}
                 />
               </span>
@@ -94,17 +130,20 @@ export function MonthGrid({ weeks, month, today, selected, events, onSelect }: M
           );
         })}
       </div>
-      <p aria-hidden="true" className="flex flex-wrap gap-x-4 gap-y-1 px-3 py-2 text-2xs text-muted">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-sm bg-magenta/60" /> Feriado ou recesso
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent-light" /> Tarefas (prazo)
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-prio-medium" /> Lembretes
-        </span>
-      </p>
+      <ul aria-label="Legenda" className="flex flex-wrap gap-x-4 gap-y-1.5 px-3 py-2.5 text-2xs text-muted">
+        {EVENT_KINDS.map((kind) => (
+          <li key={kind} className="inline-flex items-center gap-1.5">
+            <KindChip kind={kind} className="h-5 w-5" />
+            {EVENT_KIND_LABELS[kind]}
+          </li>
+        ))}
+        <li className="inline-flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent-light" /> Tarefas (prazo)
+        </li>
+        <li className="inline-flex items-center gap-1.5">
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-prio-medium" /> Lembretes
+        </li>
+      </ul>
     </div>
   );
 }

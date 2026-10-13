@@ -7,6 +7,7 @@ import { readNavCollapsed, writeNavCollapsed } from "../../utils/navPreference";
 import { countDue } from "../../utils/reminders";
 import { canManageAssistants, isSchoolRole, ROLE_LABELS } from "../../utils/roles";
 import { Avatar } from "../ui/Avatar";
+import { LogoMark } from "../ui/Logo";
 import {
   BellIcon,
   BoardIcon,
@@ -187,11 +188,11 @@ export function AppShell({ active, children }: AppShellProps) {
 
         <div className="flex h-full px-1 md:flex-col md:overflow-hidden md:px-2 md:py-4">
           <p aria-hidden="true" className="hidden items-center md:flex md:px-2">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center text-2xl font-bold text-accent-light">
-              ▦
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center text-ink">
+              <LogoMark className="h-7 w-auto" />
             </span>
-            <span className={`text-sm font-bold tracking-widest text-ink ${fading(collapsed)}`}>
-              SECRETA
+            <span className={`text-xl font-bold leading-none tracking-tighter text-ink ${fading(collapsed)}`}>
+              secreta
             </span>
           </p>
 

@@ -2,15 +2,16 @@ import type { ReactNode } from "react";
 import { PRIORITY_LABELS, PRIORITY_STYLES, STATUS_LABELS } from "../../constants/board";
 import type { DayEvents, Holiday } from "../../types/calendar";
 import { longDate, weekdayOf } from "../../utils/calendar";
-import { HOLIDAY_SOURCE_LABELS } from "../../utils/holidays";
+import { EVENT_KIND_LABELS, HOLIDAY_SOURCE_LABELS } from "../../utils/holidays";
 import { describeSchedule, occurrenceLabel, WEEKDAY_LABELS } from "../../utils/reminders";
 import { Button, DELETE_BUTTON, EDIT_BUTTON, IconButton } from "../ui/Button";
 import { PencilIcon, PlusIcon, TrashIcon } from "../ui/Icons";
+import { KIND_STYLES, KindChip } from "./KindIcon";
 
 interface DayPanelProps {
   date: string;
   events: DayEvents | undefined;
-  /** Só o Secretário cadastra feriados; sem isso o painel é somente leitura. */
+  /** Só o Secretário cadastra feriados e eventos; sem isso o painel é somente leitura. */
   canManage: boolean;
   /** Sobrenome do responsável ("" se a pessoa não existe mais). */
   nameOf: (id: string) => string;
@@ -28,10 +29,17 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+/** Linha de apoio: de onde vem o feriado ou, nos outros eventos, o tipo (se o nome for outro). */
+function describe(holiday: Holiday): string {
+  if (holiday.kind === "holiday") return HOLIDAY_SOURCE_LABELS[holiday.source];
+  const label = EVENT_KIND_LABELS[holiday.kind];
+  return holiday.name === label ? "Evento da escola" : label;
+}
+
 const ITEM = "rounded-xl border border-line bg-canvas/40 px-3 py-2";
 const CHIP = "rounded-full px-2 py-0.5 text-2xs font-semibold";
 
-/** Detalhe do dia escolhido no calendário: feriados, tarefas com prazo e lembretes. */
+/** Detalhe do dia escolhido no calendário: feriados e eventos, tarefas com prazo e lembretes. */
 export function DayPanel({
   date,
   events,
@@ -54,13 +62,14 @@ export function DayPanel({
       {empty && <p className="text-sm text-muted">Nada marcado neste dia.</p>}
 
       {events && events.holidays.length > 0 && (
-        <Group title="Feriado ou recesso">
+        <Group title="Feriados e eventos">
           {events.holidays.map((holiday) => (
-            <li key={holiday.id} className={`${ITEM} flex items-start gap-2 border-magenta/40`}>
+            <li key={holiday.id} className={`${ITEM} flex items-start gap-2.5 ${KIND_STYLES[holiday.kind].edge}`}>
+              <KindChip kind={holiday.kind} className="mt-0.5 h-8 w-8" />
               <div className="min-w-0 flex-1">
                 <p className="break-words card-title">{holiday.name}</p>
                 <p className="caption">
-                  {HOLIDAY_SOURCE_LABELS[holiday.source]}
+                  {describe(holiday)}
                   {holiday.start !== holiday.end && ` · ${occurrenceLabel({ periodKey: "", ...holiday })}`}
                 </p>
               </div>
@@ -132,7 +141,7 @@ export function DayPanel({
       {canManage && (
         <Button className="self-start" onClick={() => onAddHoliday(date)}>
           <PlusIcon />
-          Feriado neste dia
+          Evento neste dia
         </Button>
       )}
     </section>

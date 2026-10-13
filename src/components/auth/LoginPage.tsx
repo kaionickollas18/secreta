@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Logo } from "../ui/Logo";
 import { useAuthStore } from "../../store/authStore";
 import { validateLogin } from "../../utils/authErrors";
 import { Button } from "../ui/Button";
@@ -34,8 +35,11 @@ export function LoginPage() {
       <main>
         {/* O login ocupa a primeira tela inteira; os destaques ficam logo abaixo, ao rolar. */}
         <div className="mx-auto flex min-h-[100svh] max-w-md flex-col justify-center px-4 py-8">
-          <h1 className="page-title text-center">SECRETA</h1>
-          <p className="mb-6 mt-1 text-center text-sm text-muted">
+          <h1>
+            <Logo layout="stacked" />
+            <span className="sr-only">SECRETA: a secretaria escolar, organizada.</span>
+          </h1>
+          <p className="mb-6 mt-5 text-center text-sm text-muted">
             Entre com seu e-mail e senha.
           </p>
 

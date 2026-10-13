@@ -88,6 +88,43 @@ export const NoteIcon = () => (
     <path d="M6 3.5h9l4 4V20a.5.5 0 0 1-.5.5h-12A.5.5 0 0 1 6 20V3.5zM14.5 3.5V8H19M9 12.5h6M9 16h4" />
   </Icon>
 );
+export const SunIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" />
+  </Icon>
+);
+export const ClipboardIcon = () => (
+  <Icon>
+    <rect x="5" y="5" width="14" height="16" rx="2" />
+    <path d="M9 5V3.5h6V5M9 11h6M9 15h4" />
+  </Icon>
+);
+export const NotebookIcon = () => (
+  <Icon>
+    <rect x="6" y="3.5" width="13" height="17" rx="2" />
+    <path d="M4 8h3.5M4 12h3.5M4 16h3.5M11.5 8.5h4" />
+  </Icon>
+);
+/** Três livros deitados, um sobre o outro. */
+export const BooksIcon = () => (
+  <Icon>
+    <rect x="4" y="15.5" width="16" height="4.5" rx="1" />
+    <rect x="6.5" y="10" width="13.5" height="4.5" rx="1" />
+    <rect x="4" y="4.5" width="13" height="4.5" rx="1" />
+  </Icon>
+);
+export const HourglassIcon = () => (
+  <Icon>
+    <path d="M6.5 3.5h11M6.5 20.5h11M8 3.5V7l4 5 4-5V3.5M8 20.5V17l4-5 4 5v3.5" />
+  </Icon>
+);
+/** Pasta preenchida: a cor (laranja, rosa) vem do texto em volta. */
+export const FolderIcon = () => (
+  <Icon fill="currentColor" fillOpacity="0.35">
+    <path d="M3.5 7A1.5 1.5 0 0 1 5 5.5h4.5l2 2.5H19a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5V7z" />
+  </Icon>
+);
 export const ClockIcon = () => (
   <Icon>
     <circle cx="12" cy="12" r="9" />

@@ -7,6 +7,7 @@ import type { CardActions } from "./components/task/TaskCard";
 import { TaskModal, type TaskModalState } from "./components/task/TaskModal";
 import { Button } from "./components/ui/Button";
 import { ConfirmDialog } from "./components/ui/ConfirmDialog";
+import { Logo } from "./components/ui/Logo";
 import { PlusIcon } from "./components/ui/Icons";
 import { ToastViewport } from "./components/ui/ToastViewport";
 import { REQUESTED_MESSAGE } from "./constants/board";
@@ -105,7 +106,8 @@ export default function App() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="page-title">
-            SECRETA
+            <Logo />
+            <span className="sr-only">SECRETA</span>
           </h1>
           <p className="page-lede">
             {total === 0

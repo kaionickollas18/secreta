@@ -1,14 +1,27 @@
 import { useState, type FormEvent } from "react";
-import type { Holiday, HolidayFormErrors, HolidayFormValues, HolidayInput } from "../../types/calendar";
-import { emptyHolidayForm, HOLIDAY_LIMITS, holidayToForm, validateHolidayForm } from "../../utils/holidays";
+import {
+  EVENT_KINDS,
+  type Holiday,
+  type HolidayFormErrors,
+  type HolidayFormValues,
+  type HolidayInput,
+} from "../../types/calendar";
+import {
+  emptyHolidayForm,
+  EVENT_KIND_LABELS,
+  HOLIDAY_LIMITS,
+  holidayToForm,
+  validateHolidayForm,
+} from "../../utils/holidays";
 import { Button } from "../ui/Button";
+import { KindChip } from "./KindIcon";
 
 const FIELD =
   "w-full rounded-xl border border-line bg-canvas/70 px-3 py-2 text-sm placeholder:text-muted/70 aria-[invalid=true]:border-prio-urgent";
 const LABEL = "mb-1 block text-sm font-medium";
 
 interface HolidayFormProps {
-  /** Feriado sendo editado. Sem ele, o formulário cria um novo. */
+  /** Evento sendo editado. Sem ele, o formulário cria um novo. */
   holiday?: Holiday;
   /** Data já preenchida ao criar (o dia escolhido no calendário). */
   initialDate?: string;
@@ -25,7 +38,7 @@ export function HolidayForm({ holiday, initialDate, onSubmit, onCancel }: Holida
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  function set(key: keyof HolidayFormValues, value: string) {
+  function set<K extends keyof HolidayFormValues>(key: K, value: HolidayFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
   }
 
@@ -40,6 +53,8 @@ export function HolidayForm({ holiday, initialDate, onSubmit, onCancel }: Holida
         {errors[key]}
       </p>
     );
+
+  const isHoliday = values.kind === "holiday";
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -59,8 +74,32 @@ export function HolidayForm({ holiday, initialDate, onSubmit, onCancel }: Holida
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div>
+        <label htmlFor="holiday-kind" className={LABEL}>
+          Tipo
+        </label>
+        <div className="flex items-center gap-2">
+          <KindChip kind={values.kind} className="h-9 w-9" />
+          <select
+            id="holiday-kind"
+            className={FIELD}
+            value={values.kind}
+            onChange={(e) => {
+              const next = EVENT_KINDS.find((kind) => kind === e.target.value);
+              if (next) set("kind", next);
+            }}
+          >
+            {EVENT_KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {EVENT_KIND_LABELS[kind]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
         <label htmlFor="holiday-name" className={LABEL}>
-          Nome *
+          {isHoliday ? "Nome *" : "Nome ou detalhe"}
         </label>
         <input
           id="holiday-name"
@@ -68,11 +107,13 @@ export function HolidayForm({ holiday, initialDate, onSubmit, onCancel }: Holida
           className={FIELD}
           value={values.name}
           maxLength={HOLIDAY_LIMITS.name}
-          placeholder="Ex.: Aniversário da cidade"
+          placeholder={isHoliday ? "Ex.: Aniversário da cidade" : "Ex.: 3º bimestre"}
           onChange={(e) => set("name", e.target.value)}
           {...a11y("name")}
         />
-        {errorOf("name")}
+        {errors.name
+          ? errorOf("name")
+          : !isHoliday && <p className="mt-1 caption">Em branco, aparece o nome do tipo.</p>}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -103,7 +144,7 @@ export function HolidayForm({ holiday, initialDate, onSubmit, onCancel }: Holida
             onChange={(e) => set("end", e.target.value)}
             {...a11y("end")}
           />
-          {errors.end ? errorOf("end") : <p className="mt-1 caption">Só para recessos de vários dias.</p>}
+          {errors.end ? errorOf("end") : <p className="mt-1 caption">Só para eventos de vários dias.</p>}
         </div>
       </div>
 
@@ -116,7 +157,7 @@ export function HolidayForm({ holiday, initialDate, onSubmit, onCancel }: Holida
       <div className="flex justify-end gap-2 pt-2">
         <Button onClick={onCancel}>Cancelar</Button>
         <Button type="submit" variant="primary" disabled={submitting}>
-          {submitting ? "Salvando…" : holiday ? "Salvar alterações" : "Adicionar feriado"}
+          {submitting ? "Salvando…" : holiday ? "Salvar alterações" : "Adicionar ao calendário"}
         </Button>
       </div>
     </form>

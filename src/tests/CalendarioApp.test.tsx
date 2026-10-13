@@ -6,7 +6,7 @@ vi.mock("../store/supabaseClient", () => ({ supabase: null }));
 vi.mock("../store/taskApi", () => import("./fakeTaskApi"));
 vi.mock("../store/holidayApi", () => ({
   fetchHolidays: async () => ({ data: [], error: null }),
-  saveHoliday: async (_schoolId: string, input: { name: string; start: string; end: string }) => ({
+  saveHoliday: async (_schoolId: string, input: { kind: string; name: string; start: string; end: string }) => ({
     data: { id: "novo", ...input, source: "school" },
     error: null,
   }),
@@ -68,31 +68,55 @@ describe("CalendarioApp", () => {
     const user = userEvent.setup();
     const panel = renderAs(SECRETARY);
 
-    await user.click(screen.getByRole("button", { name: "Novo feriado" }));
-    const dialog = await screen.findByRole("dialog", { name: "Novo feriado ou recesso" });
+    await user.click(screen.getByRole("button", { name: "Novo evento" }));
+    const dialog = await screen.findByRole("dialog", { name: "Novo evento no calendário" });
     expect(within(dialog).getByLabelText("Dia *")).toHaveValue(today);
 
-    await user.click(within(dialog).getByRole("button", { name: "Adicionar feriado" }));
-    expect(within(dialog).getByText("Informe o nome do feriado ou recesso.")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Adicionar ao calendário" }));
+    expect(within(dialog).getByText("Informe o nome do feriado.")).toBeInTheDocument();
 
     await user.type(within(dialog).getByLabelText("Nome *"), "Aniversário da cidade");
-    await user.click(within(dialog).getByRole("button", { name: "Adicionar feriado" }));
+    await user.click(within(dialog).getByRole("button", { name: "Adicionar ao calendário" }));
 
     expect(await panel.findByText("Aniversário da cidade")).toBeInTheDocument();
     expect(panel.getByText("Da escola")).toBeInTheDocument();
     expect(panel.getByRole("button", { name: "Excluir Aniversário da cidade" })).toBeInTheDocument();
   });
 
+  it("secretário marca um evento da escola, que aparece com o nome do tipo", async () => {
+    const user = userEvent.setup();
+    const panel = renderAs(SECRETARY);
+
+    await user.click(panel.getByRole("button", { name: "Evento neste dia" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Novo evento no calendário" }));
+    expect(within(dialog.getByLabelText("Tipo")).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Feriado",
+      "Recesso",
+      "Planejamento Pedagógico",
+      "Reunião Administrativa",
+      "Formação Pedagógica",
+      "Conselho de Classe",
+      "Entrega das Atas e Índices Bimestrais na SEMEC",
+      "Entrega das Notas na Secretaria da Escola",
+    ]);
+    await user.selectOptions(dialog.getByLabelText("Tipo"), "council");
+    await user.click(dialog.getByRole("button", { name: "Adicionar ao calendário" }));
+
+    expect(await panel.findByText("Conselho de Classe")).toBeInTheDocument();
+    expect(panel.getByText("Evento da escola")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: new RegExp(`^${longDate(today)}, Conselho de Classe`) })).toBeInTheDocument();
+  });
+
   it("auxiliar vê o calendário, mas não cadastra feriados", () => {
     useHolidayStore.setState({
-      holidays: [{ id: "h1", name: "Recesso", start: today, end: today, source: "school" }],
+      holidays: [{ id: "h1", name: "Recesso", start: today, end: today, source: "school", kind: "holiday" }],
       status: "ready",
     });
     const panel = renderAs(ASSISTANT);
 
     expect(panel.getByText("Recesso")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Novo feriado" })).not.toBeInTheDocument();
-    expect(panel.queryByRole("button", { name: "Feriado neste dia" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Novo evento" })).not.toBeInTheDocument();
+    expect(panel.queryByRole("button", { name: "Evento neste dia" })).not.toBeInTheDocument();
     expect(panel.queryByRole("button", { name: "Excluir Recesso" })).not.toBeInTheDocument();
   });
 

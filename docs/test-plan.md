@@ -65,7 +65,8 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 1. Abrir **Calendário**: o mês atual aparece com o dia de hoje marcado; os feriados nacionais já estão lá (ex.: 12/10, 02/11, 15/11).
 2. Uma tarefa com prazo aparece no dia do prazo; um lembrete "do dia 15 ao 20" aparece em cada um desses dias.
 3. Secretário: **Novo feriado** com um dia só e um recesso de vários dias; editar; excluir. Recarregar e conferir.
-4. Auxiliar vê os feriados da escola, sem botões de criar, editar ou excluir. Com duas escolas: o feriado de uma não aparece na outra.
+3b. **Novo evento** de cada tipo (Planejamento, Reunião, Formação, Conselho, Entrega na SEMEC, Entrega das Notas): cada um aparece no dia com o seu ícone; feriado preenche o dia em vermelho pastel, recesso em amarelo pastel e Planejamento, Reunião, Formação e Conselho em verde pastel; as entregas aparecem como pasta laranja e rosa; sem nome, mostra o nome do tipo; um dia com vários eventos mostra os ícones e "+1".
+4. Auxiliar vê os feriados e eventos da escola, sem botões de criar, editar ou excluir. Com duas escolas: o feriado de uma não aparece na outra.
 5. No **Quadro**, quem é responsável por uma tarefa que vence hoje ou está atrasada vê "Suas tarefas" no topo; quem não é responsável não vê. **Ver minhas** filtra o quadro. Concluída a tarefa, o aviso some.
 6. Com um lembrete pendente: antes das 8h não há aviso; a partir das 8h ele aparece; ao dispensar, some e volta às 12h; marcado como feito, não volta.
 
