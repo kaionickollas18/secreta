@@ -35,6 +35,10 @@ describe("perfil das pessoas (regras)", () => {
       valid: true,
       value: { nickname: null, birthDate: null },
     });
+    // As letras ficam como foram escritas; só espaços repetidos viram um.
+    expect(validatePersonalDetails({ nickname: "Amigo  da   Escola", birthDate: "" }, today)).toMatchObject({
+      value: { nickname: "Amigo da Escola" },
+    });
     const errorsOf = (form: { nickname: string; birthDate: string }) => {
       const result = validatePersonalDetails(form, today);
       return result.valid ? {} : result.errors;

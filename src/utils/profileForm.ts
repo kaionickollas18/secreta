@@ -37,7 +37,7 @@ export function validatePersonalDetails(
   today: string = todayISO(),
 ): { valid: true; value: PersonalDetails } | { valid: false; errors: PersonalErrors } {
   const errors: PersonalErrors = {};
-  const nickname = sanitizeText(form.nickname).replace(/s+/g, " ");
+  const nickname = sanitizeText(form.nickname).replace(/\s+/g, " ");
   if (nickname.length > NICKNAME_MAX) errors.nickname = `Use no máximo ${NICKNAME_MAX} caracteres.`;
   if (form.birthDate !== "") {
     if (!isValidISODate(form.birthDate) || form.birthDate < "1900-01-01") errors.birthDate = "Informe uma data válida.";
