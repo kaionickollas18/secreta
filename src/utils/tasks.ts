@@ -179,3 +179,8 @@ export function resolveStatusChange(
   // Sair da coluna cancela o pedido pendente.
   return { status: toStatus, completionRequested: false, outcome: "moved" };
 }
+
+/** Tarefas não concluídas em que a pessoa é responsável, na ordem do quadro. */
+export function openTasksOf(tasks: Task[], userId: string): Task[] {
+  return sortBoard(tasks.filter((t) => t.status !== "done" && t.assignees.includes(userId)));
+}

@@ -19,6 +19,19 @@ export async function updateLastName(userId: string, lastName: string): Promise<
   return error ? GENERIC_ERROR : null;
 }
 
+/** Apelido e data de nascimento da própria pessoa (`null` apaga). */
+export async function updatePersonalDetails(
+  userId: string,
+  details: { nickname: string | null; birthDate: string | null },
+): Promise<string | null> {
+  if (!supabase) return GENERIC_ERROR;
+  const { error } = await supabase
+    .from("profiles")
+    .update({ nickname: details.nickname, birth_date: details.birthDate })
+    .eq("id", userId);
+  return error ? GENERIC_ERROR : null;
+}
+
 /**
  * Envia a foto nova (já reduzida) e aponta o perfil para ela. O nome do arquivo é aleatório:
  * o endereço muda a cada troca, então nenhum navegador fica mostrando a foto antiga.

@@ -1,21 +1,27 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { TeamSection } from "../components/profile/TeamSection";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { LogoutIcon } from "../components/ui/Icons";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAuthStore } from "../store/authStore";
+import { useDirectoryStore } from "../store/directoryStore";
+import { useTaskStore } from "../store/taskStore";
 import { useToastStore } from "../store/toastStore";
 import {
   LAST_NAME_MAX,
+  NICKNAME_MAX,
   preparePhoto,
   validateLastName,
   validatePasswordForm,
+  validatePersonalDetails,
   validatePhotoFile,
   type PasswordErrors,
   type PasswordForm,
+  type PersonalErrors,
 } from "../utils/profileForm";
-import { roleLabel } from "../utils/roles";
+import { isSchoolRole, roleLabel } from "../utils/roles";
 import { PASSWORD_MIN } from "../utils/userValidation";
 
 const FIELD =
@@ -23,7 +29,10 @@ const FIELD =
 const SECTION = "glass rounded-3xl p-5";
 const EMPTY_PASSWORD: PasswordForm = { current: "", next: "", confirm: "" };
 
-/** Perfil próprio: cada pessoa troca a foto, o sobrenome e a senha. */
+/**
+ * Perfil próprio: cada pessoa troca a foto, o sobrenome, o apelido, o nascimento e a senha.
+ * Também lista as pessoas da escola, com o perfil de cada uma para leitura.
+ */
 export default function PerfilApp() {
   const profile = useAuthStore((s) => s.profile);
   const { saveLastName, savePhoto, removePhoto, changePassword, signOut } = useAuthStore();
@@ -34,7 +43,32 @@ export default function PerfilApp() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [password, setPassword] = useState<PasswordForm>(EMPTY_PASSWORD);
   const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({});
-  const [busy, setBusy] = useState<"photo" | "name" | "password" | null>(null);
+  const [busy, setBusy] = useState<"photo" | "name" | "personal" | "password" | null>(null);
+  const members = useDirectoryStore((s) => s.members);
+  const loadDirectory = useDirectoryStore((s) => s.load);
+  const savePersonalDetails = useDirectoryStore((s) => s.savePersonalDetails);
+  const tasks = useTaskStore((s) => s.tasks);
+  const loadTasks = useTaskStore((s) => s.load);
+  const [personal, setPersonal] = useState({ nickname: "", birthDate: "" });
+  const [personalErrors, setPersonalErrors] = useState<PersonalErrors>({});
+
+  const userId = profile?.id;
+  const inSchool = profile ? isSchoolRole(profile.role) : false;
+  // Apelido e nascimento vêm do cadastro (o perfil da sessão guarda só o que a moldura usa).
+  const me = members.find((m) => m.id === userId);
+  const savedNickname = me?.nickname ?? "";
+  const savedBirthDate = me?.birthDate ?? "";
+
+  useEffect(() => {
+    if (!userId) return;
+    void loadDirectory();
+    if (inSchool) void loadTasks();
+  }, [userId, inSchool, loadDirectory, loadTasks]);
+
+  // Preenche o formulário quando o cadastro chega (ou muda depois de salvar).
+  useEffect(() => {
+    setPersonal({ nickname: savedNickname, birthDate: savedBirthDate });
+  }, [savedNickname, savedBirthDate]);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -83,6 +117,17 @@ export default function PerfilApp() {
     setLastNameError(null);
     setBusy("name");
     if (report(await saveLastName(result.value), "Sobrenome atualizado.")) setLastName(result.value);
+    setBusy(null);
+  }
+
+  async function handlePersonal(event: FormEvent) {
+    event.preventDefault();
+    if (!profile) return;
+    const result = validatePersonalDetails(personal);
+    setPersonalErrors(result.valid ? {} : result.errors);
+    if (!result.valid) return;
+    setBusy("personal");
+    report(await savePersonalDetails(profile.id, result.value), "Dados atualizados.");
     setBusy(null);
   }
 
@@ -203,6 +248,79 @@ export default function PerfilApp() {
             </Button>
           </form>
         </section>
+
+        <section className={SECTION} aria-labelledby="h-personal">
+          <h2 id="h-personal" className="section-title">
+            Apelido e nascimento
+          </h2>
+          <p className="caption mt-1">Opcionais. Aparecem no seu perfil para as pessoas da sua escola.</p>
+          <form onSubmit={handlePersonal} noValidate className="mt-3 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="profile-nickname" className="mb-1 block text-sm font-medium">
+                  Apelido
+                </label>
+                <input
+                  id="profile-nickname"
+                  className={FIELD}
+                  value={personal.nickname}
+                  maxLength={NICKNAME_MAX}
+                  autoComplete="nickname"
+                  placeholder="Como gosta de ser chamado(a)"
+                  aria-invalid={Boolean(personalErrors.nickname)}
+                  aria-describedby={personalErrors.nickname ? "profile-nickname-error" : undefined}
+                  onChange={(event) => setPersonal((current) => ({ ...current, nickname: event.target.value }))}
+                />
+                {personalErrors.nickname && (
+                  <p id="profile-nickname-error" role="alert" className="mt-1 text-sm text-prio-urgent">
+                    {personalErrors.nickname}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="profile-birth-date" className="mb-1 block text-sm font-medium">
+                  Data de nascimento
+                </label>
+                <input
+                  id="profile-birth-date"
+                  type="date"
+                  className={FIELD}
+                  value={personal.birthDate}
+                  autoComplete="bday"
+                  aria-invalid={Boolean(personalErrors.birthDate)}
+                  aria-describedby={personalErrors.birthDate ? "profile-birth-date-error" : undefined}
+                  onChange={(event) => setPersonal((current) => ({ ...current, birthDate: event.target.value }))}
+                />
+                {personalErrors.birthDate && (
+                  <p id="profile-birth-date-error" role="alert" className="mt-1 text-sm text-prio-urgent">
+                    {personalErrors.birthDate}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={
+                busy === "personal" ||
+                !me ||
+                (personal.nickname.trim() === savedNickname && personal.birthDate === savedBirthDate)
+              }
+            >
+              {busy === "personal" ? "Salvando…" : "Salvar apelido e nascimento"}
+            </Button>
+          </form>
+        </section>
+
+        {inSchool && profile.schoolId && (
+          <TeamSection
+            className={SECTION}
+            members={members}
+            schoolId={profile.schoolId}
+            currentUserId={profile.id}
+            tasks={tasks}
+          />
+        )}
 
         <section className={SECTION} aria-labelledby="h-password">
           <h2 id="h-password" className="section-title">

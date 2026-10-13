@@ -1,8 +1,10 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { create } from "zustand";
 import type { Member, School } from "../types/directory";
+import { isValidISODate } from "../utils/date";
 import { isUserRole } from "../utils/guards";
-import { avatarUrlOf } from "./profileApi";
+import type { PersonalDetails } from "../utils/profileForm";
+import { avatarUrlOf, updatePersonalDetails } from "./profileApi";
 import { supabase } from "./supabaseClient";
 
 const GENERIC_ERROR = "Não foi possível concluir a operação. Tente novamente.";
@@ -34,6 +36,8 @@ interface DirectoryState {
   createAssistant: (input: NewMember) => Promise<string | null>;
   updateMember: (id: string, patch: MemberPatch) => Promise<string | null>;
   deleteMember: (id: string) => Promise<string | null>;
+  /** A própria pessoa grava o apelido e o nascimento dela. */
+  savePersonalDetails: (userId: string, details: PersonalDetails) => Promise<string | null>;
 }
 
 /** Chama a Edge Function `manage-users` e extrai a mensagem de erro dela. */
@@ -72,7 +76,7 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
       set((s) => ({ status: s.status === "ready" ? "ready" : "loading" }));
       const [schools, profiles] = await Promise.all([
         supabase.from("schools").select("id, name"),
-        supabase.from("profiles").select("id, role, school_id, full_name, last_name, email, active, avatar_path, elevated"),
+        supabase.from("profiles").select("id, role, school_id, full_name, last_name, email, active, avatar_path, elevated, nickname, birth_date"),
       ]);
       if (schools.error || profiles.error) return set({ status: "error" });
       set({
@@ -91,6 +95,10 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
                   active: p.active,
                   avatarUrl: avatarUrlOf(p.avatar_path),
                   elevated: p.role === "assistant" && p.elevated === true,
+                  ...(typeof p.nickname === "string" && p.nickname ? { nickname: p.nickname } : {}),
+                  ...(typeof p.birth_date === "string" && isValidISODate(p.birth_date)
+                    ? { birthDate: p.birth_date }
+                    : {}),
                 },
               ]
             : [],
@@ -138,5 +146,6 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
       ),
 
     deleteMember: (id) => run(() => callManageUsers("delete_user", { user_id: id })),
+    savePersonalDetails: (userId, details) => run(() => updatePersonalDetails(userId, details)),
   };
 });

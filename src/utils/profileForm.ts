@@ -1,3 +1,4 @@
+import { isValidISODate, todayISO } from "./date";
 import { PASSWORD_MAX, PASSWORD_MIN } from "./userValidation";
 import { sanitizeText } from "./validation";
 
@@ -17,6 +18,33 @@ export function validateLastName(
   if (lastName.length > LAST_NAME_MAX)
     return { valid: false, error: `Use no máximo ${LAST_NAME_MAX} caracteres.` };
   return { valid: true, value: lastName };
+}
+
+export const NICKNAME_MAX = 30;
+
+export interface PersonalDetails {
+  /** `null` apaga o apelido. */
+  nickname: string | null;
+  /** YYYY-MM-DD; `null` apaga a data. */
+  birthDate: string | null;
+}
+
+export type PersonalErrors = Partial<Record<keyof PersonalDetails, string>>;
+
+/** Apelido e nascimento são opcionais: em branco, ficam sem valor. */
+export function validatePersonalDetails(
+  form: { nickname: string; birthDate: string },
+  today: string = todayISO(),
+): { valid: true; value: PersonalDetails } | { valid: false; errors: PersonalErrors } {
+  const errors: PersonalErrors = {};
+  const nickname = sanitizeText(form.nickname).replace(/s+/g, " ");
+  if (nickname.length > NICKNAME_MAX) errors.nickname = `Use no máximo ${NICKNAME_MAX} caracteres.`;
+  if (form.birthDate !== "") {
+    if (!isValidISODate(form.birthDate) || form.birthDate < "1900-01-01") errors.birthDate = "Informe uma data válida.";
+    else if (form.birthDate > today) errors.birthDate = "A data de nascimento não pode ser no futuro.";
+  }
+  if (Object.keys(errors).length > 0) return { valid: false, errors };
+  return { valid: true, value: { nickname: nickname || null, birthDate: form.birthDate || null } };
 }
 
 export interface PasswordForm {

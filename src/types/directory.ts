@@ -18,6 +18,10 @@ export interface Member {
   avatarUrl?: string;
   /** Auxiliar com acesso especial, concedido pelo secretário. */
   elevated?: boolean;
+  /** Como a pessoa prefere ser chamada. Ela mesma define, no Perfil. */
+  nickname?: string;
+  /** Data de nascimento (YYYY-MM-DD). Ela mesma informa, no Perfil. */
+  birthDate?: string;
 }
 
 /** Valores crus do formulário de cadastro/edição. */

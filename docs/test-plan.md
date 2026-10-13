@@ -19,6 +19,7 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `messages.test.ts` | Validação, agrupamento por dia, não lidas |
 | `calendar.test.ts`, `CalendarioApp.test.tsx` | Feriados nacionais, validação de feriados, grade do mês, lembretes e tarefas por dia, horários e regras dos avisos; tela do calendário por perfil |
 | `notes.test.tsx` | Validação e itens das notas, conversão do banco, vínculos, quem exclui; tela de notas e notas dentro de tarefa/lembrete |
+| `team.test.tsx` | Lista da equipe, apelido, idade, validação de apelido e nascimento; perfil de um colega na tela |
 | `AppShell.test.tsx` | Itens da barra por perfil e avisos |
 | `attendance.test.ts`, `sheetParser.test.ts`, `attendanceSource.test.ts` | Indicadores, leitura da planilha, link, arquivos CSV e base offline |
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
@@ -108,6 +109,13 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 4. Trocar a senha: senha atual errada mostra o erro no campo; com a certa, sair e entrar com a nova.
 5. Remover a foto: volta a inicial.
 6. Arquivo que não é imagem (PDF) é recusado com explicação.
+
+### 8b. Perfis das pessoas
+1. Em **Perfil**, preencher apelido e data de nascimento e salvar; recarregar e conferir. Apagar os dois e salvar de novo.
+2. Data no futuro mostra erro no campo.
+3. Em "Pessoas da escola", tocar em um colega: abre o perfil com foto, apelido, nome, função, nascimento, e-mail e as tarefas em aberto dele.
+4. Em outra conta da mesma escola, o apelido e o nascimento novos aparecem. Com duas escolas: ninguém de uma aparece na lista da outra.
+5. Tentar alterar o apelido de outra pessoa não é possível pela tela (não há campo); o banco só aceita a própria linha.
 
 ### 9. Responsivo e acessibilidade
 1. Largura de 360 px: a barra vai para baixo; colunas rolam; modais abrem como gaveta.
