@@ -31,8 +31,11 @@ export function timeLabel(iso: string): string {
 }
 
 /** Agrupa as mensagens (já em ordem cronológica) por dia local. */
-export function groupByDay(messages: Message[], now: Date = new Date()): { label: string; messages: Message[] }[] {
-  const groups: { label: string; messages: Message[] }[] = [];
+export function groupByDay<T extends { createdAt: string }>(
+  messages: T[],
+  now: Date = new Date(),
+): { label: string; messages: T[] }[] {
+  const groups: { label: string; messages: T[] }[] = [];
   for (const message of messages) {
     const label = dayLabel(message.createdAt, now);
     const last = groups[groups.length - 1];

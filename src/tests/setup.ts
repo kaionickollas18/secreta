@@ -11,6 +11,8 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 }
 
 afterEach(() => {
+  // Testes marcados com o ambiente "node" (criptografia) não têm janela.
+  if (typeof window === "undefined") return;
   cleanup();
   window.localStorage.clear();
 });

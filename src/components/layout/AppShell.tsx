@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuthStore } from "../../store/authStore";
+import { useChatStore } from "../../store/chatStore";
 import { useMessageStore } from "../../store/messageStore";
 import { useReminderStore } from "../../store/reminderStore";
+import { totalUnread, unreadByChannel } from "../../utils/chat";
 import { countUnread } from "../../utils/messages";
 import { readNavCollapsed, writeNavCollapsed } from "../../utils/navPreference";
 import { countDue } from "../../utils/reminders";
@@ -96,6 +98,11 @@ export function AppShell({ active, children }: AppShellProps) {
   const lastSeen = useMessageStore((s) => s.lastSeen);
   const loadMessages = useMessageStore((s) => s.load);
   const watchMessages = useMessageStore((s) => s.watch);
+  const directs = useChatStore((s) => s.directs);
+  const anonymous = useChatStore((s) => s.anonymous);
+  const chatSeen = useChatStore((s) => s.seen);
+  const loadChat = useChatStore((s) => s.load);
+  const watchChat = useChatStore((s) => s.watch);
   // Lido já no primeiro desenho, para o menu não abrir num modo e mudar em seguida.
   const [collapsed, setCollapsed] = useState(readNavCollapsed);
 
@@ -113,8 +120,14 @@ export function AppShell({ active, children }: AppShellProps) {
     if (!userId || !inSchool) return;
     void loadReminders();
     void loadMessages(userId);
-    return watchMessages(userId);
-  }, [userId, inSchool, loadReminders, loadMessages, watchMessages]);
+    void loadChat(userId);
+    const stopMessages = watchMessages(userId);
+    const stopChat = watchChat(userId);
+    return () => {
+      stopMessages();
+      stopChat();
+    };
+  }, [userId, inSchool, loadReminders, loadMessages, watchMessages, loadChat, watchChat]);
 
   if (!profile) return <>{children}</>;
 
@@ -125,8 +138,12 @@ export function AppShell({ active, children }: AppShellProps) {
   }
 
   const due = countDue(reminders, doneKeys);
-  // Na própria página do mural as mensagens já estão sendo lidas.
-  const unread = active === "mensagens" ? 0 : countUnread(messages, lastSeen, profile.id);
+  // Na própria página das conversas o aviso de cada uma aparece na lista dela.
+  const unread =
+    active === "mensagens"
+      ? 0
+      : countUnread(messages, lastSeen, profile.id) +
+        totalUnread(unreadByChannel(directs, anonymous, chatSeen, profile.id));
   const roleLabel = ROLE_LABELS[profile.role];
 
   const profileItem: NavItem = {
@@ -159,7 +176,7 @@ export function AppShell({ active, children }: AppShellProps) {
         { key: "notas", label: "Notas", href: "notas.html", icon: <NoteIcon /> },
         {
           key: "mensagens",
-          label: "Mensagens",
+          label: "Conversas",
           href: "mensagens.html",
           icon: <ChatIcon />,
           badge: unread,

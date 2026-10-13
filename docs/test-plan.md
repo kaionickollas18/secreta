@@ -20,6 +20,7 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `calendar.test.ts`, `CalendarioApp.test.tsx` | Feriados nacionais, validação de feriados, grade do mês, lembretes e tarefas por dia, horários e regras dos avisos; tela do calendário por perfil |
 | `notes.test.tsx` | Validação e itens das notas, conversão do banco, vínculos, quem exclui; tela de notas e notas dentro de tarefa/lembrete |
 | `team.test.tsx` | Lista da equipe, apelido, idade, validação de apelido e nascimento; perfil de um colega na tela |
+| `chatCrypto.test.ts`, `conversas.test.tsx` | Criptografia das conversas (os dois lados leem, terceiro não, senha errada não abre, chave não exportável); lista de conversas, não lidas, canal anônimo e moderação, pedido de senha |
 | `AppShell.test.tsx` | Itens da barra por perfil e avisos |
 | `attendance.test.ts`, `sheetParser.test.ts`, `attendanceSource.test.ts` | Indicadores, leitura da planilha, link, arquivos CSV e base offline |
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
@@ -30,7 +31,7 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 ### 1. Login e perfis
 1. Senha errada mostra "E-mail ou senha incorretos."
 2. Master entra e cai em **Gestão de escolas**; a barra mostra só "Escolas".
-3. Secretário vê Quadro, Lembretes, Calendário, Notas, Mensagens, Dashboard e Equipe. Auxiliar não vê Equipe.
+3. Secretário vê Quadro, Lembretes, Calendário, Notas, Conversas, Dashboard e Equipe. Auxiliar não vê Equipe.
 4. Auxiliar abrindo `gestao.html` direto vê "Sem acesso a esta página".
 5. **Sair** volta ao login.
 
@@ -85,6 +86,18 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 2. Em outra página, a barra mostra o contador de mensagens novas; ao abrir o mural, some.
 3. Cada um apaga a própria mensagem; o Secretário apaga a de qualquer pessoa; o Auxiliar não vê a lixeira nas mensagens dos outros.
 4. Enter envia; Shift+Enter quebra a linha; mensagem vazia mostra erro.
+
+### 6b. Conversas (diretas e anônimo)
+1. A aba **Conversas** lista Geral, Anônimo e cada colega ativo (foto e sobrenome). No celular, tocar abre a conversa e a seta volta para a lista.
+2. **Geral** continua sendo o mural (roteiro 6).
+3. **Anônimo**: escrever uma mensagem; na outra conta ela aparece como "Anônimo", sem recarregar. Só quem escreveu e o Secretário veem a lixeira.
+4. **Direta**: sair e entrar de novo com as duas contas (o login cria a chave). Enviar uma mensagem para o colega: chega na outra janela sem recarregar; o contador aparece no menu e na lista.
+5. No painel do Supabase, abrir a tabela `direct_messages`: a coluna `ciphertext` é ilegível.
+6. Uma terceira conta da mesma escola não vê a conversa entre as outras duas.
+7. Sessão que já estava aberta antes desta versão: a conversa direta pede a senha uma vez; senha errada mostra o erro.
+8. Trocar a senha em Perfil, sair e entrar com a nova: as conversas antigas continuam abrindo.
+9. Secretário redefine a senha de um auxiliar em Equipe: ao entrar, o auxiliar usa **Recomeçar**; as mensagens antigas aparecem para ele como "protegida que este aparelho não consegue abrir", e o colega continua lendo as dele.
+10. Colega que nunca entrou depois desta versão: o campo de escrever fica desligado, com o aviso.
 
 ### 7. Dashboard
 1. Sem configuração: Secretário vê "Configurar base de dados"; Auxiliar vê o aviso, sem botão.

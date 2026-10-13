@@ -47,3 +47,8 @@ Se um segredo for exposto (chat, print, commit), revogue e gere outro.
 - Poucas dependências, versões fixadas pelo lockfile; rodar `npm audit` periodicamente.
 - Depois de mudar o schema, rodar os avisos de segurança do Supabase (Advisors).
 - Recomendado ao publicar com cabeçalhos próprios: `Content-Security-Policy` restritiva (permitindo o domínio do Supabase, `docs.google.com` e as fontes do Google) e `X-Content-Type-Options: nosniff`. O GitHub Pages não permite configurar cabeçalhos.
+
+## Conversas
+- **Diretas**: criptografia de ponta a ponta no navegador. O banco guarda só o texto embaralhado; a chave privada de cada pessoa só existe no aparelho dela (não exportável) e, no banco, embaralhada com a senha. Protege de quem lê o banco; **não** protege de quem altera o código publicado do site, nem esconde quem falou com quem e quando. Sem a senha antiga não há recuperação do histórico.
+- **Anônimo**: sem nome para a escola, com a autoria guardada à parte para a própria pessoa apagar o que escreveu. Quem administra o banco consegue apurar a autoria; a tela avisa isso.
+- A função `my_chat_key()` é `security definer` de propósito: devolve só a linha de quem chama. O aviso do Supabase sobre ela é esperado.

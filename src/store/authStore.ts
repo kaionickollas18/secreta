@@ -3,6 +3,8 @@ import type { AuthStatus, Profile } from "../types/auth";
 import { isUserRole } from "../utils/guards";
 import { loginErrorMessage } from "../utils/authErrors";
 import { parseCachedProfile, PROFILE_CACHE_KEY } from "../utils/profileCache";
+import { rewrapForNewPassword, unlockWithPassword } from "./chatKeys";
+import { clearVault } from "./chatVault";
 import { avatarUrlOf, changePassword, removeAvatar, updateLastName, uploadAvatar } from "./profileApi";
 import { supabase } from "./supabaseClient";
 
@@ -126,12 +128,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email, password) => {
     if (!supabase) return;
     set({ error: null });
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) set({ error: loginErrorMessage(error) });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) return set({ error: loginErrorMessage(error) });
+    // Com a senha em mãos, já abre (ou cria) a chave das conversas protegidas neste aparelho.
+    // Se falhar, a aba Conversas pede a senha depois.
+    if (data.user) void unlockWithPassword(data.user.id, password, true);
   },
 
   signOut: async () => {
     writeCachedProfile(null);
+    await clearVault();
     await supabase?.auth.signOut();
     set({ status: "signedOut", profile: null, error: null });
   },
@@ -172,7 +178,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return error;
   },
 
-  changePassword: (current, next) => changePassword(current, next),
+  changePassword: async (current, next) => {
+    const error = await changePassword(current, next);
+    if (error) return error;
+    // A chave das conversas é protegida pela senha: acompanha a troca.
+    return (await rewrapForNewPassword(current, next))
+      ? null
+      : "Senha alterada. As conversas protegidas não acompanharam a troca: na aba Conversas, use “Recomeçar”.";
+  },
 }));
 
 /** Atualiza o perfil na tela e na cópia guardada no navegador. */

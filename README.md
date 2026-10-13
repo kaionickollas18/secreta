@@ -1,6 +1,6 @@
 # SECRETA
 
-Sistema web para a secretaria de escolas: quadro Kanban de tarefas, lembretes de prazos que se repetem, calendário com feriados, notas e listas de marcação, mural de mensagens da equipe e dashboard de frequência dos alunos. Cada escola enxerga apenas os próprios dados.
+Sistema web para a secretaria de escolas: quadro Kanban de tarefas, lembretes de prazos que se repetem, calendário com feriados, notas e listas de marcação, conversas da equipe (mural, canal anônimo e mensagens diretas criptografadas) e dashboard de frequência dos alunos. Cada escola enxerga apenas os próprios dados.
 
 O site é estático (pode ser publicado no GitHub Pages) e usa o [Supabase](https://supabase.com) para login, banco de dados, arquivos e atualização ao vivo.
 

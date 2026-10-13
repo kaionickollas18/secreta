@@ -125,6 +125,19 @@ export const FolderIcon = () => (
     <path d="M3.5 7A1.5 1.5 0 0 1 5 5.5h4.5l2 2.5H19a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5V7z" />
   </Icon>
 );
+export const LockIcon = () => (
+  <Icon>
+    <rect x="5" y="10.5" width="14" height="10" rx="2" />
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+  </Icon>
+);
+/** Máscara: o canal anônimo. */
+export const MaskIcon = () => (
+  <Icon>
+    <path d="M3.5 7.5c5.5-2 11.5-2 17 0v4.5a4.5 4.5 0 0 1-7.3 3.5L12 14.5l-1.2 1a4.5 4.5 0 0 1-7.3-3.5V7.5z" />
+    <path d="M7 11h2.5M14.5 11H17" />
+  </Icon>
+);
 export const ClockIcon = () => (
   <Icon>
     <circle cx="12" cy="12" r="9" />
