@@ -14,10 +14,11 @@ export interface TaskRow {
   position: number;
   created_at: string;
   updated_at: string;
+  completed_at: string | null;
 }
 
 export const TASK_COLUMNS =
-  "id, title, description, status, priority, assignee_ids, due_date, completion_requested, position, created_at, updated_at";
+  "id, title, description, status, priority, assignee_ids, due_date, completion_requested, position, created_at, updated_at, completed_at";
 
 /** Converte a linha do banco. Devolve `null` se status/prioridade forem desconhecidos. */
 export function taskFromRow(row: TaskRow): Task | null {
@@ -34,6 +35,7 @@ export function taskFromRow(row: TaskRow): Task | null {
     position: row.position,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    completedAt: row.completed_at ?? undefined,
   };
 }
 

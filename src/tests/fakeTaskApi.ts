@@ -67,8 +67,14 @@ export async function patchTask(
   if ("due_date" in patch) next.dueDate = (patch.due_date as string | null) ?? undefined;
   if ("completion_requested" in patch) next.completionRequested = patch.completion_requested as boolean;
   if ("position" in patch) next.position = patch.position as number;
-  // Como o banco: concluir encerra o pedido pendente.
+  // Como o banco: concluir encerra o pedido pendente e marca a data de conclusão.
   if (next.status === "done") next.completionRequested = false;
+  next.completedAt =
+    next.status !== "done"
+      ? undefined
+      : current.status === "done"
+        ? current.completedAt
+        : new Date().toISOString();
   db.tasks = db.tasks.map((t) => (t.id === id ? next : t));
   return { data: next, error: null };
 }

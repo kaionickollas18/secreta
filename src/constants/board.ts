@@ -31,7 +31,7 @@ export const EMPTY_COLUMN_HINTS: Record<TaskStatus, string> = {
   todo: "Arraste para cá o que você vai fazer em seguida.",
   in_progress: "Mantenha poucas tarefas aqui para terminar mais rápido.",
   review: "Tarefas aguardando conferência ficam nesta coluna.",
-  done: "Tudo o que for concluído aparece aqui.",
+  done: "O que for concluído fica aqui por 3 dias e depois segue no histórico.",
 };
 
 export const PRIORITY_LABELS: Record<TaskPriority, string> = {

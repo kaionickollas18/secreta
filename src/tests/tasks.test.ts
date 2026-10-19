@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FILTERS, filterTasks, groupByStatus, moveTask } from "../utils/tasks";
+import { DEFAULT_FILTERS, filterTasks, groupByStatus, moveTask, onBoard } from "../utils/tasks";
 import { makeTask } from "./helpers";
 
 describe("filterTasks", () => {
@@ -81,5 +81,24 @@ describe("moveTask", () => {
     expect(moveTask(list, "nope", "done")).toBe(list);
     expect(moveTask(list, "a", "done", "nope")).toBe(list);
     expect(moveTask(list, "a", "todo", "a")).toBe(list);
+  });
+});
+
+describe("onBoard", () => {
+  const now = new Date("2026-10-19T12:00:00.000Z");
+
+  it("mantém tarefas não concluídas, por mais antigas que sejam", () => {
+    expect(onBoard(makeTask({ status: "review", updatedAt: "2025-01-01T00:00:00.000Z" }), now)).toBe(true);
+  });
+
+  it("mostra a concluída por 3 dias e depois a tira do quadro", () => {
+    const doneAt = (completedAt: string) => makeTask({ status: "done", completedAt });
+    expect(onBoard(doneAt("2026-10-16T12:00:01.000Z"), now)).toBe(true);
+    expect(onBoard(doneAt("2026-10-16T12:00:00.000Z"), now)).toBe(false);
+  });
+
+  it("sem data de conclusão, usa a última edição", () => {
+    const old = makeTask({ status: "done", updatedAt: "2026-10-01T00:00:00.000Z" });
+    expect(onBoard(old, now)).toBe(false);
   });
 });

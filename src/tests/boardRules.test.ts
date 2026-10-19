@@ -168,11 +168,13 @@ describe("taskFromRow", () => {
     position: 4,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-02T00:00:00Z",
+    completed_at: null,
   };
 
   it("converte a linha do banco", () => {
     expect(taskFromRow(row)).toMatchObject({
       status: "review",
+      completedAt: undefined,
       assignees: [],
       description: undefined,
       dueDate: undefined,

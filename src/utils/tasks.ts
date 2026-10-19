@@ -180,6 +180,20 @@ export function resolveStatusChange(
   return { status: toStatus, completionRequested: false, outcome: "moved" };
 }
 
+/** Dias que uma tarefa concluída continua visível no quadro. Depois, só no histórico. */
+export const DONE_VISIBLE_DAYS = 3;
+
+/**
+ * A tarefa aparece no quadro? Concluídas saem depois de `DONE_VISIBLE_DAYS` dias; continuam
+ * no banco e no histórico. Sem `completedAt` (conclusões antigas), vale a última edição.
+ */
+export function onBoard(task: Task, now: Date = new Date()): boolean {
+  if (task.status !== "done") return true;
+  const completed = Date.parse(task.completedAt ?? task.updatedAt);
+  if (Number.isNaN(completed)) return true;
+  return now.getTime() - completed < DONE_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 /** Tarefas não concluídas em que a pessoa é responsável, na ordem do quadro. */
 export function openTasksOf(tasks: Task[], userId: string): Task[] {
   return sortBoard(tasks.filter((t) => t.status !== "done" && t.assignees.includes(userId)));

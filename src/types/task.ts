@@ -22,6 +22,8 @@ export interface Task {
   createdAt: string;
   /** ISO 8601 */
   updatedAt: string;
+  /** ISO 8601. Quando entrou em Concluído (preenchido pelo banco). */
+  completedAt?: string;
 }
 
 /** Dados editáveis de uma tarefa, já validados e normalizados. */
