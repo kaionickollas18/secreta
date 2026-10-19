@@ -115,7 +115,11 @@ describe("pesquisa e resumo na tela", () => {
     const report = studentReport(classes, "5 ano A", "Ana Lúcia");
     if (!report) throw new Error("relatório esperado");
     const onClose = vi.fn();
-    render(<StudentReportCard report={report} onClose={onClose} />);
+    const onPrint = vi.fn();
+    render(<StudentReportCard report={report} onClose={onClose} onPrint={onPrint} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Baixar PDF" }));
+    expect(onPrint).toHaveBeenCalledTimes(1);
 
     expect(screen.getByRole("heading", { name: "Ana Lúcia" })).toBeInTheDocument();
     expect(screen.getByText("Frequência abaixo de 75%: risco de reprovação por faltas.")).toBeInTheDocument();

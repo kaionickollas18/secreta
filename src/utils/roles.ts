@@ -61,6 +61,11 @@ export function canDeleteNote(role: UserRole, isAuthor: boolean): boolean {
   return isAuthor || role === "secretary";
 }
 
+/** Qualquer pessoa da escola registra e marca memorandos e ofícios; excluir, só o Secretário. */
+export function canDeleteDocuments(role: UserRole): boolean {
+  return role === "secretary";
+}
+
 /** O Secretário modera o mural: pode apagar mensagens de qualquer pessoa da escola. */
 export function canModerateMessages(role: UserRole): boolean {
   return role === "secretary";

@@ -190,3 +190,50 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Documentos oficiais em PDF. O documento (`.print-document`) fica fora da tela e, ao
+ * imprimir, é a única coisa que aparece: folha A4 branca, texto preto e a logo da escola ao
+ * fundo, bem clara. O navegador salva em PDF pela própria janela de impressão.
+ */
+.print-document {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  /* Some o aplicativo inteiro, inclusive janelas e avisos montados direto no body. */
+  body > *:not(.print-document) {
+    display: none !important;
+  }
+  .print-document {
+    display: block;
+    position: relative;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #000;
+    /* Mantém o cinza do cabeçalho da tabela mesmo com "gráficos de fundo" desligado. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Marca-d'água: centralizada em todas as páginas, por trás do texto. */
+  .print-watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 130mm;
+    max-height: 130mm;
+    object-fit: contain;
+    transform: translate(-50%, -50%);
+    opacity: 0.08;
+    z-index: -1;
+  }
+}

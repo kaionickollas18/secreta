@@ -19,10 +19,11 @@ import {
   ChevronLeftIcon,
   LogoutIcon,
   NoteIcon,
+  SendIcon,
   UsersIcon,
 } from "../ui/Icons";
 
-export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "mensagens" | "dashboard" | "gestao" | "perfil";
+export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "documentos" | "mensagens" | "dashboard" | "gestao" | "perfil";
 
 interface NavItem {
   key: NavKey;
@@ -174,6 +175,7 @@ export function AppShell({ active, children }: AppShellProps) {
         },
         { key: "calendario", label: "Calendário", href: "calendario.html", icon: <CalendarIcon /> },
         { key: "notas", label: "Notas", href: "notas.html", icon: <NoteIcon /> },
+        { key: "documentos", label: "Documentos", href: "documentos.html", icon: <SendIcon /> },
         {
           key: "mensagens",
           label: "Conversas",

@@ -21,10 +21,12 @@ function Stat({ label, value, tone = "" }: { label: string; value: string; tone?
 interface StudentReportCardProps {
   report: StudentReport;
   onClose: () => void;
+  /** Abre a impressão do documento oficial (de onde se salva o PDF). */
+  onPrint: () => void;
 }
 
 /** Resumo de um aluno: situação geral e a frequência de cada mês. */
-export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
+export function StudentReportCard({ report, onClose, onPrint }: StudentReportCardProps) {
   const days = (n: number) => `${n} ${n === 1 ? "dia" : "dias"}`;
   const absencesText = (n: number) => `${n} ${n === 1 ? "falta" : "faltas"}`;
 
@@ -43,9 +45,14 @@ export function StudentReportCard({ report, onClose }: StudentReportCardProps) {
             <RiskBadge risk={report.risk} />
           </p>
         </div>
-        <Button variant="ghost" onClick={onClose}>
-          Fechar resumo
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="depth" onClick={onPrint}>
+            Baixar PDF
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            Fechar resumo
+          </Button>
+        </div>
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -31,6 +31,7 @@ export default defineConfig({
         lembretes: "lembretes.html",
         calendario: "calendario.html",
         notas: "notas.html",
+        documentos: "documentos.html",
         mensagens: "mensagens.html",
         frequencia: "frequencia.html",
         gestao: "gestao.html",

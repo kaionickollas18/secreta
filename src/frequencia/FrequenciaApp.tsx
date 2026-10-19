@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BarList } from "../components/attendance/BarList";
 import { ClassesTable } from "../components/attendance/ClassesTable";
 import { DataSourceModal } from "../components/attendance/DataSourceModal";
+import { SchoolIdentityModal } from "../components/attendance/SchoolIdentityModal";
+import { StudentDocument } from "../components/attendance/StudentDocument";
 import { StudentReportCard } from "../components/attendance/StudentReportCard";
 import { StudentSearch } from "../components/attendance/StudentSearch";
 import { StudentsTable } from "../components/attendance/StudentsTable";
@@ -12,9 +14,13 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAttendanceData } from "../hooks/useAttendanceData";
 import { useAuthStore } from "../store/authStore";
+import { useSchoolStore } from "../store/schoolStore";
+import { useToastStore } from "../store/toastStore";
 import type { AttendanceStatus, ClassData } from "../types/attendance";
 import { prefersReducedMotion } from "../utils/arrivals";
+import { todayISO } from "../utils/date";
 import { canConfigureDashboard, effectiveRole } from "../utils/roles";
+import { hasIdentity } from "../utils/schoolIdentity";
 import {
   buildInsights,
   dailySeries,
@@ -85,6 +91,15 @@ export default function FrequenciaApp() {
   const [className, setClassName] = useState("all");
   const [query, setQuery] = useState("");
   const [sourceOpen, setSourceOpen] = useState(false);
+  const [identityOpen, setIdentityOpen] = useState(false);
+  const identity = useSchoolStore((s) => s.identity);
+  const loadIdentity = useSchoolStore((s) => s.load);
+  const pushToast = useToastStore((s) => s.push);
+  const schoolId = profile?.schoolId ?? null;
+
+  useEffect(() => {
+    if (schoolId) void loadIdentity(schoolId);
+  }, [schoolId, loadIdentity]);
   const [selected, setSelected] = useState<{ className: string; name: string } | null>(null);
   const searchRef = useRef<HTMLElement>(null);
   const allClasses = data?.classes ?? NO_CLASSES;
@@ -139,6 +154,22 @@ export default function FrequenciaApp() {
       hint: `${c.name}: ${c.absences} faltas em ${c.days} dias`,
     }));
 
+  /** Abre a impressão com o documento do aluno; o nome do PDF sugerido é o título da página. */
+  function printStudent(studentName: string) {
+    if (!hasIdentity(identity)) {
+      pushToast({
+        tone: "info",
+        message: canConfigure
+          ? "Preencha os “Dados da escola” para o cabeçalho do documento sair completo."
+          : "O secretário ainda não preencheu os dados da escola; o cabeçalho sai incompleto.",
+      });
+    }
+    const title = document.title;
+    document.title = `Frequência - ${studentName}`;
+    window.addEventListener("afterprint", () => (document.title = title), { once: true });
+    window.print();
+  }
+
   return (
     <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-5 px-4 py-5 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -177,9 +208,12 @@ export default function FrequenciaApp() {
             </>
           )}
           {canConfigure && (
-            <Button variant="depth" onClick={() => setSourceOpen(true)}>
-              Base de dados
-            </Button>
+            <>
+              <Button onClick={() => setIdentityOpen(true)}>Dados da escola</Button>
+              <Button variant="depth" onClick={() => setSourceOpen(true)}>
+                Base de dados
+              </Button>
+            </>
           )}
         </div>
       </header>
@@ -246,6 +280,13 @@ export default function FrequenciaApp() {
                   key={`${report.className}-${report.name}`}
                   report={report}
                   onClose={() => setSelected(null)}
+                  onPrint={() => printStudent(report.name)}
+                />
+                <StudentDocument
+                  report={report}
+                  identity={identity}
+                  issuedBy={profile?.fullName ?? ""}
+                  issuedOn={todayISO()}
                 />
               </div>
             )}
@@ -351,6 +392,13 @@ export default function FrequenciaApp() {
         </>
       )}
 
+      {profile?.schoolId && canConfigure && (
+        <SchoolIdentityModal
+          open={identityOpen}
+          schoolId={profile.schoolId}
+          onClose={() => setIdentityOpen(false)}
+        />
+      )}
       {profile?.schoolId && canConfigure && (
         <DataSourceModal
           open={sourceOpen}

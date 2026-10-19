@@ -21,6 +21,7 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `notes.test.tsx` | Validação e itens das notas, conversão do banco, vínculos, quem exclui; tela de notas e notas dentro de tarefa/lembrete |
 | `team.test.tsx` | Lista da equipe, apelido, idade, validação de apelido e nascimento; perfil de um colega na tela |
 | `chatCrypto.test.ts`, `conversas.test.tsx` | Criptografia das conversas (os dois lados leem, terceiro não, senha errada não abre, chave não exportável); lista de conversas, não lidas, canal anônimo e moderação, pedido de senha |
+| `documentos.test.tsx`, `schoolIdentity.test.tsx` | Regras e tela de memorandos e ofícios (registro, entrega com resumo, ordem, quem exclui); dados da escola e conteúdo do documento do aluno em PDF |
 | `AppShell.test.tsx` | Itens da barra por perfil e avisos |
 | `attendance.test.ts`, `sheetParser.test.ts`, `attendanceSource.test.ts` | Indicadores, leitura da planilha, link, arquivos CSV e base offline |
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
@@ -31,7 +32,7 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 ### 1. Login e perfis
 1. Senha errada mostra "E-mail ou senha incorretos."
 2. Master entra e cai em **Gestão de escolas**; a barra mostra só "Escolas".
-3. Secretário vê Quadro, Lembretes, Calendário, Notas, Conversas, Dashboard e Equipe. Auxiliar não vê Equipe.
+3. Secretário vê Quadro, Lembretes, Calendário, Notas, Documentos, Conversas, Dashboard e Equipe. Auxiliar não vê Equipe.
 4. Auxiliar abrindo `gestao.html` direto vê "Sem acesso a esta página".
 5. **Sair** volta ao login.
 
@@ -56,6 +57,7 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 2. Trocar o período; baixar o CSV e abrir no Excel (acentos corretos, colunas separadas).
 3. Excluir a tarefa concluída do quadro: o registro continua no histórico.
 4. Reabrir uma tarefa concluída: o registro sai do histórico.
+5. Tarefa concluída há mais de 3 dias some da coluna Concluído, mas continua no histórico e no CSV (para testar, no SQL Editor: `update tasks set completed_at = now() - interval '4 days' where id = '…'` e recarregar o quadro).
 
 ### 5. Lembretes
 1. Secretário cria "Todo mês, do dia 15 ao 20" e "A cada 2 meses".
@@ -114,6 +116,20 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 3. Ele cria uma tarefa, aprova um pedido e marca um lembrete como feito: tudo é aceito pelo banco.
 4. Abrindo `gestao.html` direto, ele vê "Sem acesso a esta página".
 5. Secretário retira o acesso: depois de recarregar, o auxiliar volta ao normal; uma tentativa de criar tarefa com a tela antiga aberta é recusada.
+
+### 7c. Documento do aluno em PDF
+1. Secretário, no Dashboard: **Dados da escola** → conferir nome, INEP, endereço, CEP e ato de criação; enviar a logo. Auxiliar não vê esse botão.
+2. Pesquisar um aluno e clicar em **Baixar PDF**: na janela de impressão, escolher "Salvar como PDF". Conferir fundo branco, cabeçalho com logo e dados, tabelas, linha de assinatura e a logo clara ao fundo.
+3. Aluno com muitos meses: o documento quebra de página sem cortar linha de tabela.
+4. No celular (Chrome/Safari): o mesmo botão abre a impressão do aparelho, com a opção de salvar em PDF.
+
+### 7d. Memorandos e ofícios
+0. A aba abre no **Quadro de números**. Tocar em um número livre abre o registro com o número preenchido; depois de salvar, o número fica azul. Tocar no azul abre a entrega; depois de marcar, fica rosa. Tocar no rosa mostra o documento com o resumo. Trocar para **Ofícios** mostra a numeração deles. Os passos abaixo são na visão **Lista**.
+1. Em **Documentos**, registrar um memorando e um ofício; os dois aparecem em "Aguardando entrega".
+2. **Marcar como entregue** sem resumo mostra o erro; com resumo, data e quem recebeu, o documento vai para "Entregues" mostrando o resumo.
+3. Data de entrega anterior à do documento, ou no futuro, é recusada.
+4. **Desfazer entrega** devolve o documento para a lista de pendentes, mantendo o resumo.
+5. Auxiliar registra, edita e marca, mas não vê a lixeira; o Secretário exclui. Com duas escolas: os documentos de uma não aparecem na outra.
 
 ### 8. Perfil
 1. Abrir **Perfil** na barra; enviar uma foto (JPG do celular): ela aparece no perfil, na barra e nos cartões em que a pessoa é responsável.

@@ -17,7 +17,7 @@ As regras valem no banco (RLS e triggers), não só na tela. Detalhes em [docs/v
 - **Login** com e-mail e senha; ninguém se cadastra sozinho.
 - **Quadro Kanban**: A Fazer, Em Progresso, Em Revisão e Concluído; arrastar e soltar (mouse, toque e teclado); prioridade, vencimento, responsáveis (secretário e auxiliares, pelo sobrenome); busca e filtros; atualização ao vivo entre usuários.
 - **Conclusão com aprovação**: o auxiliar pede, o secretário aprova ou devolve.
-- **Histórico** permanente das tarefas concluídas, com filtro de período e download em CSV.
+- **Histórico** permanente das tarefas concluídas, com filtro de período e download em CSV. No quadro, a tarefa concluída fica em Concluído por 3 dias e depois aparece só no histórico.
 - **Lembretes**: uma vez, toda semana ou a cada N meses com período de dias (ex.: todo mês, do dia 15 ao 20).
 - **Mensagens**: mural único por escola, ao vivo.
 - **Dashboard de frequência**: lê uma planilha do Google ou arquivos CSV enviados pelo secretário.
@@ -55,7 +55,7 @@ O `vite.config.ts` usa `base: "./"`, então o site funciona em qualquer nome de 
 
 ## Estrutura de pastas
 ```
-index.html, lembretes.html, calendario.html, notas.html, mensagens.html, frequencia.html, gestao.html   uma página por área
+index.html, lembretes.html, calendario.html, notas.html, documentos.html, mensagens.html, frequencia.html, gestao.html   uma página por área
 src/
   components/
     auth/        LoginPage, AuthGate

@@ -48,10 +48,10 @@ Sem servidor próprio: o back-end é o Supabase. Sem bibliotecas pesadas. Sem ar
 
 ## Estrutura
 ```
-*.html                          uma página por área (quadro, lembretes, calendario, notas, mensagens, frequencia, gestao)
+*.html                          uma página por área (quadro, lembretes, calendario, notas, documentos, mensagens, frequencia, gestao)
 src/
-  components/{auth,layout,board,task,reminders,calendar,notes,attendance,admin,ui}/   UI
-  {lembretes,calendario,notas,mensagens,frequencia,gestao}/   entrada de cada página
+  components/{auth,layout,board,task,reminders,calendar,notes,documents,chat,profile,attendance,admin,ui}/   UI
+  {lembretes,calendario,notas,documentos,mensagens,frequencia,gestao}/   entrada de cada página
   hooks/                        hooks de composição
   store/                        Zustand e acesso ao Supabase (*Api.ts)
   types/  constants/  utils/    domínio e funções puras

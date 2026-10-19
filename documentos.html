@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Memorandos e ofícios da secretaria." />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Documentos · SECRETA</title>
+    <!-- Prepara em segundo plano a página do item da barra sob o mouse; ela abre quase na hora.
+         O Dashboard busca a planilha inteira, então só é preparado no clique. -->
+    <script type="speculationrules">
+      {
+        "prerender": [
+          { "where": { "selector_matches": "nav a:not([href*='frequencia'])" }, "eagerness": "moderate" },
+          { "where": { "selector_matches": "nav a[href*='frequencia']" }, "eagerness": "conservative" }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/documentos/main.tsx"></script>
+  </body>
+</html>
