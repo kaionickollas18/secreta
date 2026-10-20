@@ -22,7 +22,7 @@ import {
   type PasswordForm,
   type PersonalErrors,
 } from "../utils/profileForm";
-import { isSchoolRole, roleLabel } from "../utils/roles";
+import { isSchoolRole, isStaffRole, roleLabel } from "../utils/roles";
 import { PASSWORD_MIN } from "../utils/userValidation";
 
 const FIELD =
@@ -55,6 +55,7 @@ export default function PerfilApp() {
 
   const userId = profile?.id;
   const inSchool = profile ? isSchoolRole(profile.role) : false;
+  const staff = profile ? isStaffRole(profile.role) : false;
   // Apelido e nascimento vêm do cadastro (o perfil da sessão guarda só o que a moldura usa).
   const me = members.find((m) => m.id === userId);
   const savedNickname = me?.nickname ?? "";
@@ -63,8 +64,8 @@ export default function PerfilApp() {
   useEffect(() => {
     if (!userId) return;
     void loadDirectory();
-    if (inSchool) void loadTasks();
-  }, [userId, inSchool, loadDirectory, loadTasks]);
+    if (staff) void loadTasks();
+  }, [userId, staff, loadDirectory, loadTasks]);
 
   // Preenche o formulário quando o cadastro chega (ou muda depois de salvar).
   useEffect(() => {
@@ -321,6 +322,7 @@ export default function PerfilApp() {
             currentUserId={profile.id}
             tasks={tasks}
             onStartChat={(member) => window.location.assign(chatHref(member.id))}
+            showTasks={staff}
           />
         )}
 

@@ -1,10 +1,10 @@
 # Segurança
 
-Escopo: site estático + Supabase. Três perfis (Master, Secretário, Auxiliar); cada escola só acessa os próprios dados. O sistema guarda nomes de funcionários e de alunos (menores de idade): privacidade é requisito.
+Escopo: site estático + Supabase. Quatro perfis (Master, Secretário, Auxiliar, Professor); cada escola só acessa os próprios dados. O sistema guarda nomes de funcionários e de alunos (menores de idade): privacidade é requisito.
 
 ## Autenticação
 - Supabase Auth com e-mail e senha. O cadastro público deve ficar **desligado** (Authentication → Sign In / Providers → Allow new users to sign up).
-- Contas só nascem pela Edge Function `manage-users`: o Master cria secretários; o Secretário cria auxiliares da própria escola.
+- Contas só nascem pela Edge Function `manage-users`: o Master cria secretários; o Secretário cria auxiliares e professores da própria escola. O Secretário também edita o perfil deles (nome, sobrenome, apelido, nascimento, e-mail, papel, foto) pela mesma função.
 - Desativar um usuário bloqueia o login (ban) e o perfil (`active = false`).
 - A tela de login não revela se o e-mail existe.
 - Recomendado: ligar a proteção contra senhas vazadas (Authentication → Password Security).

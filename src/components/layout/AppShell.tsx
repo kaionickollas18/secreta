@@ -7,7 +7,7 @@ import { totalUnread, unreadByChannel } from "../../utils/chat";
 import { countUnread } from "../../utils/messages";
 import { readNavCollapsed, writeNavCollapsed } from "../../utils/navPreference";
 import { countDue } from "../../utils/reminders";
-import { canManageAssistants, isSchoolRole, ROLE_LABELS } from "../../utils/roles";
+import { canManageAssistants, isSchoolRole, isStaffRole, ROLE_LABELS } from "../../utils/roles";
 import { Avatar } from "../ui/Avatar";
 import { LogoMark } from "../ui/Logo";
 import {
@@ -116,10 +116,11 @@ export function AppShell({ active, children }: AppShellProps) {
 
   const userId = profile?.id;
   const inSchool = profile ? isSchoolRole(profile.role) : false;
+  const staff = profile ? isStaffRole(profile.role) : false;
 
   useEffect(() => {
     if (!userId || !inSchool) return;
-    void loadReminders();
+    if (staff) void loadReminders();
     void loadMessages(userId);
     void loadChat(userId);
     const stopMessages = watchMessages(userId);
@@ -128,7 +129,7 @@ export function AppShell({ active, children }: AppShellProps) {
       stopMessages();
       stopChat();
     };
-  }, [userId, inSchool, loadReminders, loadMessages, watchMessages, loadChat, watchChat]);
+  }, [userId, inSchool, staff, loadReminders, loadMessages, watchMessages, loadChat, watchChat]);
 
   if (!profile) return <>{children}</>;
 
@@ -162,7 +163,18 @@ export function AppShell({ active, children }: AppShellProps) {
     ),
   };
 
-  const items: NavItem[] = inSchool
+  const conversations: NavItem = {
+    key: "mensagens",
+    label: "Conversas",
+    href: "mensagens.html",
+    icon: <ChatIcon />,
+    badge: unread,
+    badgeLabel: `${unread} ${unread === 1 ? "mensagem nova" : "mensagens novas"}`,
+  };
+  const calendar: NavItem = { key: "calendario", label: "Calendário", href: "calendario.html", icon: <CalendarIcon /> };
+  const dashboard: NavItem = { key: "dashboard", label: "Dashboard", href: "frequencia.html", icon: <ChartIcon /> };
+
+  const items: NavItem[] = staff
     ? [
         { key: "quadro", label: "Quadro", href: "./", icon: <BoardIcon /> },
         {
@@ -173,24 +185,20 @@ export function AppShell({ active, children }: AppShellProps) {
           badge: due,
           badgeLabel: `${due} ${due === 1 ? "lembrete pede" : "lembretes pedem"} atenção`,
         },
-        { key: "calendario", label: "Calendário", href: "calendario.html", icon: <CalendarIcon /> },
+        calendar,
         { key: "notas", label: "Notas", href: "notas.html", icon: <NoteIcon /> },
         { key: "documentos", label: "Documentos", href: "documentos.html", icon: <SendIcon /> },
-        {
-          key: "mensagens",
-          label: "Conversas",
-          href: "mensagens.html",
-          icon: <ChatIcon />,
-          badge: unread,
-          badgeLabel: `${unread} ${unread === 1 ? "mensagem nova" : "mensagens novas"}`,
-        },
-        { key: "dashboard", label: "Dashboard", href: "frequencia.html", icon: <ChartIcon /> },
+        conversations,
+        dashboard,
         ...(canManageAssistants(profile.role)
           ? [{ key: "gestao" as const, label: "Equipe", href: "gestao.html", icon: <UsersIcon /> }]
           : []),
         profileItem,
       ]
-    : [{ key: "gestao", label: "Escolas", href: "gestao.html", icon: <UsersIcon /> }, profileItem];
+    : inSchool
+      ? // Professor: o que é da escola toda, sem o trabalho interno da secretaria.
+        [conversations, calendar, dashboard, profileItem]
+      : [{ key: "gestao", label: "Escolas", href: "gestao.html", icon: <UsersIcon /> }, profileItem];
 
   const onProfile = active === "perfil";
 

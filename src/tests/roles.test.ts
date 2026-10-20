@@ -10,6 +10,8 @@ import {
   canModerateMessages,
   effectiveRole,
   isSchoolRole,
+  isStaffRole,
+  ROLE_LABELS,
   roleLabel,
 } from "../utils/roles";
 
@@ -58,5 +60,17 @@ describe("permissões por papel", () => {
     expect(isSchoolRole("master")).toBe(false);
     expect(isSchoolRole("secretary")).toBe(true);
     expect(isSchoolRole("assistant")).toBe(true);
+  });
+
+  it("o professor é da escola, mas não da secretaria, e não tem permissões de gestão", () => {
+    expect(isSchoolRole("teacher")).toBe(true);
+    expect(isStaffRole("teacher")).toBe(false);
+    expect(isStaffRole("assistant")).toBe(true);
+    expect(ROLE_LABELS.teacher).toBe("Professor(a)");
+    expect(roleLabel({ role: "teacher", elevated: true })).toBe("Professor(a)");
+    expect(effectiveRole({ role: "teacher", elevated: true })).toBe("teacher");
+    for (const can of [canManageTasks, canApproveCompletion, canConfigureDashboard, canManageReminders, canModerateMessages, canManageAssistants]) {
+      expect(can("teacher")).toBe(false);
+    }
   });
 });

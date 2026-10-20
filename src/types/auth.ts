@@ -1,4 +1,4 @@
-export const USER_ROLES = ["master", "secretary", "assistant"] as const;
+export const USER_ROLES = ["master", "secretary", "assistant", "teacher"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 /** Perfil do usuário logado (tabela `profiles`). */

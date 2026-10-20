@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useDirectoryStore } from "../../store/directoryStore";
 import { useToastStore } from "../../store/toastStore";
 import type { Member } from "../../types/directory";
-import { assistantsOf, filterMembers } from "../../utils/directory";
-import { ELEVATED_LABEL } from "../../utils/roles";
+import { displayName, filterMembers, managedMembers } from "../../utils/directory";
+import { ELEVATED_LABEL, ROLE_LABELS, type ManagedRole } from "../../utils/roles";
+import { Avatar } from "../ui/Avatar";
 import { Button } from "../ui/Button";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { EmptyState } from "../ui/EmptyState";
@@ -14,9 +15,11 @@ import { MemberForm } from "./MemberForm";
 
 type ModalState = { kind: "create" } | { kind: "edit"; member: Member } | null;
 
-/** Área do Secretário: cadastro dos auxiliares administrativos da escola. */
-export function AssistantsPanel() {
-  const { members, status, load, createAssistant, updateMember, deleteMember } = useDirectoryStore();
+const managedRoleOf = (member: Member): ManagedRole => (member.role === "teacher" ? "teacher" : "assistant");
+
+/** Área do Secretário: cadastro e perfil dos auxiliares administrativos e dos professores. */
+export function TeamPanel() {
+  const { members, status, load, createMember, updateMember, deleteMember } = useDirectoryStore();
   const pushToast = useToastStore((s) => s.push);
   const [modal, setModal] = useState<ModalState>(null);
   const [toDelete, setToDelete] = useState<Member | null>(null);
@@ -27,7 +30,7 @@ export function AssistantsPanel() {
     void load();
   }, [load]);
 
-  const all = assistantsOf(members);
+  const all = managedMembers(members);
   const shown = filterMembers(all, query);
 
   function finish(error: string | null, message: string): string | null {
@@ -42,7 +45,7 @@ export function AssistantsPanel() {
     if (!toDelete) return;
     const error = await deleteMember(toDelete.id);
     setToDelete(null);
-    pushToast(error ? { tone: "error", message: error } : { tone: "success", message: "Auxiliar excluído." });
+    pushToast(error ? { tone: "error", message: error } : { tone: "success", message: "Pessoa excluída." });
   }
 
   /** Dá ou retira o acesso especial. Conceder pede confirmação antes; retirar é imediato. */
@@ -62,17 +65,17 @@ export function AssistantsPanel() {
   }
 
   return (
-    <section aria-labelledby="h-assistants" className="space-y-4">
+    <section aria-labelledby="h-team-admin" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="h-assistants" className="panel-title">
-          Auxiliares administrativos
+        <h2 id="h-team-admin" className="panel-title">
+          Auxiliares e professores
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           {all.length > 0 && (
             <input
               type="search"
-              aria-label="Buscar auxiliar"
-              placeholder="Buscar auxiliar"
+              aria-label="Buscar pessoa"
+              placeholder="Buscar pessoa"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="glass min-h-[40px] w-full rounded-full px-4 text-sm placeholder:text-muted sm:w-56"
@@ -80,7 +83,7 @@ export function AssistantsPanel() {
           )}
           <Button variant="primary" onClick={() => setModal({ kind: "create" })}>
             <PlusIcon />
-            Novo auxiliar
+            Nova pessoa
           </Button>
         </div>
       </div>
@@ -99,45 +102,60 @@ export function AssistantsPanel() {
         </p>
       )}
       {status === "ready" && all.length === 0 && (
-        <EmptyState title="Nenhum auxiliar cadastrado" description="Cadastre quem vai ajudar nas tarefas da escola." />
+        <EmptyState
+          title="Ninguém cadastrado ainda"
+          description="Cadastre os auxiliares da secretaria e os professores da escola."
+        />
       )}
       {status === "ready" && all.length > 0 && shown.length === 0 && (
-        <p className="text-sm text-muted">Nenhum auxiliar encontrado para essa busca.</p>
+        <p className="text-sm text-muted">Ninguém encontrado para essa busca.</p>
       )}
 
       <ul className="grid gap-3 md:grid-cols-2">
         {shown.map((member) => (
           <li key={member.id} className="glass rounded-3xl p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="section-title">{member.fullName}</h3>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {member.elevated && (
-                  <span className="rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-light">
-                    {ELEVATED_LABEL}
+            <div className="flex items-start gap-3">
+              <Avatar id={member.id} name={member.lastName} url={member.avatarUrl} className="h-12 w-12 text-base" />
+              <div className="min-w-0 flex-1">
+                <h3 className="break-words section-title">{member.fullName}</h3>
+                <p className="truncate caption">
+                  {member.email}
+                  {member.nickname && ` · ${displayName(member)}`}
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <span className="rounded-full bg-raised px-2 py-0.5 text-xs font-medium">
+                    {ROLE_LABELS[member.role]}
                   </span>
-                )}
-                <ActiveBadge active={member.active} />
+                  {member.elevated && (
+                    <span className="rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-light">
+                      {ELEVATED_LABEL}
+                    </span>
+                  )}
+                  <ActiveBadge active={member.active} />
+                </div>
               </div>
             </div>
-            <p className="caption">{member.email}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button onClick={() => setModal({ kind: "edit", member })}>Editar</Button>
-              {member.elevated ? (
-                <Button
-                  aria-label={`Retirar o acesso de secretário de ${member.fullName}`}
-                  onClick={() => void setElevated(member, false)}
-                >
-                  Retirar acesso de secretário
-                </Button>
-              ) : (
-                <Button
-                  aria-label={`Dar acesso de secretário a ${member.fullName}`}
-                  onClick={() => setToElevate(member)}
-                >
-                  Dar acesso de secretário
-                </Button>
-              )}
-              <Button variant="danger" onClick={() => setToDelete(member)}>
+              <Button aria-label={`Editar ${member.fullName}`} onClick={() => setModal({ kind: "edit", member })}>
+                Editar
+              </Button>
+              {member.role === "assistant" &&
+                (member.elevated ? (
+                  <Button
+                    aria-label={`Retirar o acesso de secretário de ${member.fullName}`}
+                    onClick={() => void setElevated(member, false)}
+                  >
+                    Retirar acesso de secretário
+                  </Button>
+                ) : (
+                  <Button
+                    aria-label={`Dar acesso de secretário a ${member.fullName}`}
+                    onClick={() => setToElevate(member)}
+                  >
+                    Dar acesso de secretário
+                  </Button>
+                ))}
+              <Button variant="danger" aria-label={`Excluir ${member.fullName}`} onClick={() => setToDelete(member)}>
                 Excluir
               </Button>
             </div>
@@ -145,36 +163,57 @@ export function AssistantsPanel() {
         ))}
       </ul>
 
-      <Modal open={modal?.kind === "create"} title="Novo auxiliar" onClose={() => setModal(null)}>
+      <Modal open={modal?.kind === "create"} title="Nova pessoa" onClose={() => setModal(null)}>
         <MemberForm
           mode="create"
+          staff
           submitLabel="Cadastrar"
           onCancel={() => setModal(null)}
           onSubmit={async (v) =>
             finish(
-              await createAssistant({ fullName: v.fullName, email: v.email, password: v.password }),
-              "Auxiliar cadastrado.",
+              await createMember({ fullName: v.fullName, email: v.email, password: v.password, role: v.role }),
+              `${ROLE_LABELS[v.role]} cadastrado(a).`,
             )
           }
         />
       </Modal>
 
-      <Modal open={modal?.kind === "edit"} title="Editar auxiliar" onClose={() => setModal(null)}>
+      <Modal
+        open={modal?.kind === "edit"}
+        title={modal?.kind === "edit" ? `Editar ${modal.member.fullName}` : ""}
+        onClose={() => setModal(null)}
+      >
         {modal?.kind === "edit" && (
           <MemberForm
             key={modal.member.id}
             mode="edit"
-            initial={modal.member}
+            staff
+            initial={{
+              fullName: modal.member.fullName,
+              email: modal.member.email,
+              active: modal.member.active,
+              role: managedRoleOf(modal.member),
+              lastName: modal.member.lastName,
+              nickname: modal.member.nickname ?? "",
+              birthDate: modal.member.birthDate ?? "",
+              hasPhoto: Boolean(modal.member.avatarUrl),
+            }}
             submitLabel="Salvar"
             onCancel={() => setModal(null)}
             onSubmit={async (v) =>
               finish(
                 await updateMember(modal.member.id, {
                   fullName: v.fullName,
+                  lastName: v.lastName,
+                  nickname: v.nickname,
+                  birthDate: v.birthDate,
+                  email: v.email,
+                  role: v.role,
                   password: v.password,
                   active: v.active,
+                  removePhoto: v.removePhoto,
                 }),
-                "Auxiliar atualizado.",
+                "Perfil atualizado.",
               )
             }
           />
@@ -197,10 +236,10 @@ export function AssistantsPanel() {
 
       <ConfirmDialog
         open={toDelete !== null}
-        title="Excluir auxiliar?"
+        title={toDelete ? `Excluir ${ROLE_LABELS[toDelete.role].toLowerCase()}?` : "Excluir?"}
         message={
           toDelete
-            ? `${toDelete.fullName} perderá o acesso e será removido(a) dos responsáveis das tarefas. Esta ação não pode ser desfeita. Para apenas bloquear o acesso, use Editar e desmarque “Acesso ativo”.`
+            ? `${toDelete.fullName} perderá o acesso${toDelete.role === "assistant" ? " e será removido(a) dos responsáveis das tarefas" : ""}. Esta ação não pode ser desfeita. Para apenas bloquear o acesso, use Editar e desmarque “Acesso ativo”.`
             : ""
         }
         confirmLabel="Excluir"

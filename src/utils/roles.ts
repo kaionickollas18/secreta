@@ -4,6 +4,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   master: "Master",
   secretary: "Secretário",
   assistant: "Auxiliar Administrativo",
+  teacher: "Professor(a)",
 };
 
 /** Nome do acesso especial, como aparece na tela. */
@@ -24,11 +25,31 @@ export function roleLabel(profile: { role: UserRole; elevated?: boolean }): stri
   return profile.role === "assistant" && profile.elevated ? `${label} · ${ELEVATED_LABEL}` : label;
 }
 
-/** Perfis que usam o quadro e o dashboard (o Master só gerencia escolas). */
-export const SCHOOL_ROLES: readonly UserRole[] = ["secretary", "assistant"];
+/**
+ * Pessoas da escola: conversam, veem o calendário, o dashboard e os perfis dos colegas.
+ * O Master só gerencia escolas.
+ */
+export const SCHOOL_ROLES: readonly UserRole[] = ["secretary", "assistant", "teacher"];
+
+/**
+ * Equipe da secretaria: além do que a escola toda vê, usa o quadro, os lembretes, as notas e
+ * os memorandos e ofícios. O professor fica de fora (o banco também esconde essas tabelas dele).
+ */
+export const STAFF_ROLES: readonly UserRole[] = ["secretary", "assistant"];
+
+/** Papéis que o secretário cadastra na Equipe. */
+export const MANAGED_ROLES = ["assistant", "teacher"] as const;
+export type ManagedRole = (typeof MANAGED_ROLES)[number];
+
+/** Para onde vai o professor que abre uma página só da secretaria. */
+export const TEACHER_HOME = "mensagens.html";
 
 export function isSchoolRole(role: UserRole): boolean {
   return SCHOOL_ROLES.includes(role);
+}
+
+export function isStaffRole(role: UserRole): boolean {
+  return STAFF_ROLES.includes(role);
 }
 
 /** Somente o Secretário cria e exclui tarefas e define responsáveis. */

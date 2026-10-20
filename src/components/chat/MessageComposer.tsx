@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type Keybo
 import {
   applyMention,
   encodeMentions,
+  mentionsOutside,
   mentionTrigger,
   suggestMentions,
   type MentionOption,
@@ -17,12 +18,14 @@ interface MessageComposerProps {
   blocked?: string;
   /** Pessoas (`@`) e tarefas (`#`) que podem ser marcadas. */
   mentionOptions: MentionOption[];
+  /** Quem lê a conversa, quando não é a escola toda: marcar outra pessoa mostra um aviso. */
+  audience?: string[];
   /** Devolve a mensagem de erro, ou `null` se deu certo. */
   onSend: (text: string) => Promise<string | null>;
 }
 
 /** Campo de escrever: Enter envia, `@` sugere pessoas, `#` sugere tarefas, e há um botão de emojis. */
-export function MessageComposer({ placeholder, blocked, mentionOptions, onSend }: MessageComposerProps) {
+export function MessageComposer({ placeholder, blocked, mentionOptions, audience, onSend }: MessageComposerProps) {
   const [draft, setDraft] = useState("");
   const [caret, setCaret] = useState(0);
   const [picks, setPicks] = useState<MentionOption[]>([]);
@@ -40,6 +43,7 @@ export function MessageComposer({ placeholder, blocked, mentionOptions, onSend }
     () => (trigger && trigger.start !== dismissedAt ? suggestMentions(mentionOptions, trigger) : []),
     [trigger, dismissedAt, mentionOptions],
   );
+  const outsiders = useMemo(() => mentionsOutside(draft, picks, audience), [draft, picks, audience]);
   const listOpen = suggestions.length > 0;
   const active = Math.min(highlight, suggestions.length - 1);
 
@@ -168,6 +172,15 @@ export function MessageComposer({ placeholder, blocked, mentionOptions, onSend }
           : ""}
       </p>
 
+      {outsiders.length > 0 && (
+        <p role="status" className="mb-2 rounded-xl border border-prio-high/50 bg-prio-high-tint px-3 py-2 text-sm">
+          {outsiders.map((p) => p.label).join(", ")}{" "}
+          {outsiders.length === 1
+            ? "não participa desta conversa e não vai ver esta mensagem."
+            : "não participam desta conversa e não vão ver esta mensagem."}{" "}
+          Para chamar alguém, marque no Geral.
+        </p>
+      )}
       <div className="flex items-end gap-2">
         <EmojiPicker onPick={insertEmoji} disabled={Boolean(blocked)} />
         <label htmlFor="message-body" className="sr-only">

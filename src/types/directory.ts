@@ -1,3 +1,4 @@
+import type { ManagedRole } from "../utils/roles";
 import type { UserRole } from "./auth";
 
 export interface School {
@@ -31,6 +32,13 @@ export interface MemberFormValues {
   email: string;
   password: string;
   active: boolean;
+  /** Equipe da escola: auxiliar ou professor. */
+  role: ManagedRole;
+  /** Campos de perfil que o secretário edita (só na edição de alguém da equipe). */
+  lastName: string;
+  nickname: string;
+  birthDate: string;
+  removePhoto: boolean;
 }
 
 export type MemberFormErrors = Partial<Record<keyof MemberFormValues, string>>;

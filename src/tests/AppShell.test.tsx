@@ -11,7 +11,7 @@ import { useReminderStore } from "../store/reminderStore";
 import type { Profile } from "../types/auth";
 import { todayISO } from "../utils/date";
 import { NAV_PREFERENCE_KEY, parseNavCollapsed } from "../utils/navPreference";
-import { ASSISTANT, SECRETARY } from "./helpers";
+import { ASSISTANT, SECRETARY, TEACHER } from "./helpers";
 
 const MASTER: Profile = { id: "m", role: "master", schoolId: null, fullName: "Kaio Ribeiro", lastName: "Ribeiro" };
 
@@ -61,6 +61,15 @@ describe("AppShell", () => {
     ]);
     cleanup();
     expect(linkNames(renderShell(MASTER, "gestao"))).toEqual(["Escolas", "Perfil"]);
+  });
+
+  it("professor vê só Conversas, Calendário, Dashboard e Perfil, e não carrega lembretes", () => {
+    const original = useReminderStore.getState().load;
+    const load = vi.fn(async () => {});
+    useReminderStore.setState({ load });
+    expect(linkNames(renderShell(TEACHER, "mensagens"))).toEqual(["Conversas", "Calendário", "Dashboard", "Perfil"]);
+    expect(load).not.toHaveBeenCalled();
+    useReminderStore.setState({ load: original });
   });
 
   it("o topo do menu mostra quem está usando e leva ao perfil", () => {

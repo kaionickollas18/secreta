@@ -27,13 +27,14 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
 
 ## Roteiro manual
-Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escolas. Abra Secretário e Auxiliar em janelas diferentes (uma anônima).
+Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência, duas escolas. Abra Secretário e Auxiliar em janelas diferentes (uma anônima).
 
 ### 1. Login e perfis
 1. Senha errada mostra "E-mail ou senha incorretos."
 2. Master entra e cai em **Gestão de escolas**; a barra mostra só "Escolas".
 3. Secretário vê Quadro, Lembretes, Calendário, Notas, Documentos, Conversas, Dashboard e Equipe. Auxiliar não vê Equipe.
 4. Auxiliar abrindo `gestao.html` direto vê "Sem acesso a esta página".
+   - Professor vê só Conversas, Calendário, Dashboard e Perfil. Abrindo `index.html`, `lembretes.html`, `notas.html` ou `documentos.html` direto, vai para Conversas.
 5. **Sair** volta ao login.
 
 ### 2. Gestão
@@ -41,6 +42,9 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 2. Secretário desativado não consegue entrar; reativado, entra.
 3. Secretário cria um auxiliar; edita; desativa; exclui.
 4. E-mail repetido mostra "Já existe um usuário com este e-mail."
+   - Secretário cria um **professor** (Nova pessoa → Professor(a)); ele aparece na lista com o papel e sem o botão de acesso de secretário.
+   - Secretário edita alguém: muda nome (o sobrenome acompanha), sobrenome, apelido, nascimento e e-mail; salva; a pessoa passa a entrar com o e-mail novo e vê os dados novos no Perfil. "Remover a foto de perfil" tira a foto.
+   - Trocar um auxiliar responsável por tarefas para professor: ele sai dos responsáveis e perde o acesso de secretário, se tinha.
 5. Com duas escolas: o secretário de uma não vê pessoas, tarefas, lembretes nem mensagens da outra.
 
 ### 3. Quadro
@@ -155,6 +159,14 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 1. Largura de 360 px: a barra vai para baixo; colunas rolam; modais abrem como gaveta.
 2. Só com teclado: Tab/Shift+Tab, Enter, Esc; mover cartão (espaço, setas, espaço).
 3. Foco visível; foco volta ao botão de origem ao fechar um modal; zoom de 200%.
+
+### 10. Professor
+1. Entrar como professor: a barra mostra Conversas, Calendário, Dashboard e Perfil.
+2. Conversas: envia no Geral e no Anônimo; conversa direta com o secretário funciona nos dois sentidos. `#` não sugere tarefas.
+3. Calendário mostra feriados e eventos, sem tarefas nem lembretes e sem botões de criar. Dashboard abre só para leitura (sem "Configurar base de dados" nem "Dados da escola").
+4. Perfil → Pessoas da escola: o perfil dos colegas não mostra "Tarefas em aberto".
+5. **No banco** (SQL Editor, como o professor, ou pelo console do navegador com a sessão dele): `select` em `tasks`, `task_history`, `reminders`, `notes` e `official_documents` volta vazio.
+6. Numa conversa direta, marcar com `@` alguém de fora mostra o aviso de que essa pessoa não vai ver a mensagem.
 
 ## Casos críticos
 Um perfil fazendo o que não pode · dados de uma escola aparecendo em outra · conclusão sem aprovação · perda do histórico · lembrete com prazo errado · nomes de alunos expostos sem login.

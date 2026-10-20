@@ -8,8 +8,9 @@ O site é estático (pode ser publicado no GitHub Pages) e usa o [Supabase](http
 | Perfil | O que faz |
 |---|---|
 | **Master** | Cadastra, renomeia e exclui escolas; cadastra e edita o secretário de cada uma. Não vê tarefas. |
-| **Secretário** | Cadastra auxiliares. Cria e exclui tarefas, define responsáveis, conclui e aprova pedidos de conclusão. Cria lembretes e cadastra feriados. Configura a base de dados do dashboard. Modera o mural. |
+| **Secretário** | Cadastra auxiliares e professores e edita livremente o perfil deles (nome, sobrenome, apelido, nascimento, e-mail, papel, senha, foto). Cria e exclui tarefas, define responsáveis, conclui e aprova pedidos de conclusão. Cria lembretes e cadastra feriados. Configura a base de dados do dashboard. Modera o mural. |
 | **Auxiliar Administrativo** | Edita e move tarefas, pede a conclusão ao secretário. Vê lembretes e dashboard. Participa do mural. |
+| **Professor(a)** | Participa das conversas (Geral, Anônimo e diretas), vê o calendário, o dashboard de frequência e o perfil dos colegas. Não vê o quadro, os lembretes, as notas nem os memorandos e ofícios da secretaria. |
 
 As regras valem no banco (RLS e triggers), não só na tela. Detalhes em [docs/v2-supabase.md](docs/v2-supabase.md).
 
@@ -65,7 +66,7 @@ src/
     task/        TaskCard, TaskForm, TaskModal, AssigneeBadge…
     reminders/   ReminderCard, ReminderForm
     attendance/  gráficos, tabelas e DataSourceModal
-    admin/       MasterPanel, AssistantsPanel, MemberForm
+    admin/       MasterPanel, TeamPanel, MemberForm
     ui/          Button, Modal, ConfirmDialog, EmptyState, ToastViewport, Icons
   lembretes/ mensagens/ frequencia/ gestao/   entrada de cada página
   hooks/       composição (permissões, filtros, frequência)

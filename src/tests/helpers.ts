@@ -53,3 +53,11 @@ export const ASSISTANT: Profile = {
   fullName: "Ana Souza",
   lastName: "Souza",
 };
+
+export const TEACHER: Profile = {
+  id: "caio",
+  role: "teacher",
+  schoolId: "school-1",
+  fullName: "Caio Mendes",
+  lastName: "Mendes",
+};

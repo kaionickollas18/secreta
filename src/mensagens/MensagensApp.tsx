@@ -25,7 +25,7 @@ import { displayName, schoolTeam } from "../utils/directory";
 import { mentionsUser, type MentionOption } from "../utils/mentions";
 import { countUnread, MESSAGE_PAGE } from "../utils/messages";
 import { whenPageShown } from "../utils/pageLifecycle";
-import { canModerateMessages, effectiveRole } from "../utils/roles";
+import { canModerateMessages, effectiveRole, isStaffRole } from "../utils/roles";
 
 /** Fundo redondo dos ícones dos dois canais de todos, do tamanho das fotos dos colegas. */
 const CHANNEL_ICON = "flex h-11 w-11 items-center justify-center rounded-full";
@@ -66,11 +66,14 @@ export default function MensagensApp() {
   const schoolId = profile?.schoolId ?? null;
   const peerId = channel ? peerOfChannel(channel) : null;
 
+  // O professor não vê o quadro: para ele não há tarefas a marcar nem a mostrar no perfil.
+  const staff = profile ? isStaffRole(profile.role) : false;
+
   useEffect(() => {
     void loadDirectory();
     // As tarefas servem às marcações `#` e ao perfil (tarefas em aberto de cada pessoa).
-    void loadTasks();
-  }, [loadDirectory, loadTasks]);
+    if (staff) void loadTasks();
+  }, [loadDirectory, loadTasks, staff]);
 
   const team = useMemo(() => (schoolId ? schoolTeam(members, schoolId) : []), [members, schoolId]);
   const colleagues = useMemo(() => team.filter((m) => m.active && m.id !== userId), [team, userId]);
@@ -289,6 +292,7 @@ export default function MensagensApp() {
         }
         onSend={(text) => chat.sendDirect(userId, peer.id, text)}
         onDelete={setToDelete}
+        audience={[userId, peer.id]}
         currentUserId={userId}
         mentionOptions={mentionOptions}
         resolver={resolver}
@@ -360,6 +364,7 @@ export default function MensagensApp() {
           <MemberProfile
             member={profileMember}
             tasks={tasks}
+            showTasks={staff}
             onStartChat={
               colleagues.some((m) => m.id === profileMember.id) && peerId !== profileMember.id
                 ? () => {

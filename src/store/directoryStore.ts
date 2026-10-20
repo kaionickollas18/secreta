@@ -4,6 +4,7 @@ import type { Member, School } from "../types/directory";
 import { isValidISODate } from "../utils/date";
 import { isUserRole } from "../utils/guards";
 import type { PersonalDetails } from "../utils/profileForm";
+import type { ManagedRole } from "../utils/roles";
 import { avatarUrlOf, updatePersonalDetails } from "./profileApi";
 import { supabase } from "./supabaseClient";
 
@@ -17,6 +18,17 @@ interface NewMember {
 
 interface MemberPatch {
   fullName?: string;
+  /** Como aparece nas tarefas e nas conversas. */
+  lastName?: string;
+  /** Vazio apaga. */
+  nickname?: string;
+  /** AAAA-MM-DD; vazio apaga. */
+  birthDate?: string;
+  email?: string;
+  /** Auxiliar ou professor (só o secretário muda). */
+  role?: ManagedRole;
+  /** Apaga a foto de perfil da pessoa. */
+  removePhoto?: boolean;
   /** Vazio ou ausente mantém a senha atual. */
   password?: string;
   active?: boolean;
@@ -33,7 +45,8 @@ interface DirectoryState {
   createSchool: (schoolName: string, secretary: NewMember) => Promise<string | null>;
   renameSchool: (id: string, name: string) => Promise<string | null>;
   deleteSchool: (id: string) => Promise<string | null>;
-  createAssistant: (input: NewMember) => Promise<string | null>;
+  /** O secretário cadastra um auxiliar ou um professor da própria escola. */
+  createMember: (input: NewMember & { role: ManagedRole }) => Promise<string | null>;
   updateMember: (id: string, patch: MemberPatch) => Promise<string | null>;
   deleteMember: (id: string) => Promise<string | null>;
   /** A própria pessoa grava o apelido e o nascimento dela. */
@@ -125,12 +138,13 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
 
     deleteSchool: (id) => run(() => callManageUsers("delete_school", { school_id: id })),
 
-    createAssistant: (input) =>
+    createMember: (input) =>
       run(() =>
-        callManageUsers("create_assistant", {
+        callManageUsers("create_member", {
           full_name: input.fullName.trim(),
           email: input.email.trim(),
           password: input.password,
+          role: input.role,
         }),
       ),
 
@@ -139,6 +153,12 @@ export const useDirectoryStore = create<DirectoryState>((set, get) => {
         callManageUsers("update_user", {
           user_id: id,
           ...(patch.fullName !== undefined && { full_name: patch.fullName.trim() }),
+          ...(patch.lastName !== undefined && { last_name: patch.lastName.trim() }),
+          ...(patch.nickname !== undefined && { nickname: patch.nickname.trim() || null }),
+          ...(patch.birthDate !== undefined && { birth_date: patch.birthDate || null }),
+          ...(patch.email !== undefined && { email: patch.email.trim() }),
+          ...(patch.role !== undefined && { role: patch.role }),
+          ...(patch.removePhoto && { remove_photo: true }),
           ...(patch.password ? { password: patch.password } : {}),
           ...(patch.active !== undefined && { active: patch.active }),
           ...(patch.elevated !== undefined && { elevated: patch.elevated }),

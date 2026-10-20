@@ -130,6 +130,15 @@ export function suggestMentions(
     .map((s) => s.option);
 }
 
+/**
+ * Pessoas marcadas no texto que não leem esta conversa (numa direta, quem não é um dos dois).
+ * Sem `audience`, a conversa é da escola toda e ninguém fica de fora.
+ */
+export function mentionsOutside(text: string, picks: MentionOption[], audience?: string[]): MentionOption[] {
+  if (!audience) return [];
+  return picks.filter((p) => p.kind === "user" && !audience.includes(p.id) && text.includes(mentionText(p)));
+}
+
 /** Coloca a marcação escolhida no lugar do que estava sendo digitado. */
 export function applyMention(
   text: string,

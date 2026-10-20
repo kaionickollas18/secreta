@@ -65,6 +65,25 @@ export function validatePasswordForm(form: PasswordForm): { valid: boolean; erro
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
+/**
+ * Campos de perfil que o secretário edita na Equipe (sobrenome, apelido, nascimento e e-mail).
+ * Mesmas regras de quando a própria pessoa edita, mais o e-mail.
+ */
+export function validateStaffProfile(
+  form: { lastName: string; nickname: string; birthDate: string; email: string },
+  today: string = todayISO(),
+): { valid: boolean; errors: Partial<Record<"lastName" | "nickname" | "birthDate" | "email", string>> } {
+  const errors: Partial<Record<"lastName" | "nickname" | "birthDate" | "email", string>> = {};
+  const lastName = validateLastName(form.lastName);
+  if (!lastName.valid) errors.lastName = lastName.error;
+  const personal = validatePersonalDetails(form, today);
+  if (!personal.valid) Object.assign(errors, personal.errors);
+  const email = form.email.trim();
+  if (!email) errors.email = "Informe o e-mail.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Informe um e-mail válido.";
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
 /** Confere o arquivo escolhido antes de processar. Devolve a mensagem de erro, ou `null`. */
 export function validatePhotoFile(file: { type: string; size: number }): string | null {
   if (!(PHOTO_TYPES as readonly string[]).includes(file.type))

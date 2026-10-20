@@ -15,6 +15,8 @@ interface TeamSectionProps {
   tasks: Task[];
   /** Abre a conversa com a pessoa (não aparece para si mesmo nem para inativos). */
   onStartChat?: (member: Member) => void;
+  /** Mostra as tarefas em aberto de cada pessoa (só para quem vê o quadro). */
+  showTasks?: boolean;
   className?: string;
 }
 
@@ -25,6 +27,7 @@ export function TeamSection({
   currentUserId,
   tasks,
   onStartChat,
+  showTasks = true,
   className = "",
 }: TeamSectionProps) {
   const team = useMemo(() => schoolTeam(members, schoolId), [members, schoolId]);
@@ -73,6 +76,7 @@ export function TeamSection({
           <MemberProfile
             member={opened}
             tasks={tasks}
+            showTasks={showTasks}
             onStartChat={
               onStartChat && opened.active && opened.id !== currentUserId ? () => onStartChat(opened) : undefined
             }

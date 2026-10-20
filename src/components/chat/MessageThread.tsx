@@ -33,6 +33,8 @@ interface MessageThreadProps {
   /** Pessoas e tarefas que podem ser marcadas com `@` e `#`. */
   mentionOptions: MentionOption[];
   resolver: MentionResolver;
+  /** Quem lê esta conversa, quando não é a escola toda (conversa direta). */
+  audience?: string[];
 }
 
 /** Uma conversa: as mensagens por dia e o campo de escrever. Serve para todos os canais. */
@@ -52,6 +54,7 @@ export function MessageThread({
   currentUserId,
   mentionOptions,
   resolver,
+  audience,
 }: MessageThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const groups = useMemo(() => groupByDay(messages), [messages]);
@@ -157,7 +160,13 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
-      <MessageComposer placeholder={placeholder} blocked={blocked} mentionOptions={mentionOptions} onSend={onSend} />
+      <MessageComposer
+        placeholder={placeholder}
+        blocked={blocked}
+        mentionOptions={mentionOptions}
+        audience={audience}
+        onSend={onSend}
+      />
     </>
   );
 }

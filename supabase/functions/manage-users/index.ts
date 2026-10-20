@@ -1,7 +1,8 @@
 // Edge Function (Deno): cria e gerencia usuários. Precisa da service role, que NUNCA vai ao navegador.
 // Quem pode o quê:
 //   master    → create_school (escola + secretário), delete_school, update_user/delete_user de secretários
-//   secretary → create_assistant, update_user/delete_user de auxiliares da própria escola
+//   secretary → create_member (auxiliar ou professor), update_user/delete_user de auxiliares e
+//               professores da própria escola. `create_assistant` continua aceito (versões antigas da tela).
 // "Quem chama" é sempre o papel real (coluna role): um auxiliar com acesso especial age como
 // secretário no quadro, mas não gerencia a equipe.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -12,7 +13,16 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-type Role = "master" | "secretary" | "assistant";
+type Role = "master" | "secretary" | "assistant" | "teacher";
+
+/** Papéis que o secretário cadastra e edita. */
+const STAFF_ROLES: Role[] = ["assistant", "teacher"];
+
+function staffRole(value: unknown): Role {
+  const role = STAFF_ROLES.find((r) => r === value);
+  if (!role) throw new HttpError(400, "Papel inválido.");
+  return role;
+}
 
 interface Caller {
   id: string;
@@ -60,6 +70,24 @@ function password(value: unknown): string {
 }
 
 const lastNameOf = (fullName: string) => fullName.split(/\s+/).pop() ?? fullName;
+
+/** Texto opcional: vazio ou `null` apaga o campo. */
+function optionalText(value: unknown, field: string, max: number): string | null {
+  if (value === null || (typeof value === "string" && value.trim() === "")) return null;
+  return text(value, field, 1, max);
+}
+
+/** Data de nascimento (AAAA-MM-DD) entre 1900 e hoje, ou `null` para apagar. */
+function birthDate(value: unknown): string | null {
+  if (value === null || value === "") return null;
+  const v = typeof value === "string" ? value : "";
+  const date = new Date(`${v}T00:00:00Z`);
+  const valid = /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(date.getTime()) && date.toISOString().startsWith(v);
+  if (!valid || v < "1900-01-01" || v > new Date().toISOString().slice(0, 10)) {
+    throw new HttpError(400, "Data de nascimento inválida.");
+  }
+  return v;
+}
 
 async function getCaller(req: Request): Promise<Caller> {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -117,20 +145,38 @@ async function removeAvatars(userId: string): Promise<void> {
   }
 }
 
+/** Tira a pessoa dos responsáveis das tarefas (ao excluir, ou ao virar professor). */
+async function removeFromTasks(userId: string): Promise<void> {
+  const { data: tasks } = await admin.from("tasks").select("id, assignee_ids").contains("assignee_ids", [userId]);
+  for (const task of tasks ?? []) {
+    await admin
+      .from("tasks")
+      .update({ assignee_ids: (task.assignee_ids as string[]).filter((a) => a !== userId) })
+      .eq("id", task.id);
+  }
+}
+
 /** Verifica se o chamador pode gerenciar o alvo e devolve o perfil dele. */
 async function loadManageable(caller: Caller, userId: unknown) {
   const id = text(userId, "usuário", 36, 36);
   const { data: target } = await admin
     .from("profiles")
-    .select("id, role, school_id, full_name")
+    .select("id, role, school_id, full_name, email, avatar_path")
     .eq("id", id)
     .maybeSingle();
   if (!target) throw new HttpError(404, "Usuário não encontrado.");
   const allowed =
     (caller.role === "master" && target.role === "secretary") ||
-    (caller.role === "secretary" && target.role === "assistant" && target.school_id === caller.school_id);
+    (caller.role === "secretary" && STAFF_ROLES.includes(target.role) && target.school_id === caller.school_id);
   if (!allowed) throw new HttpError(403, "Sem permissão para este usuário.");
-  return target as { id: string; role: Role; school_id: string; full_name: string };
+  return target as {
+    id: string;
+    role: Role;
+    school_id: string;
+    full_name: string;
+    email: string;
+    avatar_path: string | null;
+  };
 }
 
 async function handle(action: unknown, body: Record<string, unknown>, caller: Caller) {
@@ -159,15 +205,16 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
       }
     }
 
-    case "create_assistant": {
+    case "create_assistant":
+    case "create_member": {
       if (caller.role !== "secretary" || !caller.school_id) {
-        throw new HttpError(403, "Somente o Secretário cadastra auxiliares.");
+        throw new HttpError(403, "Somente o Secretário cadastra a equipe da escola.");
       }
       const userId = await createUser({
         email: email(body.email),
         password: password(body.password),
         fullName: text(body.full_name, "nome", 2, 120),
-        role: "assistant",
+        role: action === "create_member" ? staffRole(body.role) : "assistant",
         schoolId: caller.school_id,
         createdBy: caller.id,
       });
@@ -187,6 +234,30 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
           profilePatch.last_name = lastNameOf(fullName);
         }
       }
+      // O secretário edita livremente o perfil da equipe; o sobrenome informado vale mais
+      // que o derivado do nome completo.
+      if (body.last_name !== undefined) profilePatch.last_name = text(body.last_name, "sobrenome", 1, 60);
+      if (body.nickname !== undefined) profilePatch.nickname = optionalText(body.nickname, "apelido", 30);
+      if (body.birth_date !== undefined) profilePatch.birth_date = birthDate(body.birth_date);
+      if (body.email !== undefined) {
+        const mail = email(body.email);
+        if (mail !== target.email) {
+          profilePatch.email = mail;
+          authPatch.email = mail;
+          authPatch.email_confirm = true;
+        }
+      }
+      if (body.role !== undefined) {
+        if (caller.role !== "secretary") throw new HttpError(403, "Somente o Secretário muda o papel de alguém.");
+        const role = staffRole(body.role);
+        if (role !== target.role) {
+          profilePatch.role = role;
+          // O acesso especial é só de auxiliar: quem vira professor perde.
+          if (role !== "assistant") profilePatch.elevated = false;
+        }
+      }
+      const removePhoto = body.remove_photo === true && Boolean(target.avatar_path);
+      if (removePhoto) profilePatch.avatar_path = null;
       if (body.password !== undefined) authPatch.password = password(body.password);
       if (body.active !== undefined) {
         const active = body.active === true;
@@ -196,32 +267,33 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
       // Acesso especial: só o secretário concede, e só a auxiliares da própria escola
       // (loadManageable já garantiu as duas coisas quando quem chama é secretário).
       if (body.elevated !== undefined) {
-        if (caller.role !== "secretary" || target.role !== "assistant") {
+        const finalRole = (profilePatch.role as Role | undefined) ?? target.role;
+        if (caller.role !== "secretary" || finalRole !== "assistant") {
           throw new HttpError(403, "Somente o Secretário define o acesso especial de um auxiliar.");
         }
         profilePatch.elevated = body.elevated === true;
+      }
+      // O acesso (e-mail, senha) vem antes: um e-mail já usado falha aqui, sem deixar o perfil pela metade.
+      if (Object.keys(authPatch).length > 0) {
+        const { error } = await admin.auth.admin.updateUserById(target.id, authPatch);
+        if (error) {
+          const taken = error.message.toLowerCase().includes("already");
+          throw new HttpError(taken ? 409 : 400, taken ? "Já existe um usuário com este e-mail." : "Não foi possível atualizar o acesso.");
+        }
       }
       if (Object.keys(profilePatch).length > 0) {
         const { error } = await admin.from("profiles").update(profilePatch).eq("id", target.id);
         if (error) throw new HttpError(400, "Não foi possível atualizar o perfil.");
       }
-      if (Object.keys(authPatch).length > 0) {
-        const { error } = await admin.auth.admin.updateUserById(target.id, authPatch);
-        if (error) throw new HttpError(400, "Não foi possível atualizar o acesso.");
-      }
+      if (removePhoto) await removeAvatars(target.id);
+      // Professor não é responsável por tarefas da secretaria.
+      if (profilePatch.role === "teacher") await removeFromTasks(target.id);
       return { ok: true };
     }
 
     case "delete_user": {
       const target = await loadManageable(caller, body.user_id);
-      // Tira o usuário dos responsáveis das tarefas antes de remover.
-      const { data: tasks } = await admin.from("tasks").select("id, assignee_ids").contains("assignee_ids", [target.id]);
-      for (const task of tasks ?? []) {
-        await admin
-          .from("tasks")
-          .update({ assignee_ids: (task.assignee_ids as string[]).filter((a) => a !== target.id) })
-          .eq("id", task.id);
-      }
+      await removeFromTasks(target.id);
       await removeAvatars(target.id);
       const { error } = await admin.auth.admin.deleteUser(target.id);
       if (error) throw new HttpError(400, "Não foi possível excluir o usuário.");

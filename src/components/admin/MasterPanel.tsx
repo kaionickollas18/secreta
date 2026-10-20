@@ -197,7 +197,7 @@ export function MasterPanel() {
           <MemberForm
             key={modal.member.id}
             mode="edit"
-            initial={modal.member}
+            initial={{ fullName: modal.member.fullName, email: modal.member.email, active: modal.member.active }}
             submitLabel="Salvar"
             onCancel={() => setModal(null)}
             onSubmit={async (v) =>

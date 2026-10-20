@@ -8,6 +8,11 @@ const valid: MemberFormValues = {
   email: "ana@escola.com",
   password: "senha-forte-1",
   active: true,
+  role: "assistant",
+  lastName: "Souza",
+  nickname: "",
+  birthDate: "",
+  removePhoto: false,
 };
 
 describe("validateMemberForm", () => {

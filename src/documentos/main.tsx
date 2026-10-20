@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { AuthGate } from "../components/auth/AuthGate";
 import { AppShell } from "../components/layout/AppShell";
 import "../index.css";
-import { SCHOOL_ROLES } from "../utils/roles";
+import { STAFF_ROLES, TEACHER_HOME } from "../utils/roles";
 import DocumentosApp from "./DocumentosApp";
 
 const root = document.getElementById("root");
@@ -14,7 +14,7 @@ if (!root) throw new Error("Elemento #root não encontrado.");
 const app = createRoot(root);
 flushSync(() => app.render(
   <StrictMode>
-    <AuthGate allow={SCHOOL_ROLES} redirects={{ master: "gestao.html" }}>
+    <AuthGate allow={STAFF_ROLES} redirects={{ master: "gestao.html", teacher: TEACHER_HOME }}>
       <AppShell active="documentos">
         <DocumentosApp />
       </AppShell>

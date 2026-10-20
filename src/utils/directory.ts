@@ -1,4 +1,5 @@
 import type { Member, School } from "../types/directory";
+import { MANAGED_ROLES } from "./roles";
 import { normalizeText } from "./tasks";
 
 const byName = (a: { fullName: string }, b: { fullName: string }) =>
@@ -23,12 +24,20 @@ export function displayName(member: Pick<Member, "fullName" | "nickname">): stri
   return member.nickname || member.fullName;
 }
 
-/** Secretário e auxiliares de uma escola: o secretário primeiro, depois os ativos, por nome. */
+/**
+ * Pessoas de uma escola (secretário, auxiliares e professores): o secretário primeiro, depois
+ * a secretaria, os professores e, por último, os inativos; cada grupo por nome.
+ */
 export function schoolTeam(members: Member[], schoolId: string): Member[] {
-  const rank = (m: Member) => (m.role === "secretary" ? 0 : m.active ? 1 : 2);
+  const rank = (m: Member) => (m.role === "secretary" ? 0 : !m.active ? 3 : m.role === "assistant" ? 1 : 2);
   return members
-    .filter((m) => m.schoolId === schoolId && (m.role === "secretary" || m.role === "assistant"))
+    .filter((m) => m.schoolId === schoolId && m.role !== "master")
     .sort((a, b) => rank(a) - rank(b) || byName(a, b));
+}
+
+/** Quem o secretário cadastra e edita na Equipe: auxiliares e professores, por nome. */
+export function managedMembers(members: Member[]): Member[] {
+  return members.filter((m) => MANAGED_ROLES.some((r) => r === m.role)).sort(byName);
 }
 
 /** Idade em anos completos em `today` (datas YYYY-MM-DD). */
