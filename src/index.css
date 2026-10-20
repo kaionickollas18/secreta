@@ -193,23 +193,24 @@
 
 /*
  * Documentos oficiais em PDF. O documento (`.print-document`) fica fora da tela e, ao
- * imprimir, é a única coisa que aparece: folha A4 branca, texto preto e a logo da escola ao
- * fundo, bem clara. O navegador salva em PDF pela própria janela de impressão.
+ * imprimir, é a única coisa que aparece: folha A4 deitada, fundo branco, cartões claros com
+ * destaque em azul e a logo da escola ao fundo, bem clara. O navegador salva em PDF pela
+ * própria janela de impressão.
  */
 .print-document {
   display: none;
 }
 @media print {
   @page {
-    size: A4;
-    margin: 18mm 16mm;
+    size: A4 landscape;
+    margin: 9mm 11mm;
   }
   html {
     color-scheme: light;
   }
   body {
     background: #fff !important;
-    color: #000 !important;
+    color: #1d2433 !important;
   }
   /* Some o aplicativo inteiro, inclusive janelas e avisos montados direto no body. */
   body > *:not(.print-document) {
@@ -218,22 +219,421 @@
   .print-document {
     display: block;
     position: relative;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #000;
-    /* Mantém o cinza do cabeçalho da tabela mesmo com "gráficos de fundo" desligado. */
+    /* Mantém cores e fundos mesmo com "gráficos de fundo" desligado na impressão. */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  /* Marca-d'água: centralizada em todas as páginas, por trás do texto. */
+  /* Marca-d'água: centralizada em todas as páginas, por trás do conteúdo. */
   .print-watermark {
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 130mm;
-    max-height: 130mm;
+    width: 120mm;
+    max-height: 120mm;
     object-fit: contain;
     transform: translate(-50%, -50%);
-    opacity: 0.08;
+    opacity: 0.06;
     z-index: -1;
   }
+}
+
+/* ───────────── Documento do aluno: cartões claros, azul de destaque, leitura fácil ───────────── */
+.doc {
+  --doc-ink: #1d2433;
+  --doc-muted: #5f687a;
+  --doc-line: #e1e6f0;
+  --doc-card: rgba(255, 255, 255, 0.9);
+  --doc-soft: #f3f6fb;
+  --doc-accent: #4f7be8;
+  --doc-accent-soft: #e8effd;
+  --doc-ok: #23895b;
+  --doc-ok-soft: #e1f3ea;
+  --doc-warning: #b87503;
+  --doc-warning-soft: #fcf0d6;
+  --doc-critical: #c93c3c;
+  --doc-critical-soft: #fae3e3;
+  font-family: "Schibsted Grotesk", Arial, Helvetica, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.35;
+  color: var(--doc-ink);
+}
+.doc p,
+.doc h1,
+.doc h2 {
+  margin: 0;
+}
+.doc-card {
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 3.5mm;
+  padding: 3mm 4.5mm;
+  break-inside: avoid;
+}
+.doc-muted {
+  color: var(--doc-muted);
+  font-size: 8.5pt;
+}
+.doc-capitalize::first-letter {
+  text-transform: uppercase;
+}
+.doc-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.7mm 3mm;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--doc-soft);
+  color: var(--doc-muted);
+}
+.doc-pill-accent {
+  background: var(--doc-accent-soft);
+  color: var(--doc-accent);
+}
+
+/* Cabeçalho: logo, identificação da escola e o título do documento. */
+.doc-header {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+}
+.doc-logo {
+  width: 16mm;
+  height: 16mm;
+  object-fit: contain;
+}
+.doc-school {
+  flex: 1;
+  min-width: 0;
+}
+.doc-school-name {
+  font-size: 13pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.doc-title-block {
+  text-align: right;
+  border-left: 1px solid var(--doc-line);
+  padding-left: 5mm;
+}
+.doc .doc-title {
+  margin-top: 1.2mm;
+  font-size: 15pt;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+/* Linha de destaques: aluno, medidor de frequência e números principais. */
+.doc-kpis {
+  display: grid;
+  grid-template-columns: 1.55fr 1.25fr 1fr 1.1fr;
+  gap: 3.5mm;
+  margin-top: 3.5mm;
+}
+.doc .doc-student-name {
+  margin-top: 1.5mm;
+  font-size: 14pt;
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+.doc .doc-student-class {
+  margin: 1mm 0 2mm;
+  color: var(--doc-muted);
+}
+.doc-student-class strong {
+  color: var(--doc-ink);
+}
+.doc-gauge {
+  display: flex;
+  align-items: center;
+  gap: 4mm;
+}
+.doc-gauge-svg {
+  width: 23mm;
+  height: 23mm;
+  flex-shrink: 0;
+}
+.doc-gauge-track {
+  fill: none;
+  stroke: var(--doc-accent-soft);
+  stroke-width: 3.4;
+}
+.doc-gauge-value {
+  fill: none;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+.doc-gauge-number {
+  font-size: 7.4px;
+  font-weight: 700;
+  fill: var(--doc-ink);
+}
+.doc-gauge-caption {
+  font-size: 3.2px;
+  fill: var(--doc-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.doc-kpi-label {
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--doc-muted);
+}
+.doc .doc-kpi-value {
+  margin-top: 1.5mm;
+  font-size: 22pt;
+  font-weight: 700;
+  line-height: 1;
+}
+.doc .doc-kpi-value-date {
+  font-size: 15pt;
+  padding: 1.5mm 0 1mm;
+}
+.doc .doc-kpi-sub {
+  margin-top: 1.5mm;
+  color: var(--doc-muted);
+  font-size: 8.5pt;
+}
+
+/* Cores das situações. */
+.doc-risk-ok {
+  background: var(--doc-ok-soft);
+  color: var(--doc-ok);
+}
+.doc-risk-warning {
+  background: var(--doc-warning-soft);
+  color: var(--doc-warning);
+}
+.doc-risk-critical {
+  background: var(--doc-critical-soft);
+  color: var(--doc-critical);
+}
+.doc-risk-stroke-ok {
+  stroke: var(--doc-ok);
+}
+.doc-risk-stroke-warning {
+  stroke: var(--doc-warning);
+}
+.doc-risk-stroke-critical {
+  stroke: var(--doc-critical);
+}
+.doc-risk-fill-ok {
+  background: var(--doc-ok);
+}
+.doc-risk-fill-warning {
+  background: var(--doc-warning);
+}
+.doc-risk-fill-critical {
+  background: var(--doc-critical);
+}
+
+/* Parte principal: gráfico à esquerda, detalhe dos meses à direita. */
+.doc-main {
+  display: grid;
+  grid-template-columns: 1fr 1.08fr;
+  gap: 3.5mm;
+  margin-top: 3.5mm;
+}
+/* O gráfico ocupa a altura que a tabela ao lado deixar, e os fatos ficam no pé do cartão. */
+.doc-chart {
+  display: flex;
+  flex-direction: column;
+}
+.doc-chart .doc-chart-svg {
+  flex: 1;
+  min-height: 0;
+}
+.doc-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5mm;
+  margin-top: 2mm;
+}
+.doc-fact {
+  border-radius: 2.5mm;
+  background: var(--doc-soft);
+  padding: 2mm 3mm;
+}
+.doc .doc-fact-value {
+  margin-top: 0.5mm;
+  font-size: 10pt;
+  font-weight: 700;
+}
+.doc-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1mm 4mm;
+}
+.doc-section-title {
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+.doc-section-title,
+.doc-legend-item {
+  white-space: nowrap;
+}
+.doc-legend {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  font-size: 7.5pt;
+  color: var(--doc-muted);
+}
+.doc-legend-line,
+.doc-legend-dash {
+  display: inline-block;
+  width: 6mm;
+  margin-right: 1.2mm;
+  vertical-align: middle;
+  border-top: 0.6mm solid var(--doc-accent);
+}
+.doc-legend-dash {
+  border-top-width: 0.35mm;
+  border-top-style: dashed;
+}
+.doc-legend-dash-warning {
+  border-top-color: var(--doc-warning);
+}
+.doc-legend-dash-critical {
+  border-top-color: var(--doc-critical);
+}
+.doc-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 2mm;
+}
+.doc-chart-grid {
+  stroke: var(--doc-line);
+  stroke-width: 1;
+}
+.doc-chart-axis {
+  font-size: 11px;
+  fill: var(--doc-muted);
+}
+.doc-chart-limit {
+  stroke-width: 1.2;
+  stroke-dasharray: 6 5;
+}
+.doc-chart-limit-warning {
+  stroke: var(--doc-warning);
+}
+.doc-chart-limit-critical {
+  stroke: var(--doc-critical);
+}
+.doc-chart-limit-label {
+  font-size: 10px;
+  fill: var(--doc-muted);
+}
+.doc-chart-line {
+  fill: none;
+  stroke: var(--doc-accent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.doc-chart-dot {
+  fill: #fff;
+  stroke-width: 3;
+}
+.doc-chart-value {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--doc-ink);
+}
+
+/* Tabela dos meses: nome e dias das faltas na mesma célula, barra de frequência ao lado. */
+.doc-table {
+  width: 100%;
+  margin-top: 2mm;
+  border-collapse: collapse;
+}
+.doc-table th {
+  padding: 1.2mm 1.5mm;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--doc-muted);
+  border-bottom: 1px solid var(--doc-line);
+}
+.doc-table td {
+  padding: 1.15mm 1.5mm;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--doc-line);
+}
+.doc-table tr {
+  break-inside: avoid;
+}
+.doc-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.doc-table .doc-num {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.doc-table .doc-month-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.doc-table .doc-month-dates {
+  width: 34%;
+  font-size: 7.5pt;
+  line-height: 1.25;
+  color: var(--doc-muted);
+}
+.doc-bar {
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+}
+.doc-bar-track {
+  flex: 1;
+  height: 2.2mm;
+  min-width: 14mm;
+  border-radius: 999px;
+  background: var(--doc-soft);
+  overflow: hidden;
+}
+.doc-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.doc-bar-value {
+  width: 10mm;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rodapé: quem emitiu, como a frequência é calculada e a assinatura. */
+.doc-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10mm;
+  margin-top: 4mm;
+  break-inside: avoid;
+}
+.doc-footer-text {
+  max-width: 150mm;
+}
+.doc .doc-footer-text .doc-muted {
+  margin-top: 1mm;
+}
+.doc-signature {
+  width: 75mm;
+  padding-top: 1.2mm;
+  border-top: 1px solid var(--doc-ink);
+  text-align: center;
 }

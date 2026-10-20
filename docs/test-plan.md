@@ -127,8 +127,8 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 
 ### 7c. Documento do aluno em PDF
 1. Secretário, no Dashboard: **Dados da escola** → conferir nome, INEP, endereço, CEP e ato de criação; enviar a logo. Auxiliar não vê esse botão.
-2. Pesquisar um aluno e clicar em **Baixar PDF**: na janela de impressão, escolher "Salvar como PDF". Conferir fundo branco, cabeçalho com logo e dados, tabelas, linha de assinatura e a logo clara ao fundo.
-3. Aluno com muitos meses: o documento quebra de página sem cortar linha de tabela.
+2. Pesquisar um aluno e clicar em **Baixar PDF**: na janela de impressão, escolher "Salvar como PDF". A folha já vem **deitada (paisagem)**. Conferir: cabeçalho com logo, dados da escola e "Documento oficial"; cartão do aluno com turma, período e situação colorida; medidor de frequência; faltas e última falta; gráfico mês a mês com as linhas tracejadas de Atenção (85%) e Crítico (75%); tabela dos meses com barras e dias das faltas; assinatura; logo clara ao fundo; cores aparecendo mesmo sem marcar "Gráficos de fundo".
+3. Aluno com o ano letivo inteiro (até 12 meses, inclusive passando de um ano para outro): tudo cabe em uma página, com o ano junto do mês ("nov/25").
 4. No celular (Chrome/Safari): o mesmo botão abre a impressão do aparelho, com a opção de salvar em PDF.
 
 ### 7d. Memorandos e ofícios

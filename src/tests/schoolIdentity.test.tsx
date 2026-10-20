@@ -95,7 +95,13 @@ describe("documento de frequência do aluno (PDF)", () => {
     expect(text).toContain("04/09, 18/09");
     expect(text).toContain("Emitido em 13/10/2026 por Rita Lopes.");
     expect(doc?.querySelector("img.print-watermark")).toHaveAttribute("src", IDENTITY.logoUrl);
-    expect(doc?.querySelectorAll("tbody tr")).toHaveLength(5 + REPORT.months.length);
+    // Uma linha por mês na tabela, o gráfico e o período do relatório.
+    expect(doc?.querySelectorAll("tbody tr")).toHaveLength(REPORT.months.length);
+    expect(doc?.querySelectorAll("svg.doc-chart-svg circle")).toHaveLength(REPORT.months.length);
+    expect(text).toContain("Período: agosto a setembro de 2026");
+    expect(text).toContain("Situação: Regular");
+    expect(text).toContain("93%");
+    expect(text).toContain("Assinatura e carimbo");
   });
 
   it("sem os dados da escola, sai sem logo e com o cabeçalho mínimo", () => {
