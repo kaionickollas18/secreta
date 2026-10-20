@@ -7,6 +7,17 @@ export function dmChannel(peerId: string): ChannelId {
   return `dm:${peerId}`;
 }
 
+/** Endereço que abre direto a conversa com um colega (usado no perfil). */
+export function chatHref(peerId: string): string {
+  return `mensagens.html?com=${encodeURIComponent(peerId)}`;
+}
+
+/** Colega pedido no endereço (`?com=<id>`), ou `null`. Quem confere se é colega é a tela. */
+export function peerFromSearch(search: string): string | null {
+  const id = new URLSearchParams(search).get("com");
+  return id && /^[\w-]{1,64}$/.test(id) ? id : null;
+}
+
 /** Id do colega de um canal de conversa direta; `null` para Geral e Anônimo. */
 export function peerOfChannel(channel: ChannelId): string | null {
   return channel.startsWith("dm:") ? channel.slice(3) : null;

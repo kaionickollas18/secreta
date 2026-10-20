@@ -100,6 +100,10 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 8. Trocar a senha em Perfil, sair e entrar com a nova: as conversas antigas continuam abrindo.
 9. Secretário redefine a senha de um auxiliar em Equipe: ao entrar, o auxiliar usa **Recomeçar**; as mensagens antigas aparecem para ele como "protegida que este aparelho não consegue abrir", e o colega continua lendo as dele.
 10. Colega que nunca entrou depois desta versão: o campo de escrever fica desligado, com o aviso.
+11. **Marcações**: no Geral, digitar `@` e parte do sobrenome de um colega, escolher com as setas e Enter; digitar `#` e parte do título de uma tarefa e escolher com o mouse. Enviar: as marcações aparecem como botões. Na conta do colega marcado, a mensagem fica em destaque ("marcou você") e o Geral mostra um `@` na lista.
+12. Repetir a marcação numa conversa direta: o colega vê a marcação; no Supabase, `ciphertext` continua ilegível.
+13. Tocar na marcação da pessoa (ou no nome de quem escreveu, ou em "Ver perfil"): abre o perfil; **Conversar com …** abre a conversa direta. Tocar na marcação da tarefa: abre o resumo; **Abrir no quadro** abre a tarefa no quadro.
+14. **Emojis**: no Windows, **Win + .** no campo de escrever insere um emoji; o botão de emoji ao lado do campo também. Os emojis aparecem coloridos para quem recebe (computador e celular).
 
 ### 7. Dashboard
 1. Sem configuração: Secretário vê "Configurar base de dados"; Auxiliar vê o aviso, sem botão.
@@ -145,6 +149,7 @@ Use três contas (Master, Secretário, Auxiliar) e, de preferência, duas escola
 3. Em "Pessoas da escola", tocar em um colega: abre o perfil com foto, apelido, nome, função, nascimento, e-mail e as tarefas em aberto dele.
 4. Em outra conta da mesma escola, o apelido e o nascimento novos aparecem. Com duas escolas: ninguém de uma aparece na lista da outra.
 5. Tentar alterar o apelido de outra pessoa não é possível pela tela (não há campo); o banco só aceita a própria linha.
+6. No perfil de um colega ativo aparece **Conversar com …**, que abre Conversas já na conversa com ele. No próprio perfil e no de um inativo, o botão não aparece.
 
 ### 9. Responsivo e acessibilidade
 1. Largura de 360 px: a barra vai para baixo; colunas rolam; modais abrem como gaveta.

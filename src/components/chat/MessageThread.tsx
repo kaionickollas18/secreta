@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import type { ThreadMessage } from "../../types/chat";
 import { messageArrivals } from "../../utils/arrivals";
 import { assigneeColor } from "../../utils/assignees";
-import { groupByDay, MESSAGE_MAX, timeLabel, validateMessage } from "../../utils/messages";
-import { Button, IconButton } from "../ui/Button";
+import { mentionsUser, type MentionOption } from "../../utils/mentions";
+import { groupByDay, timeLabel } from "../../utils/messages";
+import { IconButton } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
-import { LockIcon, SendIcon, TrashIcon } from "../ui/Icons";
+import { LockIcon, TrashIcon } from "../ui/Icons";
+import { MessageComposer } from "./MessageComposer";
+import { RichText, type MentionResolver } from "./RichText";
 
 interface MessageThreadProps {
   /** Nome da conversa para leitores de tela (ex.: "Mensagens do mural"). */
@@ -25,6 +28,11 @@ interface MessageThreadProps {
   /** Devolve a mensagem de erro, ou `null` se deu certo. */
   onSend: (text: string) => Promise<string | null>;
   onDelete: (message: ThreadMessage) => void;
+  /** Quem está lendo: as mensagens que marcam essa pessoa ficam em destaque. */
+  currentUserId: string;
+  /** Pessoas e tarefas que podem ser marcadas com `@` e `#`. */
+  mentionOptions: MentionOption[];
+  resolver: MentionResolver;
 }
 
 /** Uma conversa: as mensagens por dia e o campo de escrever. Serve para todos os canais. */
@@ -41,10 +49,10 @@ export function MessageThread({
   blocked,
   onSend,
   onDelete,
+  currentUserId,
+  mentionOptions,
+  resolver,
 }: MessageThreadProps) {
-  const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const groups = useMemo(() => groupByDay(messages), [messages]);
 
@@ -56,33 +64,6 @@ export function MessageThread({
   useEffect(() => {
     if (status === "ready") messageArrivals.prime();
   }, [status]);
-
-  async function submit() {
-    const result = validateMessage(draft);
-    if (!result.valid) {
-      setError(result.error);
-      return;
-    }
-    setError(null);
-    setSending(true);
-    const failure = await onSend(result.value);
-    setSending(false);
-    if (failure) setError(failure);
-    else setDraft("");
-  }
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    void submit();
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    // Enter envia; Shift+Enter quebra a linha.
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault();
-      if (!sending) void submit();
-    }
-  }
 
   return (
     <>
@@ -107,6 +88,8 @@ export function MessageThread({
               {group.messages.map((message) => {
                 const color = assigneeColor(message.colorSeed ?? message.author);
                 const time = timeLabel(message.createdAt);
+                const mentioned = !message.mine && message.body !== null && mentionsUser(message.body, currentUserId);
+                const authorClass = `text-xs font-semibold ${message.mine ? "text-accent-light" : color.text}`;
                 return (
                   <li
                     key={message.id}
@@ -116,13 +99,31 @@ export function MessageThread({
                   >
                     <div
                       className={`max-w-[85%] rounded-2xl border px-3 py-2 sm:max-w-[70%] ${
-                        message.mine ? "border-accent/40 bg-accent-soft" : "border-line bg-surface"
+                        message.mine
+                          ? "border-accent/40 bg-accent-soft"
+                          : mentioned
+                            ? "border-magenta/70 bg-surface ring-1 ring-magenta/50"
+                            : "border-line bg-surface"
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold ${message.mine ? "text-accent-light" : color.text}`}>
-                          {message.author}
-                        </span>
+                        {message.authorId && !message.mine ? (
+                          <button
+                            type="button"
+                            aria-label={`Ver perfil de ${message.author}`}
+                            onClick={() => message.authorId && resolver.onOpenUser(message.authorId)}
+                            className={`${authorClass} underline-offset-2 hover:underline focus-visible:underline`}
+                          >
+                            {message.author}
+                          </button>
+                        ) : (
+                          <span className={authorClass}>{message.author}</span>
+                        )}
+                        {mentioned && (
+                          <span className="rounded-full bg-magenta/25 px-1.5 text-2xs font-semibold text-ink">
+                            marcou você
+                          </span>
+                        )}
                         <time dateTime={message.createdAt} className="text-2xs text-muted">
                           {time}
                         </time>
@@ -142,7 +143,9 @@ export function MessageThread({
                           Mensagem protegida que este aparelho não consegue abrir.
                         </p>
                       ) : (
-                        <p className="mt-0.5 whitespace-pre-line break-words text-base leading-normal">{message.body}</p>
+                        <p className="mt-0.5 whitespace-pre-line break-words text-base leading-normal">
+                          <RichText body={message.body} resolver={resolver} currentUserId={currentUserId} />
+                        </p>
                       )}
                     </div>
                   </li>
@@ -154,43 +157,7 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="border-t border-line p-3">
-        <div className="flex items-end gap-2">
-          <label htmlFor="message-body" className="sr-only">
-            Escrever mensagem
-          </label>
-          <textarea
-            id="message-body"
-            rows={2}
-            value={draft}
-            maxLength={MESSAGE_MAX}
-            placeholder={placeholder}
-            disabled={Boolean(blocked)}
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? "message-error" : "message-hint"}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="min-h-[44px] flex-1 resize-none rounded-xl border border-line bg-canvas/70 px-3 py-2 text-sm placeholder:text-muted/70 disabled:opacity-50 aria-[invalid=true]:border-prio-urgent"
-          />
-          <Button type="submit" variant="primary" disabled={sending || Boolean(blocked)} className="min-h-[44px]">
-            <SendIcon />
-            {sending ? "Enviando…" : "Enviar"}
-          </Button>
-        </div>
-        {error ? (
-          <p id="message-error" role="alert" className="mt-1 text-sm text-prio-urgent">
-            {error}
-          </p>
-        ) : blocked ? (
-          <p id="message-hint" className="mt-1 caption">
-            {blocked}
-          </p>
-        ) : (
-          <p id="message-hint" className="mt-1 hidden caption sm:block">
-            Enter envia · Shift+Enter quebra a linha
-          </p>
-        )}
-      </form>
+      <MessageComposer placeholder={placeholder} blocked={blocked} mentionOptions={mentionOptions} onSend={onSend} />
     </>
   );
 }

@@ -180,6 +180,17 @@ export function resolveStatusChange(
   return { status: toStatus, completionRequested: false, outcome: "moved" };
 }
 
+/** Endereço que abre a tarefa no quadro (usado nas marcações `#` das conversas). */
+export function taskHref(taskId: string): string {
+  return `index.html?tarefa=${encodeURIComponent(taskId)}`;
+}
+
+/** Tarefa pedida no endereço (`?tarefa=<id>`), ou `null`. */
+export function taskFromSearch(search: string): string | null {
+  const id = new URLSearchParams(search).get("tarefa");
+  return id && /^[\w-]{1,64}$/.test(id) ? id : null;
+}
+
 /** Dias que uma tarefa concluída continua visível no quadro. Depois, só no histórico. */
 export const DONE_VISIBLE_DAYS = 3;
 

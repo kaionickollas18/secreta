@@ -40,6 +40,12 @@ export const BellIcon = () => (
     <path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0" />
   </Icon>
 );
+export const SmileIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01" />
+  </Icon>
+);
 export const ChatIcon = () => (
   <Icon>
     <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.7A8 8 0 1 1 21 12z" />

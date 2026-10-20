@@ -18,6 +18,7 @@ import { useNoteStore } from "./store/noteStore";
 import { useTaskStore } from "./store/taskStore";
 import { useToastStore } from "./store/toastStore";
 import type { Task, TaskInput, TaskStatus } from "./types/task";
+import { taskFromSearch } from "./utils/tasks";
 
 export default function App() {
   const { total, visible, grouped, totals, filtersActive, doneCount, pendingCount } = useFilteredTasks();
@@ -51,6 +52,17 @@ export default function App() {
       stopNotes();
     };
   }, [load, loadDirectory, loadNotes, watch, watchNotes]);
+
+  // Vindo de uma marcação `#` nas conversas: abre a tarefa pedida no endereço, uma vez.
+  useEffect(() => {
+    if (status !== "ready") return;
+    const id = taskFromSearch(window.location.search);
+    if (!id) return;
+    const task = useTaskStore.getState().tasks.find((t) => t.id === id);
+    window.history.replaceState(null, "", window.location.pathname);
+    if (task) setModal({ mode: "edit", task });
+    else pushToast({ tone: "info", message: "Essa tarefa não existe mais no quadro." });
+  }, [status, pushToast]);
 
   const openCreate = useCallback((status: TaskStatus = "todo") => {
     setModal({ mode: "create", status });

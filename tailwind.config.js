@@ -12,6 +12,10 @@ export default {
           '"Segoe UI"',
           "Roboto",
           "sans-serif",
+          // Emojis coloridos do sistema (os mesmos do painel Win + . no Windows).
+          '"Segoe UI Emoji"',
+          '"Apple Color Emoji"',
+          '"Noto Color Emoji"',
         ],
       },
       // Menor texto permitido (11px): selos, contadores e rótulos da barra. Nada abaixo disso.

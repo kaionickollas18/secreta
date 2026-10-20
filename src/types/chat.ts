@@ -43,6 +43,8 @@ export interface ThreadMessage {
   body: string | null;
   createdAt: string;
   canDelete: boolean;
+  /** Quem escreveu, quando se sabe (não existe no canal anônimo). O nome abre o perfil. */
+  authorId?: string;
   /** Semente da cor do nome (id ou nome do autor). */
   colorSeed?: string;
 }

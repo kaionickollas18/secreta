@@ -10,6 +10,8 @@ export interface ConversationItem {
   /** Foto do colega ou o ícone do canal. */
   picture: ReactNode;
   unread: number;
+  /** Há mensagem nova que marca a pessoa com `@`. */
+  mentioned?: boolean;
 }
 
 interface ConversationListProps {
@@ -41,6 +43,17 @@ export function ConversationList({ items, active, onSelect, className = "" }: Co
                   <span className="block truncate text-sm font-semibold">{item.label}</span>
                   <span className="block truncate text-xs text-muted">{item.hint}</span>
                 </span>
+                {item.mentioned && (
+                  <span className="shrink-0">
+                    <span
+                      aria-hidden="true"
+                      className="block h-5 w-5 rounded-full bg-magenta text-center text-xs font-bold leading-5 text-canvas"
+                    >
+                      @
+                    </span>
+                    <span className="sr-only">(você foi marcado)</span>
+                  </span>
+                )}
                 {item.unread > 0 && (
                   <span className="shrink-0">
                     <span

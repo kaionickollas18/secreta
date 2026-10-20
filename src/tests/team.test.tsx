@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TeamSection } from "../components/profile/TeamSection";
 import { ageOn, displayName, schoolTeam } from "../utils/directory";
 import { validatePersonalDetails } from "../utils/profileForm";
@@ -91,5 +91,19 @@ describe("pessoas da escola (tela)", () => {
     const dialog = within(await screen.findByRole("dialog", { name: "Perfil de Beto Dias" }));
     expect(dialog.getAllByText("Não informado")).toHaveLength(2);
     expect(dialog.getByText("Nenhuma tarefa em aberto.")).toBeInTheDocument();
+  });
+
+  it("do perfil de um colega dá para começar a conversa; no próprio perfil, não", async () => {
+    const user = userEvent.setup();
+    const onStartChat = vi.fn();
+    render(<TeamSection members={members} schoolId="school-1" currentUserId="sec" tasks={[]} onStartChat={onStartChat} />);
+
+    await user.click(screen.getByRole("button", { name: "Ver perfil de Ana Souza" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Conversar com Souza" }));
+    expect(onStartChat).toHaveBeenCalledWith(expect.objectContaining({ id: "ana" }));
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Ver perfil de Rita Lopes" }));
+    expect(within(await screen.findByRole("dialog")).queryByRole("button", { name: /Conversar/ })).not.toBeInTheDocument();
   });
 });

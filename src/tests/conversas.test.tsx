@@ -29,6 +29,7 @@ import { useAuthStore } from "../store/authStore";
 import { useChatStore } from "../store/chatStore";
 import { useDirectoryStore } from "../store/directoryStore";
 import { useMessageStore } from "../store/messageStore";
+import { useTaskStore } from "../store/taskStore";
 import type { DirectMessage } from "../types/chat";
 import type { Profile } from "../types/auth";
 import {
@@ -40,7 +41,7 @@ import {
   totalUnread,
   unreadByChannel,
 } from "../utils/chat";
-import { ASSISTANT, makeMember, SECRETARY, TEAM } from "./helpers";
+import { ASSISTANT, makeMember, makeTask, SECRETARY, TEAM } from "./helpers";
 
 const at = (hour: number) => new Date(2026, 9, 13, hour, 0).toISOString();
 
@@ -203,5 +204,113 @@ describe("conversas (tela)", () => {
     expect(thread.getByText(/Souza ainda não ativou as conversas protegidas/)).toBeInTheDocument();
     // Só apago o que eu enviei.
     expect(thread.getAllByRole("button", { name: /^Apagar mensagem/ })).toHaveLength(1);
+  });
+});
+
+describe("conversas: marcações, perfil e emojis (tela)", () => {
+  async function renderAs(profile: Profile, muralBody = "Bom dia a todos") {
+    useAuthStore.setState({ status: "signedIn", profile, error: null });
+    useChatStore.setState({ status: "ready", lock: "locked", hasKey: false });
+    useDirectoryStore.setState({ members: TEAM, schools: [], status: "ready" });
+    useTaskStore.setState({ tasks: [makeTask({ id: "t1", title: "Pagar boleto", assignees: ["ana"] })] });
+    useMessageStore.setState({
+      messages: [{ id: "m1", senderId: "ana", senderName: "Ana Souza", body: muralBody, createdAt: at(8) }],
+      status: "ready",
+      lastSeen: null,
+    });
+    render(<MensagensApp />);
+    await screen.findByRole("navigation", { name: "Conversas" });
+  }
+
+  beforeEach(() => {
+    api.anonymous = [];
+    window.history.replaceState(null, "", "/");
+    useChatStore.setState({ keys: [], directs: [], plain: {}, anonymous: [], status: "idle", lock: "checking", hasKey: false, seen: {} });
+  });
+
+  it("@ e # sugerem pessoas e tarefas, e a mensagem sai com as marcações", async () => {
+    const user = userEvent.setup();
+    await renderAs(SECRETARY);
+    await user.click(screen.getByRole("button", { name: /Anônimo/ }));
+    const field = screen.getByLabelText("Escrever mensagem");
+
+    await user.type(field, "Oi @So");
+    const people = await screen.findByRole("listbox", { name: "Pessoas para marcar" });
+    expect(within(people).getByRole("option", { name: /@Souza/ })).toBeInTheDocument();
+    await user.keyboard("{Enter}");
+    expect(field).toHaveValue("Oi @Souza ");
+
+    await user.type(field, "veja #bol");
+    await user.click(within(screen.getByRole("listbox", { name: "Tarefas para marcar" })).getByRole("option", { name: /Pagar boleto/ }));
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => expect(api.anonymous).toEqual(["Oi @[Souza](u:ana) veja #[Pagar boleto](t:t1)"]));
+  });
+
+  it("Esc fecha as sugestões sem apagar o texto", async () => {
+    const user = userEvent.setup();
+    await renderAs(ASSISTANT);
+    await user.click(screen.getByRole("button", { name: /Anônimo/ }));
+    await user.type(screen.getByLabelText("Escrever mensagem"), "@Di");
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Escrever mensagem")).toHaveValue("@Di");
+  });
+
+  it("a marcação abre o perfil, e do perfil dá para começar a conversa", async () => {
+    const user = userEvent.setup();
+    await renderAs(ASSISTANT, "Bom dia @[Dias](u:beto), veja #[Pagar boleto](t:t1)");
+    await user.click(screen.getByRole("button", { name: /Geral/ }));
+
+    await user.click(screen.getByRole("button", { name: "Ver perfil de Dias" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Perfil de Beto Dias" }));
+    await user.click(dialog.getByRole("button", { name: "Conversar com Dias" }));
+    expect(await screen.findByRole("region", { name: "Conversa: Dias" })).toBeInTheDocument();
+  });
+
+  it("o nome de quem escreveu abre o perfil; a tarefa marcada abre o resumo com link para o quadro", async () => {
+    const user = userEvent.setup();
+    await renderAs(SECRETARY, "Veja #[Pagar boleto](t:t1)");
+    await user.click(screen.getByRole("button", { name: /Geral/ }));
+
+    await user.click(screen.getByRole("button", { name: "Ver perfil de Ana Souza" }));
+    expect(await screen.findByRole("dialog", { name: "Perfil de Ana Souza" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Ver tarefa Pagar boleto" }));
+    const task = within(await screen.findByRole("dialog", { name: "Pagar boleto" }));
+    expect(task.getByText(/Responsáveis: Souza/)).toBeInTheDocument();
+    expect(task.getByRole("link", { name: "Abrir no quadro" })).toHaveAttribute("href", "index.html?tarefa=t1");
+  });
+
+  it("destaca a mensagem que me marca, avisa na lista e não confia em marcação de id desconhecido", async () => {
+    const user = userEvent.setup();
+    await renderAs(SECRETARY, "@[Lopes](u:sec) e @[Chefe](u:inventado)");
+    const list = within(screen.getByRole("navigation", { name: "Conversas" }));
+    expect(list.getByRole("button", { name: /Geral.*você foi marcado/ })).toBeInTheDocument();
+
+    await user.click(list.getByRole("button", { name: /Geral/ }));
+    expect(screen.getByText("marcou você")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Chefe/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("log", { name: "Mensagens do mural" })).toHaveTextContent("@Chefe");
+  });
+
+  it("vindo do perfil (?com=), abre direto a conversa com a pessoa", async () => {
+    window.history.replaceState(null, "", "/mensagens.html?com=beto");
+    await renderAs(ASSISTANT);
+    expect(await screen.findByRole("region", { name: "Conversa: Dias" })).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
+
+  it("o botão de emojis coloca o emoji no texto", async () => {
+    const user = userEvent.setup();
+    await renderAs(ASSISTANT);
+    await user.click(screen.getByRole("button", { name: /Anônimo/ }));
+    await user.type(screen.getByLabelText("Escrever mensagem"), "Valeu ");
+    await user.click(screen.getByRole("button", { name: "Inserir emoji" }));
+    await user.click(screen.getByRole("button", { name: "Emoji 👍" }));
+    expect(screen.getByLabelText("Escrever mensagem")).toHaveValue("Valeu 👍");
+    expect(screen.queryByRole("group", { name: "Emojis" })).not.toBeInTheDocument();
   });
 });

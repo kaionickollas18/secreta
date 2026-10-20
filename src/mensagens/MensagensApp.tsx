@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { ConversationList, type ConversationItem } from "../components/chat/ConversationList";
 import { MessageThread } from "../components/chat/MessageThread";
+import type { MentionResolver } from "../components/chat/RichText";
+import { TaskPreview } from "../components/chat/TaskPreview";
 import { UnlockPanel } from "../components/chat/UnlockPanel";
+import { MemberProfile } from "../components/profile/MemberProfile";
 import { Avatar } from "../components/ui/Avatar";
-import { IconButton } from "../components/ui/Button";
+import { Button, IconButton } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Modal } from "../components/ui/Modal";
 import { ChevronLeftIcon, MaskIcon, UsersIcon } from "../components/ui/Icons";
 import { ToastViewport } from "../components/ui/ToastViewport";
+import { STATUS_LABELS } from "../constants/board";
 import { useAuthStore } from "../store/authStore";
 import { DIRECT_PAGE } from "../store/chatApi";
 import { useChatStore } from "../store/chatStore";
 import { useDirectoryStore } from "../store/directoryStore";
 import { useMessageStore } from "../store/messageStore";
+import { useTaskStore } from "../store/taskStore";
 import { useToastStore } from "../store/toastStore";
 import type { ChannelId, ThreadMessage } from "../types/chat";
-import { activeKeyOf, conversationWith, dmChannel, peerOfChannel, unreadByChannel } from "../utils/chat";
-import { schoolTeam } from "../utils/directory";
+import { activeKeyOf, conversationWith, dmChannel, peerFromSearch, peerOfChannel, unreadByChannel } from "../utils/chat";
+import { displayName, schoolTeam } from "../utils/directory";
+import { mentionsUser, type MentionOption } from "../utils/mentions";
 import { countUnread, MESSAGE_PAGE } from "../utils/messages";
 import { whenPageShown } from "../utils/pageLifecycle";
 import { canModerateMessages, effectiveRole } from "../utils/roles";
@@ -23,8 +30,16 @@ import { canModerateMessages, effectiveRole } from "../utils/roles";
 /** Fundo redondo dos ícones dos dois canais de todos, do tamanho das fotos dos colegas. */
 const CHANNEL_ICON = "flex h-11 w-11 items-center justify-center rounded-full";
 
-/** No computador a conversa Geral já abre; no celular a pessoa escolhe na lista primeiro. */
+/**
+ * Vindo do perfil de alguém (`?com=<id>`), abre a conversa com essa pessoa. Senão, no
+ * computador a conversa Geral já abre; no celular a pessoa escolhe na lista primeiro.
+ */
 function initialChannel(): ChannelId | null {
+  const peer = peerFromSearch(window.location.search);
+  if (peer) {
+    window.history.replaceState(null, "", window.location.pathname);
+    return dmChannel(peer);
+  }
   return typeof window.matchMedia === "function" && window.matchMedia("(min-width: 768px)").matches ? "geral" : null;
 }
 
@@ -41,6 +56,11 @@ export default function MensagensApp() {
   const pushToast = useToastStore((s) => s.push);
   const [channel, setChannel] = useState<ChannelId | null>(initialChannel);
   const [toDelete, setToDelete] = useState<ThreadMessage | null>(null);
+  const tasks = useTaskStore((s) => s.tasks);
+  const loadTasks = useTaskStore((s) => s.load);
+  /** Perfil ou tarefa aberta a partir de uma marcação ou do nome de quem escreveu. */
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
 
   const userId = profile?.id;
   const schoolId = profile?.schoolId ?? null;
@@ -48,13 +68,36 @@ export default function MensagensApp() {
 
   useEffect(() => {
     void loadDirectory();
-  }, [loadDirectory]);
+    // As tarefas servem às marcações `#` e ao perfil (tarefas em aberto de cada pessoa).
+    void loadTasks();
+  }, [loadDirectory, loadTasks]);
 
-  const colleagues = useMemo(
-    () => (schoolId ? schoolTeam(members, schoolId).filter((m) => m.active && m.id !== userId) : []),
-    [members, schoolId, userId],
-  );
+  const team = useMemo(() => (schoolId ? schoolTeam(members, schoolId) : []), [members, schoolId]);
+  const colleagues = useMemo(() => team.filter((m) => m.active && m.id !== userId), [team, userId]);
   const peer = colleagues.find((m) => m.id === peerId);
+  const profileMember = team.find((m) => m.id === profileId);
+  const previewTask = tasks.find((t) => t.id === taskId);
+
+  const mentionOptions = useMemo<MentionOption[]>(
+    () => [
+      ...colleagues.map((m) => ({ kind: "user" as const, id: m.id, label: m.lastName, hint: displayName(m) })),
+      // Tarefas em andamento primeiro; as concluídas também podem ser citadas.
+      ...[...tasks]
+        .sort((a, b) => Number(a.status === "done") - Number(b.status === "done") || a.title.localeCompare(b.title, "pt-BR"))
+        .map((t) => ({ kind: "task" as const, id: t.id, label: t.title, hint: STATUS_LABELS[t.status] })),
+    ],
+    [colleagues, tasks],
+  );
+
+  const resolver = useMemo<MentionResolver>(
+    () => ({
+      userName: (id) => team.find((m) => m.id === id)?.lastName,
+      taskTitle: (id) => tasks.find((t) => t.id === id)?.title,
+      onOpenUser: setProfileId,
+      onOpenTask: setTaskId,
+    }),
+    [team, tasks],
+  );
 
   const muralCount = mural.messages.length;
   const anonymousCount = chat.anonymous.length;
@@ -93,6 +136,11 @@ export default function MensagensApp() {
         </span>
       ),
       unread: channel === "geral" ? 0 : countUnread(mural.messages, mural.lastSeen, userId),
+      mentioned:
+        channel !== "geral" &&
+        mural.messages.some(
+          (m) => m.senderId !== userId && (!mural.lastSeen || m.createdAt > mural.lastSeen) && mentionsUser(m.body, userId),
+        ),
     },
     {
       id: "anonimo",
@@ -104,6 +152,11 @@ export default function MensagensApp() {
         </span>
       ),
       unread: channel === "anonimo" ? 0 : (unread.anonimo ?? 0),
+      mentioned:
+        channel !== "anonimo" &&
+        chat.anonymous.some(
+          (m) => !m.mine && (!chat.seen.anonimo || m.createdAt > chat.seen.anonimo) && mentionsUser(m.body, userId),
+        ),
     },
     ...colleagues.map((member) => {
       const id = dmChannel(member.id);
@@ -126,6 +179,7 @@ export default function MensagensApp() {
         id: m.id,
         mine,
         author: mine ? "Você" : m.senderName,
+        authorId: m.senderId,
         body: m.body,
         createdAt: m.createdAt,
         canDelete: mine || moderator,
@@ -149,6 +203,7 @@ export default function MensagensApp() {
         id: m.id,
         mine,
         author: mine ? "Você" : (peer?.lastName ?? "Colega"),
+        authorId: m.senderId,
         body: chat.plain[m.id] ?? null,
         createdAt: m.createdAt,
         canDelete: mine,
@@ -183,6 +238,9 @@ export default function MensagensApp() {
         placeholder="Escreva uma mensagem para a equipe"
         onSend={(text) => mural.send(schoolId, text)}
         onDelete={setToDelete}
+        currentUserId={userId}
+        mentionOptions={mentionOptions}
+        resolver={resolver}
       />
     ) : channel === "anonimo" ? (
       <MessageThread
@@ -203,6 +261,9 @@ export default function MensagensApp() {
         placeholder="Escreva sem se identificar"
         onSend={(text) => chat.sendAnonymous(schoolId, text)}
         onDelete={setToDelete}
+        currentUserId={userId}
+        mentionOptions={mentionOptions}
+        resolver={resolver}
       />
     ) : peer && chat.lock === "locked" && chat.status === "ready" ? (
       <UnlockPanel
@@ -228,6 +289,9 @@ export default function MensagensApp() {
         }
         onSend={(text) => chat.sendDirect(userId, peer.id, text)}
         onDelete={setToDelete}
+        currentUserId={userId}
+        mentionOptions={mentionOptions}
+        resolver={resolver}
       />
     ) : (
       <p className="m-auto p-6 text-center text-sm text-muted">Escolha uma conversa na lista.</p>
@@ -264,6 +328,11 @@ export default function MensagensApp() {
                   {peer ? "Protegida: só vocês dois conseguem ler" : current.hint}
                 </p>
               </div>
+              {peer && (
+                <Button variant="ghost" className="ml-auto shrink-0" onClick={() => setProfileId(peer.id)}>
+                  Ver perfil
+                </Button>
+              )}
             </div>
           )}
           {thread}
@@ -282,6 +351,31 @@ export default function MensagensApp() {
         onConfirm={() => void handleDelete()}
         onCancel={() => setToDelete(null)}
       />
+      <Modal
+        open={profileMember !== undefined}
+        title={profileMember ? `Perfil de ${displayName(profileMember)}` : ""}
+        onClose={() => setProfileId(null)}
+      >
+        {profileMember && (
+          <MemberProfile
+            member={profileMember}
+            tasks={tasks}
+            onStartChat={
+              colleagues.some((m) => m.id === profileMember.id) && peerId !== profileMember.id
+                ? () => {
+                    setChannel(dmChannel(profileMember.id));
+                    setProfileId(null);
+                  }
+                : undefined
+            }
+          />
+        )}
+      </Modal>
+      <Modal open={previewTask !== undefined} title={previewTask?.title ?? ""} onClose={() => setTaskId(null)}>
+        {previewTask && (
+          <TaskPreview task={previewTask} nameOf={(id) => team.find((m) => m.id === id)?.lastName ?? "Alguém"} />
+        )}
+      </Modal>
       <ToastViewport />
     </div>
   );

@@ -9,6 +9,7 @@ import { useAuthStore } from "../store/authStore";
 import { useDirectoryStore } from "../store/directoryStore";
 import { useTaskStore } from "../store/taskStore";
 import { useToastStore } from "../store/toastStore";
+import { chatHref } from "../utils/chat";
 import {
   LAST_NAME_MAX,
   NICKNAME_MAX,
@@ -319,6 +320,7 @@ export default function PerfilApp() {
             schoolId={profile.schoolId}
             currentUserId={profile.id}
             tasks={tasks}
+            onStartChat={(member) => window.location.assign(chatHref(member.id))}
           />
         )}
 
