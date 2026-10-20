@@ -252,6 +252,8 @@
   --doc-warning-soft: #fcf0d6;
   --doc-critical: #c93c3c;
   --doc-critical-soft: #fae3e3;
+  width: 100%;
+  overflow-wrap: break-word;
   font-family: "Schibsted Grotesk", Arial, Helvetica, sans-serif;
   font-size: 9.5pt;
   line-height: 1.35;
@@ -263,6 +265,7 @@
   margin: 0;
 }
 .doc-card {
+  min-width: 0;
   background: var(--doc-card);
   border: 1px solid var(--doc-line);
   border-radius: 3.5mm;
@@ -315,6 +318,8 @@
   line-height: 1.2;
 }
 .doc-title-block {
+  flex-shrink: 0;
+  max-width: 48%;
   text-align: right;
   border-left: 1px solid var(--doc-line);
   padding-left: 5mm;
@@ -329,7 +334,7 @@
 /* Linha de destaques: aluno, medidor de frequência e números principais. */
 .doc-kpis {
   display: grid;
-  grid-template-columns: 1.55fr 1.25fr 1fr 1.1fr;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.1fr);
   gap: 3.5mm;
   margin-top: 3.5mm;
 }
@@ -349,8 +354,13 @@
 }
 .doc-gauge {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4mm;
+  gap: 2mm 4mm;
+}
+/* Sem espaço ao lado do medidor (folha em pé), o texto desce para baixo dele. */
+.doc-gauge > div {
+  flex: 1 1 24mm;
 }
 .doc-gauge-svg {
   width: 23mm;
@@ -433,27 +443,20 @@
   background: var(--doc-critical);
 }
 
-/* Parte principal: gráfico à esquerda, detalhe dos meses à direita. */
-.doc-main {
-  display: grid;
-  grid-template-columns: 1fr 1.08fr;
-  gap: 3.5mm;
+/* Gráfico (com os fatos ao lado) e tabela empilhados na largura toda. */
+.doc-chart,
+.doc-months {
   margin-top: 3.5mm;
 }
-/* O gráfico ocupa a altura que a tabela ao lado deixar, e os fatos ficam no pé do cartão. */
-.doc-chart {
-  display: flex;
-  flex-direction: column;
-}
-.doc-chart .doc-chart-svg {
-  flex: 1;
-  min-height: 0;
+.doc-chart-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46mm;
+  gap: 4mm;
+  align-items: center;
 }
 .doc-facts {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 2.5mm;
-  margin-top: 2mm;
 }
 .doc-fact {
   border-radius: 2.5mm;
@@ -462,8 +465,18 @@
 }
 .doc .doc-fact-value {
   margin-top: 0.5mm;
-  font-size: 10pt;
+  font-size: 10.5pt;
   font-weight: 700;
+}
+/* A tabela pode continuar na página seguinte: o cartão não segura a quebra, e o
+   cabeçalho das colunas se repete no alto da nova página. */
+.doc-months {
+  break-inside: auto;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.doc-table thead {
+  display: table-header-group;
 }
 .doc-card-head {
   display: flex;
@@ -509,7 +522,8 @@
   display: block;
   width: 100%;
   height: auto;
-  margin-top: 2mm;
+  max-height: 55mm;
+  margin-top: 1.5mm;
 }
 .doc-chart-grid {
   stroke: var(--doc-line);
@@ -553,6 +567,7 @@
 /* Tabela dos meses: nome e dias das faltas na mesma célula, barra de frequência ao lado. */
 .doc-table {
   width: 100%;
+  table-layout: fixed;
   margin-top: 2mm;
   border-collapse: collapse;
 }
@@ -585,8 +600,18 @@
   font-weight: 700;
   white-space: nowrap;
 }
+/* Larguras das colunas: mês, dias, faltas, frequência e dias com falta. */
+.doc-table th:nth-child(1) {
+  width: 19%;
+}
+.doc-table th:nth-child(2),
+.doc-table th:nth-child(3) {
+  width: 8%;
+}
+.doc-table th:nth-child(4) {
+  width: 25%;
+}
 .doc-table .doc-month-dates {
-  width: 34%;
   font-size: 7.5pt;
   line-height: 1.25;
   color: var(--doc-muted);
@@ -597,9 +622,10 @@
   gap: 2mm;
 }
 .doc-bar-track {
-  flex: 1;
+  flex: 1 1 auto;
   height: 2.2mm;
-  min-width: 14mm;
+  min-width: 10mm;
+  max-width: 42mm;
   border-radius: 999px;
   background: var(--doc-soft);
   overflow: hidden;

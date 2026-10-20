@@ -17,7 +17,7 @@ export interface ChartBox {
 }
 
 /** `right` deixa espaço para os nomes das linhas de atenção e crítico, fora da área do gráfico. */
-export const CHART_BOX: ChartBox = { width: 600, height: 250, left: 44, right: 58, top: 26, bottom: 30 };
+export const CHART_BOX: ChartBox = { width: 900, height: 250, left: 44, right: 64, top: 26, bottom: 30 };
 
 /** Presença mínima de cada situação (as mesmas faixas do dashboard: 15% e 25% de faltas). */
 export const PRESENCE_LIMITS = [

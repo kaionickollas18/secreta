@@ -66,7 +66,13 @@ function PresenceChart({ report }: { report: StudentReport }) {
       </defs>
       {chart.ticks.map((tick) => (
         <g key={tick.label}>
-          <line x1={left} x2={width - right} y1={tick.y} y2={tick.y} className="doc-chart-grid" />
+          <line
+            x1={left}
+            x2={width - right}
+            y1={tick.y}
+            y2={tick.y}
+            className="doc-chart-grid"
+          />
           <text x={left - 8} y={tick.y + 4} textAnchor="end" className="doc-chart-axis">
             {tick.label}
           </text>
@@ -90,8 +96,18 @@ function PresenceChart({ report }: { report: StudentReport }) {
       {chart.points.length > 1 && <path d={chart.line} className="doc-chart-line" />}
       {chart.points.map((point) => (
         <g key={`${point.label}-${point.x}`}>
-          <circle cx={point.x} cy={point.y} r="5.5" className={`doc-chart-dot doc-risk-stroke-${point.risk}`} />
-          <text x={point.x} y={point.y - 11} textAnchor="middle" className="doc-chart-value">
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r="5.5"
+            className={`doc-chart-dot doc-risk-stroke-${point.risk}`}
+          />
+          <text
+            x={point.x}
+            y={point.y - 11}
+            textAnchor="middle"
+            className="doc-chart-value"
+          >
             {formatPercent(point.value)}
           </text>
           <text x={point.x} y={height - 8} textAnchor="middle" className="doc-chart-axis">
@@ -108,10 +124,19 @@ function PresenceChart({ report }: { report: StudentReport }) {
  * cartões claros, gráfico mês a mês e a logo da escola em marca-d'água. Fica fora da tela e só
  * aparece na impressão, de onde o navegador salva em PDF. Estilos em `index.css` (`.doc-*`).
  */
-export function StudentDocument({ report, identity, issuedBy, issuedOn }: StudentDocumentProps) {
+export function StudentDocument({
+  report,
+  identity,
+  issuedBy,
+  issuedOn,
+}: StudentDocumentProps) {
   // Duas linhas sob o nome: a identificação legal e, abaixo, onde a escola fica.
-  const legal = [identity.inep && `INEP: ${identity.inep}`, identity.decree].filter(Boolean).join(" · ");
-  const place = [identity.address, identity.cep && `CEP: ${formatCep(identity.cep)}`].filter(Boolean).join(" · ");
+  const legal = [identity.inep && `INEP: ${identity.inep}`, identity.decree]
+    .filter(Boolean)
+    .join(" · ");
+  const place = [identity.address, identity.cep && `CEP: ${formatCep(identity.cep)}`]
+    .filter(Boolean)
+    .join(" · ");
   const presences = report.schoolDays - report.absences;
   const withYear = spansYears(report.months);
   const highlights = monthHighlights(report.months);
@@ -119,7 +144,9 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
 
   return createPortal(
     <div className="print-document doc" aria-hidden="true">
-      {identity.logoUrl && <img src={identity.logoUrl} alt="" className="print-watermark" />}
+      {identity.logoUrl && (
+        <img src={identity.logoUrl} alt="" className="print-watermark" />
+      )}
 
       <header className="doc-card doc-header">
         {identity.logoUrl && <img src={identity.logoUrl} alt="" className="doc-logo" />}
@@ -148,7 +175,9 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
               </>
             )}
           </p>
-          <span className={`doc-pill doc-risk-${report.risk}`}>Situação: {RISK_TEXT[report.risk]}</span>
+          <span className={`doc-pill doc-risk-${report.risk}`}>
+            Situação: {RISK_TEXT[report.risk]}
+          </span>
         </div>
 
         <div className="doc-card doc-gauge">
@@ -156,7 +185,8 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
           <div>
             <p className="doc-kpi-label">Frequência no período</p>
             <p className="doc-kpi-sub">
-              {presences} de {report.schoolDays} {report.schoolDays === 1 ? "dia" : "dias"} presente
+              {presences} de {report.schoolDays}{" "}
+              {report.schoolDays === 1 ? "dia" : "dias"} presente
             </p>
           </div>
         </div>
@@ -165,13 +195,16 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
           <p className="doc-kpi-label">Faltas</p>
           <p className="doc-kpi-value">{report.absences}</p>
           <p className="doc-kpi-sub">
-            {report.absences} em {report.schoolDays} {report.schoolDays === 1 ? "dia" : "dias"} de chamada
+            {report.absences} em {report.schoolDays}{" "}
+            {report.schoolDays === 1 ? "dia" : "dias"} de chamada
           </p>
         </div>
 
         <div className="doc-card doc-kpi">
           <p className="doc-kpi-label">Última falta</p>
-          <p className="doc-kpi-value doc-kpi-value-date">{report.lastAbsence ? formatDay(report.lastAbsence) : "—"}</p>
+          <p className="doc-kpi-value doc-kpi-value-date">
+            {report.lastAbsence ? formatDay(report.lastAbsence) : "—"}
+          </p>
           <p className="doc-kpi-sub">
             {!report.lastAbsence
               ? "Nenhuma falta no período"
@@ -182,32 +215,37 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
         </div>
       </section>
 
-      <section className="doc-main">
-        <div className="doc-card doc-chart">
-          <div className="doc-card-head">
-            <h2 className="doc-section-title">Frequência mês a mês</h2>
-            <p className="doc-legend">
-              <span className="doc-legend-item">
-                <span className="doc-legend-line" />
-                Frequência
-              </span>
-              <span className="doc-legend-item">
-                <span className="doc-legend-dash doc-legend-dash-warning" />
-                Atenção (85%)
-              </span>
-              <span className="doc-legend-item">
-                <span className="doc-legend-dash doc-legend-dash-critical" />
-                Crítico (75%)
-              </span>
-            </p>
+      {/* Gráfico e tabela empilhados na largura toda: o documento cresce para baixo e, se
+          precisar, a tabela continua na página seguinte (com o cabeçalho das colunas). */}
+      <section className="doc-card doc-chart">
+        <div className="doc-chart-body">
+          <div className="doc-chart-plot">
+            <div className="doc-card-head">
+              <h2 className="doc-section-title">Frequência mês a mês</h2>
+              <p className="doc-legend">
+                <span className="doc-legend-item">
+                  <span className="doc-legend-line" />
+                  Frequência
+                </span>
+                <span className="doc-legend-item">
+                  <span className="doc-legend-dash doc-legend-dash-warning" />
+                  Atenção (85%)
+                </span>
+                <span className="doc-legend-item">
+                  <span className="doc-legend-dash doc-legend-dash-critical" />
+                  Crítico (75%)
+                </span>
+              </p>
+            </div>
+            <PresenceChart report={report} />
           </div>
-          <PresenceChart report={report} />
           <div className="doc-facts">
             {highlights.best && (
               <div className="doc-fact">
                 <p className="doc-kpi-label">Melhor mês</p>
                 <p className="doc-fact-value">
-                  {monthTitle(highlights.best.month, withYear)} · {formatPercent(highlights.best.presenceRate)}
+                  {monthTitle(highlights.best.month, withYear)} ·{" "}
+                  {formatPercent(highlights.best.presenceRate)}
                 </p>
               </div>
             )}
@@ -215,7 +253,8 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
               <div className="doc-fact">
                 <p className="doc-kpi-label">Menor frequência</p>
                 <p className="doc-fact-value">
-                  {monthTitle(highlights.worst.month, withYear)} · {formatPercent(highlights.worst.presenceRate)}
+                  {monthTitle(highlights.worst.month, withYear)} ·{" "}
+                  {formatPercent(highlights.worst.presenceRate)}
                 </p>
               </div>
             )}
@@ -227,50 +266,53 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
             </div>
           </div>
         </div>
+      </section>
 
-        <div className="doc-card doc-months">
-          <h2 className="doc-section-title">Detalhe por mês</h2>
-          <table className="doc-table">
-            <thead>
-              <tr>
-                <th scope="col">Mês</th>
-                <th scope="col" className="doc-num">
-                  Dias
-                </th>
-                <th scope="col" className="doc-num">
-                  Faltas
-                </th>
-                <th scope="col">Frequência</th>
-                <th scope="col">Dias das faltas</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.months.map((month) => (
-                <tr key={month.month}>
-                  <td className="doc-month-name">{monthTitle(month.month, withYear)}</td>
-                  <td className="doc-num">{month.schoolDays}</td>
-                  <td className="doc-num">{month.absences}</td>
-                  <td>
-                    <span className="doc-bar">
-                      <span className="doc-bar-track">
-                        <span
-                          className={`doc-bar-fill doc-risk-fill-${month.risk}`}
-                          style={{ width: `${Math.round(month.presenceRate * 100)}%` }}
-                        />
-                      </span>
-                      <span className="doc-bar-value">{formatPercent(month.presenceRate)}</span>
+      <section className="doc-card doc-months">
+        <h2 className="doc-section-title">Detalhe por mês</h2>
+        <table className="doc-table">
+          <thead>
+            <tr>
+              <th scope="col">Mês</th>
+              <th scope="col" className="doc-num">
+                Dias
+              </th>
+              <th scope="col" className="doc-num">
+                Faltas
+              </th>
+              <th scope="col">Frequência</th>
+              <th scope="col">Dias com falta</th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.months.map((month) => (
+              <tr key={month.month}>
+                <td className="doc-month-name">{monthTitle(month.month, withYear)}</td>
+                <td className="doc-num">{month.schoolDays}</td>
+                <td className="doc-num">{month.absences}</td>
+                <td>
+                  <span className="doc-bar">
+                    <span className="doc-bar-track">
+                      <span
+                        className={`doc-bar-fill doc-risk-fill-${month.risk}`}
+                        style={{ width: `${Math.round(month.presenceRate * 100)}%` }}
+                      />
                     </span>
-                  </td>
-                  <td className="doc-month-dates">
-                    {month.dates.length > 0
-                      ? month.dates.map((date) => formatDay(date).slice(0, 5)).join(", ")
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <span className="doc-bar-value">
+                      {formatPercent(month.presenceRate)}
+                    </span>
+                  </span>
+                </td>
+                {/* Só o dia: o mês já está na linha. */}
+                <td className="doc-month-dates">
+                  {month.dates.length > 0
+                    ? month.dates.map((date) => date.slice(8, 10)).join(", ")
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
       <footer className="doc-footer">
@@ -279,8 +321,9 @@ export function StudentDocument({ report, identity, issuedBy, issuedOn }: Studen
             Emitido em {formatDay(issuedOn)} por {issuedBy}.
           </p>
           <p className="doc-muted">
-            A frequência considera os dias de chamada registrados para a turma no período. Situação: Regular, até 15%
-            de faltas; Atenção, de 15% a 25%; Crítico, mais de 25%.
+            A frequência considera os dias de chamada registrados para a turma no período.
+            Situação: Regular, até 15% de faltas; Atenção, de 15% a 25%; Crítico, mais de
+            25%.
           </p>
         </div>
         <div className="doc-signature">

@@ -92,7 +92,8 @@ describe("documento de frequência do aluno (PDF)", () => {
     expect(text).toContain("Relatório de Frequência do Aluno");
     expect(text).toContain("Aluno de Exemplo");
     expect(text).toContain("3 em 40 dias de chamada");
-    expect(text).toContain("04/09, 18/09");
+    // Na tabela, só o dia das faltas (o mês já está na linha).
+    expect(text).toContain("04, 18");
     expect(text).toContain("Emitido em 13/10/2026 por Rita Lopes.");
     expect(doc?.querySelector("img.print-watermark")).toHaveAttribute("src", IDENTITY.logoUrl);
     // Uma linha por mês na tabela, o gráfico e o período do relatório.
