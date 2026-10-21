@@ -600,15 +600,15 @@
   font-weight: 700;
   white-space: nowrap;
 }
-/* Larguras das colunas: mês, dias, faltas, frequência e dias com falta. */
-.doc-table th:nth-child(1) {
+/* Larguras das colunas (relatório do aluno): mês, dias, faltas, frequência e dias com falta. */
+.doc-table:not(.doc-ranking) th:nth-child(1) {
   width: 19%;
 }
-.doc-table th:nth-child(2),
-.doc-table th:nth-child(3) {
+.doc-table:not(.doc-ranking) th:nth-child(2),
+.doc-table:not(.doc-ranking) th:nth-child(3) {
   width: 8%;
 }
-.doc-table th:nth-child(4) {
+.doc-table:not(.doc-ranking) th:nth-child(4) {
   width: 25%;
 }
 .doc-table .doc-month-dates {
@@ -662,4 +662,139 @@
   padding-top: 1.2mm;
   border-top: 1px solid var(--doc-ink);
   text-align: center;
+}
+
+/* ───────────── Relatório da turma: barras dos meses, situação, dias da semana e ranking ───────────── */
+/* A segunda página (alunos que mais faltam) sempre começa numa folha nova. */
+.doc-page-break {
+  break-before: page;
+}
+.doc-bar-month {
+  fill: #b9cbf6;
+}
+.doc-bar-peak {
+  fill: var(--doc-accent);
+}
+.doc-legend-swatch {
+  display: inline-block;
+  width: 3mm;
+  height: 3mm;
+  margin-right: 1.2mm;
+  border-radius: 0.8mm;
+  vertical-align: middle;
+}
+.doc-legend-swatch-peak {
+  background: var(--doc-accent);
+}
+.doc-stack {
+  display: flex;
+  gap: 0.6mm;
+  height: 3.2mm;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--doc-soft);
+}
+.doc-stack-part {
+  display: block;
+  height: 100%;
+  flex-basis: 0;
+}
+.doc-fact-row {
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+  padding: 1.5mm 3mm;
+}
+.doc-fact-label {
+  flex: 1;
+  font-weight: 600;
+}
+.doc-fact-row .doc-fact-value {
+  margin: 0;
+}
+.doc-dot {
+  width: 2.6mm;
+  height: 2.6mm;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+.doc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 3.5mm;
+  margin-top: 3.5mm;
+}
+.doc-weekdays,
+.doc-insights {
+  margin: 2mm 0 0;
+  padding: 0;
+  list-style: none;
+}
+.doc-weekday {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  padding: 0.9mm 0;
+}
+.doc-weekday-label {
+  width: 16mm;
+  font-weight: 600;
+}
+.doc-weekday .doc-bar-track {
+  max-width: none;
+}
+.doc-fill-accent {
+  background: #b9cbf6;
+}
+.doc-fill-peak {
+  background: var(--doc-accent);
+}
+.doc-insights li {
+  position: relative;
+  padding: 0.8mm 0 0.8mm 4mm;
+  line-height: 1.35;
+}
+.doc-insights li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2.3mm;
+  width: 1.8mm;
+  height: 1.8mm;
+  border-radius: 999px;
+  background: var(--doc-accent);
+}
+/* Ranking: posição, aluno, faltas, frequência, seguidas, última falta e situação. */
+.doc-ranking th:nth-child(1) {
+  width: 5%;
+}
+.doc-ranking th:nth-child(2) {
+  width: 33%;
+}
+.doc-ranking th:nth-child(3) {
+  width: 10%;
+}
+.doc-ranking th:nth-child(4) {
+  width: 22%;
+}
+.doc-ranking th:nth-child(5) {
+  width: 9%;
+}
+.doc-ranking th:nth-child(6) {
+  width: 11%;
+}
+.doc-ranking td {
+  padding-top: 1.8mm;
+  padding-bottom: 1.8mm;
+}
+.doc-ranking .doc-month-name {
+  white-space: normal;
+}
+.doc-rank {
+  font-weight: 700;
+  color: var(--doc-accent);
+}
+.doc .doc-table-note {
+  margin-top: 2mm;
+  font-size: 7.5pt;
 }

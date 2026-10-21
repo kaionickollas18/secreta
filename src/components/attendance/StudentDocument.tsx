@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import type { RiskLevel, StudentReport } from "../../types/attendance";
 import type { SchoolIdentity } from "../../types/school";
-import { formatDay, formatPercent } from "../../utils/attendance";
+import { formatDay, formatPercent, RISK_LABELS } from "../../utils/attendance";
 import {
   CHART_BOX,
   monthHighlights,
@@ -10,13 +10,9 @@ import {
   presenceChart,
   spansYears,
 } from "../../utils/reportChart";
-import { formatCep } from "../../utils/schoolIdentity";
+import { DocumentFooter } from "./DocumentFooter";
+import { DocumentHeader } from "./DocumentHeader";
 
-const RISK_TEXT: Record<RiskLevel, string> = {
-  ok: "Regular",
-  warning: "Atenção",
-  critical: "Crítico",
-};
 
 interface StudentDocumentProps {
   report: StudentReport;
@@ -130,13 +126,6 @@ export function StudentDocument({
   issuedBy,
   issuedOn,
 }: StudentDocumentProps) {
-  // Duas linhas sob o nome: a identificação legal e, abaixo, onde a escola fica.
-  const legal = [identity.inep && `INEP: ${identity.inep}`, identity.decree]
-    .filter(Boolean)
-    .join(" · ");
-  const place = [identity.address, identity.cep && `CEP: ${formatCep(identity.cep)}`]
-    .filter(Boolean)
-    .join(" · ");
   const presences = report.schoolDays - report.absences;
   const withYear = spansYears(report.months);
   const highlights = monthHighlights(report.months);
@@ -148,19 +137,7 @@ export function StudentDocument({
         <img src={identity.logoUrl} alt="" className="print-watermark" />
       )}
 
-      <header className="doc-card doc-header">
-        {identity.logoUrl && <img src={identity.logoUrl} alt="" className="doc-logo" />}
-        <div className="doc-school">
-          <p className="doc-school-name">{identity.officialName || "Escola"}</p>
-          {legal && <p className="doc-muted">{legal}</p>}
-          {place && <p className="doc-muted">{place}</p>}
-        </div>
-        <div className="doc-title-block">
-          <span className="doc-pill doc-pill-accent">Documento oficial</span>
-          <h1 className="doc-title">Relatório de Frequência do Aluno</h1>
-          <p className="doc-muted">Emitido em {formatDay(issuedOn)}</p>
-        </div>
-      </header>
+      <DocumentHeader identity={identity} title="Relatório de Frequência do Aluno" issuedOn={issuedOn} />
 
       <section className="doc-kpis">
         <div className="doc-card doc-student">
@@ -176,7 +153,7 @@ export function StudentDocument({
             )}
           </p>
           <span className={`doc-pill doc-risk-${report.risk}`}>
-            Situação: {RISK_TEXT[report.risk]}
+            Situação: {RISK_LABELS[report.risk]}
           </span>
         </div>
 
@@ -315,22 +292,7 @@ export function StudentDocument({
         </table>
       </section>
 
-      <footer className="doc-footer">
-        <div className="doc-footer-text">
-          <p>
-            Emitido em {formatDay(issuedOn)} por {issuedBy}.
-          </p>
-          <p className="doc-muted">
-            A frequência considera os dias de chamada registrados para a turma no período.
-            Situação: Regular, até 15% de faltas; Atenção, de 15% a 25%; Crítico, mais de
-            25%.
-          </p>
-        </div>
-        <div className="doc-signature">
-          <p>Secretaria Escolar</p>
-          <p className="doc-muted">Assinatura e carimbo</p>
-        </div>
-      </footer>
+      <DocumentFooter issuedBy={issuedBy} issuedOn={issuedOn} />
     </div>,
     document.body,
   );

@@ -17,6 +17,13 @@ export const STREAK_ALERT = 3;
 
 const WEEKDAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
+/** Nome de cada situação, como aparece nos documentos. */
+export const RISK_LABELS: Record<RiskLevel, string> = {
+  ok: "Regular",
+  warning: "Atenção",
+  critical: "Crítico",
+};
+
 export function riskOf(rate: number): RiskLevel {
   if (rate > RISK_CRITICAL) return "critical";
   if (rate >= RISK_WARNING) return "warning";

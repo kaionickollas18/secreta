@@ -1,7 +1,14 @@
 import type { ClassSummary } from "../../types/attendance";
 import { formatNumber } from "../../utils/attendance";
+import { Button } from "../ui/Button";
 
-export function ClassesTable({ classes }: { classes: ClassSummary[] }) {
+interface ClassesTableProps {
+  classes: ClassSummary[];
+  /** Baixa o relatório da turma em PDF. */
+  onPrint?: (className: string) => void;
+}
+
+export function ClassesTable({ classes, onPrint }: ClassesTableProps) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-line">
       <table className="w-full min-w-[44rem] text-left text-sm">
@@ -15,6 +22,11 @@ export function ClassesTable({ classes }: { classes: ClassSummary[] }) {
             <th scope="col" className="px-3 py-2.5 text-right">Alunos c/ falta</th>
             <th scope="col" className="px-3 py-2.5 text-right">Críticos</th>
             <th scope="col" className="px-3 py-2.5">Quem mais falta</th>
+            {onPrint && (
+              <th scope="col" className="px-3 py-2.5">
+                <span className="sr-only">Relatório</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -33,6 +45,18 @@ export function ClassesTable({ classes }: { classes: ClassSummary[] }) {
               <td className="px-3 py-2.5">
                 {c.topStudent ? `${c.topStudent.name} (${c.topStudent.absences})` : "—"}
               </td>
+              {onPrint && (
+                <td className="px-3 py-1.5 text-right">
+                  <Button
+                    aria-label={`Baixar relatório da turma ${c.name}`}
+                    disabled={c.days === 0}
+                    onClick={() => onPrint(c.name)}
+                    className="!min-h-[32px] px-3 text-xs"
+                  >
+                    PDF
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

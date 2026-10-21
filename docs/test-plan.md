@@ -131,6 +131,12 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 3. Aluno com o ano letivo inteiro (até 12 meses, inclusive passando de um ano para outro) e escola/aluno/turma com nomes longos: nada sai da largura da folha; se não couber, a tabela continua na página seguinte com o cabeçalho das colunas repetido e nenhuma linha cortada. O ano aparece junto do mês ("nov/25").
 4. No celular (Chrome/Safari): o mesmo botão abre a impressão do aparelho, com a opção de salvar em PDF.
 
+### 7c-2. Relatório da turma em PDF
+1. No Dashboard, escolher uma turma no filtro: aparece **Baixar relatório da turma**. Com "Todas as turmas", o botão não aparece; no "Resumo por turma", cada linha tem **PDF**.
+2. Baixar: a folha vem deitada, com o mesmo visual do relatório do aluno. **Página 1**: turma, período e dias de chamada; faltas, média por dia (com o dia de mais faltas) e alunos com falta; barras da média por mês (o mês mais alto em destaque); situação dos alunos (Crítico, Atenção, Regular); faltas por dia da semana; destaques. **Página 2**: cabeçalho de novo e os até 10 alunos que mais faltam, com faltas, frequência, seguidas, última falta e situação; assinatura no fim.
+3. Com um aluno aberto na pesquisa, baixar o relatório da turma: sai só o da turma; depois, **Baixar PDF** do aluno sai só o do aluno.
+4. Professor também consegue baixar (só leitura).
+
 ### 7d. Memorandos e ofícios
 0. A aba abre no **Quadro de números**. Tocar em um número livre abre o registro com o número preenchido; depois de salvar, o número fica azul. Tocar no azul abre a entrega; depois de marcar, fica rosa. Tocar no rosa mostra o documento com o resumo. Trocar para **Ofícios** mostra a numeração deles. Os passos abaixo são na visão **Lista**.
 1. Em **Documentos**, registrar um memorando e um ofício; os dois aparecem em "Aguardando entrega".

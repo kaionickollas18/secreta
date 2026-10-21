@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarList } from "../components/attendance/BarList";
+import { ClassDocument } from "../components/attendance/ClassDocument";
 import { ClassesTable } from "../components/attendance/ClassesTable";
 import { DataSourceModal } from "../components/attendance/DataSourceModal";
 import { SchoolIdentityModal } from "../components/attendance/SchoolIdentityModal";
@@ -19,6 +20,7 @@ import { useToastStore } from "../store/toastStore";
 import type { AttendanceStatus, ClassData } from "../types/attendance";
 import { prefersReducedMotion } from "../utils/arrivals";
 import { todayISO } from "../utils/date";
+import { classReport } from "../utils/classReport";
 import { canConfigureDashboard, effectiveRole } from "../utils/roles";
 import { hasIdentity } from "../utils/schoolIdentity";
 import {
@@ -101,6 +103,8 @@ export default function FrequenciaApp() {
     if (schoolId) void loadIdentity(schoolId);
   }, [schoolId, loadIdentity]);
   const [selected, setSelected] = useState<{ className: string; name: string } | null>(null);
+  /** Turma cujo relatório está indo para a impressão (só um documento por vez na folha). */
+  const [printingClass, setPrintingClass] = useState<string | null>(null);
   const searchRef = useRef<HTMLElement>(null);
   const allClasses = data?.classes ?? NO_CLASSES;
   const canConfigure = profile ? canConfigureDashboard(effectiveRole(profile)) : false;
@@ -154,8 +158,8 @@ export default function FrequenciaApp() {
       hint: `${c.name}: ${c.absences} faltas em ${c.days} dias`,
     }));
 
-  /** Abre a impressão com o documento do aluno; o nome do PDF sugerido é o título da página. */
-  function printStudent(studentName: string) {
+  /** Avisa se faltam os dados da escola e abre a impressão; o nome do PDF sugerido é o título da página. */
+  function openPrint(fileTitle: string) {
     if (!hasIdentity(identity)) {
       pushToast({
         tone: "info",
@@ -165,10 +169,26 @@ export default function FrequenciaApp() {
       });
     }
     const title = document.title;
-    document.title = `Frequência - ${studentName}`;
+    document.title = fileTitle;
     window.addEventListener("afterprint", () => (document.title = title), { once: true });
     window.print();
   }
+
+  // O relatório da turma só entra na página na hora de imprimir; depois sai, para não
+  // aparecer junto quando o documento de um aluno for impresso.
+  const classToPrint = useMemo(() => {
+    const cls = printingClass ? allClasses.find((c) => c.name === printingClass) : undefined;
+    return cls ? classReport(cls) : null;
+  }, [allClasses, printingClass]);
+
+  useEffect(() => {
+    if (!classToPrint) return;
+    const done = () => setPrintingClass(null);
+    window.addEventListener("afterprint", done, { once: true });
+    openPrint(`Frequência da turma - ${classToPrint.name}`);
+    return () => window.removeEventListener("afterprint", done);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- imprime uma vez por pedido
+  }, [classToPrint]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-5 px-4 py-5 sm:px-6">
@@ -202,6 +222,11 @@ export default function FrequenciaApp() {
                   </option>
                 ))}
               </select>
+              {className !== "all" && (
+                <Button variant="primary" onClick={() => setPrintingClass(className)}>
+                  Baixar relatório da turma
+                </Button>
+              )}
               <Button onClick={() => void refresh()} disabled={refreshing}>
                 {refreshing ? "Atualizando…" : "Atualizar agora"}
               </Button>
@@ -280,14 +305,16 @@ export default function FrequenciaApp() {
                   key={`${report.className}-${report.name}`}
                   report={report}
                   onClose={() => setSelected(null)}
-                  onPrint={() => printStudent(report.name)}
+                  onPrint={() => openPrint(`Frequência - ${report.name}`)}
                 />
+                {!classToPrint && (
                 <StudentDocument
                   report={report}
                   identity={identity}
                   issuedBy={profile?.fullName ?? ""}
                   issuedOn={todayISO()}
                 />
+                )}
               </div>
             )}
             {selected && !report && (
@@ -387,11 +414,19 @@ export default function FrequenciaApp() {
             <h2 id="h-summary" className="mb-3 section-title">
               Resumo por turma
             </h2>
-            <ClassesTable classes={view.classSummaries} />
+            <ClassesTable classes={view.classSummaries} onPrint={setPrintingClass} />
           </section>
         </>
       )}
 
+      {classToPrint && (
+        <ClassDocument
+          report={classToPrint}
+          identity={identity}
+          issuedBy={profile?.fullName ?? ""}
+          issuedOn={todayISO()}
+        />
+      )}
       {profile?.schoolId && canConfigure && (
         <SchoolIdentityModal
           open={identityOpen}
