@@ -20,8 +20,8 @@ export function WeekdayChart({ stats }: WeekdayChartProps) {
           >
             <span className="text-xs tabular-nums text-muted">{formatNumber(stat.avgAbsences)}</span>
             <span
-              className={`w-full max-w-[2.5rem] rounded-t-md transition-[filter] group-hover:brightness-125 ${
-                isPeak ? "bg-gradient-to-t from-accent to-magenta" : "bg-accent/50"
+              className={`w-full max-w-[2.5rem] rounded-t-md transition-[filter] group-hover:brightness-110 ${
+                isPeak ? "bg-accent" : "bg-accent/35"
               }`}
               style={{ height: `${max === 0 ? 0 : (stat.avgAbsences / max) * 100 * 0.78}%` }}
             />

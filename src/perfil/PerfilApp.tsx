@@ -3,8 +3,9 @@ import { TeamSection } from "../components/profile/TeamSection";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
-import { LogoutIcon } from "../components/ui/Icons";
+import { LogoutIcon, MoonIcon, SunIcon } from "../components/ui/Icons";
 import { ToastViewport } from "../components/ui/ToastViewport";
+import { useTheme } from "../hooks/useTheme";
 import { useAuthStore } from "../store/authStore";
 import { useDirectoryStore } from "../store/directoryStore";
 import { useTaskStore } from "../store/taskStore";
@@ -37,6 +38,7 @@ const EMPTY_PASSWORD: PasswordForm = { current: "", next: "", confirm: "" };
 export default function PerfilApp() {
   const profile = useAuthStore((s) => s.profile);
   const { saveLastName, savePhoto, removePhoto, changePassword, signOut } = useAuthStore();
+  const { theme, toggle: toggleTheme } = useTheme();
   const pushToast = useToastStore((s) => s.push);
 
   const [lastName, setLastName] = useState(profile?.lastName ?? "");
@@ -364,6 +366,19 @@ export default function PerfilApp() {
               {busy === "password" ? "Alterando…" : "Alterar senha"}
             </Button>
           </form>
+        </section>
+
+        <section className={SECTION} aria-labelledby="h-theme">
+          <h2 id="h-theme" className="section-title">
+            Aparência
+          </h2>
+          <p className="caption mt-1">
+            Sem escolha, o tema acompanha o do aparelho. A escolha vale neste navegador.
+          </p>
+          <Button className="mt-3" aria-pressed={theme === "dark"} onClick={toggleTheme}>
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            Modo escuro
+          </Button>
         </section>
 
         <section className={SECTION} aria-labelledby="h-session">

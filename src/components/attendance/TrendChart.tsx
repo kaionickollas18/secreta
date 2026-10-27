@@ -71,8 +71,8 @@ export function TrendChart({ points }: TrendChartProps) {
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.55" />
-              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+              <stop offset="0%" style={{ stopColor: "rgb(var(--accent))" }} stopOpacity="0.35" />
+              <stop offset="100%" style={{ stopColor: "rgb(var(--accent))" }} stopOpacity="0" />
             </linearGradient>
           </defs>
           {ticks.map((t) => (
@@ -82,27 +82,27 @@ export function TrendChart({ points }: TrendChartProps) {
                 x2={W - PAD.right}
                 y1={y(t)}
                 y2={y(t)}
-                stroke="rgba(167,139,250,0.12)"
+                className="stroke-line"
                 strokeDasharray={t === 0 ? undefined : "3 4"}
               />
-              <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#A8A3C7">
+              <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" className="fill-muted">
                 {Math.round(t)}
               </text>
             </g>
           ))}
           {monthTicks.map(({ p, i }) => (
-            <text key={p.date} x={x(i)} y={H - 8} fontSize="11" fill="#A8A3C7">
+            <text key={p.date} x={x(i)} y={H - 8} fontSize="11" className="fill-muted">
               {MONTHS[Number(p.date.slice(5, 7)) - 1]}
             </text>
           ))}
           <path d={area} fill={`url(#${gradientId})`} />
-          <path d={line((p) => p.absences)} fill="none" stroke="#C4B5FD" strokeWidth="2" strokeLinejoin="round" />
-          <path d={line((p) => p.average)} fill="none" stroke="#E879F9" strokeWidth="2" strokeLinejoin="round" />
+          <path d={line((p) => p.absences)} fill="none" className="stroke-accent" strokeWidth="2" strokeLinejoin="round" />
+          <path d={line((p) => p.average)} fill="none" className="stroke-magenta" strokeWidth="2" strokeLinejoin="round" />
           {hover !== null && active && (
             <g>
-              <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + innerH} stroke="rgba(255,255,255,0.35)" />
-              <circle cx={x(hover)} cy={y(active.absences)} r="4" fill="#C4B5FD" stroke="#1A1530" strokeWidth="2" />
-              <circle cx={x(hover)} cy={y(active.average)} r="4" fill="#E879F9" stroke="#1A1530" strokeWidth="2" />
+              <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + innerH} className="stroke-ink/30" />
+              <circle cx={x(hover)} cy={y(active.absences)} r="4" className="fill-accent stroke-surface" strokeWidth="2" />
+              <circle cx={x(hover)} cy={y(active.average)} r="4" className="fill-magenta stroke-surface" strokeWidth="2" />
             </g>
           )}
         </svg>

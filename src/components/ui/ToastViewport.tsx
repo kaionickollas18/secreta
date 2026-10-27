@@ -22,7 +22,7 @@ function ToastItem({ toast }: { toast: Toast }) {
 
   return (
     <div
-      className={`flex animate-toast-in items-center gap-3 glass rounded-2xl bg-raised px-4 py-3 text-sm text-white shadow-card ${edge}`}
+      className={`flex animate-toast-in items-center gap-3 rounded-2xl border bg-surface px-4 py-3 text-sm text-ink shadow-glow ${edge}`}
     >
       <span className={`shrink-0 ${icon}`}>
         <Icon />
@@ -31,7 +31,7 @@ function ToastItem({ toast }: { toast: Toast }) {
       {toast.actionLabel && toast.onAction && (
         <Button
           variant="ghost"
-          className="min-h-[32px] !text-white underline hover:!bg-white/10"
+          className="min-h-[32px] !text-accent-light hover:!bg-accent-soft"
           onClick={() => {
             toast.onAction?.();
             dismiss(toast.id);

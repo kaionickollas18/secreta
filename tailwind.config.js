@@ -1,16 +1,37 @@
+/**
+ * Cores do tema (claro e escuro, no padrão da Apple): os valores ficam em variáveis CSS em
+ * `src/index.css`, como canais RGB, para os modificadores de opacidade (`bg-raised/60`)
+ * continuarem valendo nos dois temas.
+ */
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+/** Cor com opacidade própria do tema (separadores e tons de fundo), ainda ajustável por `/NN`. */
+const tinted = (name, alpha) => `rgb(var(--${name}) / calc(var(--${alpha}) * <alpha-value>))`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  // `dark:` vale no tema escuro escolhido ou, sem escolha, quando o sistema está no escuro.
+  darkMode: [
+    "variant",
+    [
+      '&:is([data-theme="dark"] *)',
+      '@media (prefers-color-scheme: dark) { &:not(:is([data-theme="light"] *)) }',
+    ],
+  ],
   theme: {
     extend: {
       fontFamily: {
+        // Fonte do sistema: SF Pro no iPhone e no Mac; Segoe UI no Windows; Roboto no Android.
         sans: [
-          '"Schibsted Grotesk"',
-          "ui-sans-serif",
-          "system-ui",
           "-apple-system",
+          "BlinkMacSystemFont",
+          '"SF Pro Text"',
+          '"SF Pro Display"',
+          '"Segoe UI Variable Text"',
           '"Segoe UI"',
+          '"Helvetica Neue"',
           "Roboto",
+          "Arial",
           "sans-serif",
           // Emojis coloridos do sistema (os mesmos do painel Win + . no Windows).
           '"Segoe UI Emoji"',
@@ -23,29 +44,31 @@ export default {
         "2xs": ["0.6875rem", { lineHeight: "1rem" }],
       },
       colors: {
-        canvas: "#0F0B1E",
-        surface: "#1A1530",
-        raised: "#2A2150",
-        ink: "#FFFFFF",
-        muted: "#A8A3C7",
-        line: "rgba(167, 139, 250, 0.16)",
+        canvas: token("canvas"),
+        surface: token("surface"),
+        raised: token("raised"),
+        ink: token("ink"),
+        muted: token("muted"),
+        line: tinted("line", "line-alpha"),
         accent: {
-          DEFAULT: "#8B5CF6",
-          soft: "rgba(139, 92, 246, 0.18)",
-          strong: "#7C3AED",
-          light: "#C4B5FD",
+          DEFAULT: token("accent"),
+          soft: tinted("accent", "soft-alpha"),
+          // Fundo de botão e item ativo com texto branco (contraste 4,5:1 nos dois temas).
+          strong: token("accent-strong"),
+          // Azul de texto e ícone sobre o fundo do tema.
+          light: token("accent-light"),
         },
-        magenta: "#E879F9",
+        magenta: token("magenta"),
         // Amarelo "Lápis" da marca: o ponto do logotipo.
         pencil: "#F5B82E",
-        "prio-low": { DEFAULT: "#4ADE80", tint: "rgba(34, 197, 94, 0.16)" },
-        "prio-medium": { DEFAULT: "#FBBF24", tint: "rgba(251, 191, 36, 0.16)" },
-        "prio-high": { DEFAULT: "#FB923C", tint: "rgba(251, 146, 60, 0.16)" },
-        "prio-urgent": { DEFAULT: "#FB7185", tint: "rgba(244, 63, 94, 0.18)" },
+        "prio-low": { DEFAULT: token("prio-low"), tint: tinted("prio-low", "tint-alpha") },
+        "prio-medium": { DEFAULT: token("prio-medium"), tint: tinted("prio-medium", "tint-alpha") },
+        "prio-high": { DEFAULT: token("prio-high"), tint: tinted("prio-high", "tint-alpha") },
+        "prio-urgent": { DEFAULT: token("prio-urgent"), tint: tinted("prio-urgent", "tint-alpha") },
       },
       boxShadow: {
-        glow: "0 0 24px -4px rgba(139, 92, 246, 0.55)",
-        card: "0 8px 24px -12px rgba(0, 0, 0, 0.6)",
+        glow: "var(--shadow-raised)",
+        card: "var(--shadow-card)",
       },
       // Movimento: sempre para dar retorno ou explicar uma mudança de estado.
       // Curva de chegada (desacelera no fim), sem "quique". Ver docs/ux-guidelines.md.
@@ -60,8 +83,8 @@ export default {
         enter: { from: { opacity: "0", transform: "translateY(6px)" } },
         // "O cartão pousa": contorno que acende e se apaga onde a tarefa chegou.
         arrive: {
-          from: { boxShadow: "0 0 0 2px #C4B5FD, 0 0 28px 2px rgba(139, 92, 246, 0.55)" },
-          to: { boxShadow: "0 0 0 2px rgba(196, 181, 253, 0), 0 0 28px 2px rgba(139, 92, 246, 0)" },
+          from: { boxShadow: "0 0 0 2px rgb(var(--accent)), 0 0 24px 2px rgb(var(--accent) / 0.35)" },
+          to: { boxShadow: "0 0 0 2px rgb(var(--accent) / 0), 0 0 24px 2px rgb(var(--accent) / 0)" },
         },
         // Contador que mudou.
         pop: { from: { transform: "scale(1.45)" } },

@@ -8,6 +8,7 @@ import { countUnread } from "../../utils/messages";
 import { readNavCollapsed, writeNavCollapsed } from "../../utils/navPreference";
 import { countDue } from "../../utils/reminders";
 import { canManageAssistants, isSchoolRole, isStaffRole, ROLE_LABELS } from "../../utils/roles";
+import { useTheme } from "../../hooks/useTheme";
 import { Avatar } from "../ui/Avatar";
 import { LogoMark } from "../ui/Logo";
 import {
@@ -18,8 +19,10 @@ import {
   ChatIcon,
   ChevronLeftIcon,
   LogoutIcon,
+  MoonIcon,
   NoteIcon,
   SendIcon,
+  SunIcon,
   UsersIcon,
 } from "../ui/Icons";
 
@@ -106,6 +109,7 @@ export function AppShell({ active, children }: AppShellProps) {
   const watchChat = useChatStore((s) => s.watch);
   // Lido já no primeiro desenho, para o menu não abrir num modo e mudar em seguida.
   const [collapsed, setCollapsed] = useState(readNavCollapsed);
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const currentLink = useRef<HTMLAnchorElement>(null);
 
@@ -208,7 +212,7 @@ export function AppShell({ active, children }: AppShellProps) {
     >
       <nav
         aria-label="Navegação principal"
-        className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md md:inset-y-0 md:right-auto md:border-r md:border-t-0 md:transition-[width] ${EASE} ${
+        className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface md:inset-y-0 md:right-auto md:border-r md:border-t-0 md:transition-[width] ${EASE} ${
           collapsed ? "md:w-[72px]" : "md:w-60"
         }`}
       >
@@ -265,13 +269,14 @@ export function AppShell({ active, children }: AppShellProps) {
                     ref={current ? currentLink : undefined}
                     aria-current={current ? "page" : undefined}
                     title={collapsed ? item.label : undefined}
-                    className={`${ITEM} ${current ? "text-white" : "text-muted hover:bg-raised hover:text-ink"}`}
+                    className={`${ITEM} ${current ? "text-accent-light md:text-white" : "text-muted hover:bg-raised hover:text-ink"}`}
                   >
-                    {/* O destaque é uma camada própria: na troca de página ele desliza até o item novo. */}
+                    {/* O destaque é uma camada própria: na troca de página ele desliza até o item novo.
+                        No celular, como na barra de abas do iPhone, o item atual só fica azul. */}
                     {current && (
                       <span
                         aria-hidden="true"
-                        className="nav-pill absolute inset-0 rounded-xl bg-gradient-to-b from-accent to-accent-strong shadow-glow"
+                        className="nav-pill absolute inset-0 hidden rounded-xl bg-accent-strong md:block"
                       />
                     )}
                     <span className={ICON_SLOT}>
@@ -289,6 +294,16 @@ export function AppShell({ active, children }: AppShellProps) {
           </ul>
 
           <div className="mt-auto hidden space-y-1 border-t border-line pt-3 md:block">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-pressed={theme === "dark"}
+              title={collapsed ? "Modo escuro" : undefined}
+              className={`${ITEM} text-muted hover:bg-raised hover:text-ink`}
+            >
+              <span className={ICON_SLOT}>{theme === "dark" ? <SunIcon /> : <MoonIcon />}</span>
+              <span className={fading(collapsed)}>Modo escuro</span>
+            </button>
             {/* Alterna entre estendido e retraído (só no computador). */}
             <button
               type="button"

@@ -2,17 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Tema no padrão da Apple (Human Interface Guidelines): cores do sistema em canais RGB.
+ * Claro por padrão; escuro quando a pessoa escolhe (data-theme="dark" no <html>, gravado em
+ * `secreta:tema` por `utils/themePreference.ts`) ou, sem escolha, quando o sistema está no escuro.
+ * Fundos sólidos: sem vidro nem degradê.
+ */
 @layer base {
+  :root {
+    color-scheme: light;
+    --canvas: 242 242 247; /* systemGroupedBackground */
+    --surface: 255 255 255;
+    --raised: 229 229 234; /* systemGray5 */
+    --ink: 0 0 0;
+    --muted: 108 108 112; /* rótulo secundário com 4,5:1 sobre o fundo */
+    --line: 60 60 67;
+    --line-alpha: 0.2;
+    --accent: 0 113 227;
+    --accent-strong: 0 98 204;
+    --accent-light: 0 64 221;
+    --soft-alpha: 0.12;
+    --magenta: 175 82 222; /* systemPurple */
+    --prio-low: 36 138 61;
+    --prio-medium: 160 90 0;
+    --prio-high: 201 52 0;
+    --prio-urgent: 215 0 21;
+    --tint-alpha: 0.12;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05), 0 6px 16px -8px rgba(0, 0, 0, 0.14);
+    --shadow-raised: 0 16px 48px -16px rgba(0, 0, 0, 0.28);
+  }
+  /* Mesmos valores escuros nos dois casos: escolha explícita ou sistema no escuro. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --canvas: 0 0 0;
+    --surface: 28 28 30; /* systemGray6 escuro */
+    --raised: 44 44 46;
+    --ink: 255 255 255;
+    --muted: 152 152 159;
+    --line: 84 84 88;
+    --line-alpha: 0.65;
+    --accent: 10 132 255;
+    --accent-strong: 0 113 227;
+    --accent-light: 100 181 255;
+    --soft-alpha: 0.2;
+    --magenta: 191 90 242;
+    --prio-low: 48 209 88;
+    --prio-medium: 255 214 10;
+    --prio-high: 255 159 10;
+    --prio-urgent: 255 69 58;
+    --tint-alpha: 0.18;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+    --shadow-raised: 0 16px 48px -12px rgba(0, 0, 0, 0.8);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --canvas: 0 0 0;
+      --surface: 28 28 30;
+      --raised: 44 44 46;
+      --ink: 255 255 255;
+      --muted: 152 152 159;
+      --line: 84 84 88;
+      --line-alpha: 0.65;
+      --accent: 10 132 255;
+      --accent-strong: 0 113 227;
+      --accent-light: 100 181 255;
+      --soft-alpha: 0.2;
+      --magenta: 191 90 242;
+      --prio-low: 48 209 88;
+      --prio-medium: 255 214 10;
+      --prio-high: 255 159 10;
+      --prio-urgent: 255 69 58;
+      --tint-alpha: 0.18;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+      --shadow-raised: 0 16px 48px -12px rgba(0, 0, 0, 0.8);
+    }
+  }
   html {
     -webkit-text-size-adjust: 100%;
-    color-scheme: dark;
   }
   body {
     @apply bg-canvas font-sans text-ink antialiased;
-    background-image:
-      radial-gradient(60rem 36rem at 12% -10%, rgba(139, 92, 246, 0.22), transparent 60%),
-      radial-gradient(48rem 30rem at 100% 0%, rgba(192, 38, 211, 0.16), transparent 60%);
-    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
     /* Sem negrito/itálico "falsos" quando o peso não carregou; kerning e ligaduras ligados. */
     font-synthesis: none;
     font-kerning: normal;
@@ -38,13 +109,13 @@
   }
   /* Superfícies que o navegador desenha sozinho também seguem a paleta. */
   html {
-    scrollbar-color: rgba(167, 139, 250, 0.35) transparent;
+    scrollbar-color: rgb(var(--muted) / 0.45) transparent;
   }
   input,
   textarea,
   select {
-    caret-color: theme(colors.accent.light);
-    accent-color: theme(colors.accent.DEFAULT);
+    caret-color: rgb(var(--accent));
+    accent-color: rgb(var(--accent));
   }
   /* Sublinhado afastado das letras, na espessura que a fonte define. */
   a,
@@ -52,26 +123,28 @@
     text-underline-offset: 0.2em;
     text-decoration-thickness: from-font;
   }
+  /* Anel de foco azul, como nos controles da Apple. */
   :focus-visible {
-    outline: 2px solid #c4b5fd;
+    outline: 3px solid rgb(var(--accent) / 0.55);
     outline-offset: 2px;
   }
   ::selection {
-    background: rgba(139, 92, 246, 0.45);
+    background: rgb(var(--accent) / 0.25);
   }
 }
 
 @layer components {
+  /* Painel: fundo sólido sobre o cinza da página (o nome ficou da versão com vidro). */
   .glass {
-    @apply border border-line bg-surface/70 backdrop-blur-md;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    @apply border border-line bg-surface shadow-card;
   }
 
   /* Hierarquia de títulos: um lugar só para tamanho, peso, entrelinha e espaçamento. */
 
   /* Título da página (h1): cor sólida; a ênfase vem do tamanho e do peso. */
+  /* Título grande (Large Title): 28 px no celular, 34 px a partir do tablet. */
   .page-title {
-    @apply text-[1.75rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-3xl sm:leading-[1.15];
+    @apply text-[1.75rem] font-bold leading-[1.15] tracking-[-0.02em] text-ink sm:text-[2.125rem] sm:leading-[1.15];
   }
   /* Frase de apoio abaixo do título da página, com largura confortável de leitura. */
   .page-lede {
@@ -79,18 +152,18 @@
   }
   /* Título de painel ou de janela (h2 de destaque). */
   .panel-title {
-    @apply text-lg font-semibold leading-snug tracking-[-0.01em];
+    @apply text-xl font-semibold leading-snug tracking-[-0.01em];
   }
   /* Título de seção. */
   .section-title {
-    @apply text-base font-semibold leading-snug tracking-[-0.005em];
+    @apply text-[1.0625rem] font-semibold leading-snug tracking-[-0.005em];
   }
   /* Título de cartão, coluna ou bloco pequeno: mesmo tamanho do corpo, separado pelo peso. */
   .card-title {
-    @apply text-sm font-semibold leading-snug;
+    @apply text-[0.9375rem] font-semibold leading-snug;
   }
   /* Legenda, dica ou metadado em parágrafo: linha limitada a ~75 caracteres e um pouco mais de
-     entrelinha, porque texto claro pequeno sobre fundo escuro fecha visualmente. */
+     entrelinha, para o texto pequeno respirar. */
   .caption {
     @apply max-w-[75ch] text-xs leading-[1.5] text-muted;
   }
@@ -254,7 +327,7 @@
   --doc-critical-soft: #fae3e3;
   width: 100%;
   overflow-wrap: break-word;
-  font-family: "Schibsted Grotesk", Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   font-size: 9.5pt;
   line-height: 1.35;
   color: var(--doc-ink);

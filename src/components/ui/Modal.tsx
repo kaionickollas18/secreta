@@ -61,7 +61,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-40 flex animate-overlay-in items-end justify-center bg-canvas/70 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-40 flex animate-overlay-in items-end justify-center bg-black/40 sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onCloseRef.current();
       }}
@@ -72,7 +72,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         onKeyDown={handleKeyDown}
-        className="max-h-[92vh] w-full animate-sheet-in overflow-y-auto rounded-t-3xl border border-line bg-surface p-5 shadow-glow sm:max-w-lg sm:animate-dialog-in sm:rounded-3xl"
+        className="max-h-[92vh] w-full animate-sheet-in overflow-y-auto rounded-t-[1.25rem] bg-surface p-5 shadow-glow sm:max-w-lg sm:animate-dialog-in sm:rounded-3xl"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 id={titleId} className="panel-title">

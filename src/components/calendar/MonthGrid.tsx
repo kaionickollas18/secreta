@@ -47,7 +47,7 @@ export function MonthGrid({ weeks, month, today, selected, events, onSelect }: M
           <span
             key={day}
             className={`py-2 text-center text-2xs uppercase tracking-wider ${
-              index === 0 || index === 6 ? "font-bold text-red-400" : "font-semibold text-muted"
+              index === 0 || index === 6 ? "font-bold text-prio-urgent" : "font-semibold text-muted"
             }`}
           >
             {day}
@@ -86,11 +86,11 @@ export function MonthGrid({ weeks, month, today, selected, events, onSelect }: M
                     weekend ? "font-bold" : "font-semibold"
                   } ${
                     isToday
-                      ? "bg-accent text-white"
+                      ? "bg-accent-strong text-white"
                       : weekend
                         ? filled
                           ? "text-red-700"
-                          : "text-red-400"
+                          : "text-prio-urgent"
                         : filled
                           ? ON_FILL
                           : "text-ink"

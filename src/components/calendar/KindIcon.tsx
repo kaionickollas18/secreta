@@ -17,7 +17,7 @@ interface KindStyle {
    * elas são dias comuns, marcados só pela pasta colorida.
    */
   fill: string;
-  /** Cor do ícone e do nome sobre o fundo escuro. */
+  /** Cor do ícone e do nome sobre o fundo do tema (mais escura no claro, pastel no escuro). */
   text: string;
   /** Contorno do item no detalhe do dia. */
   edge: string;
@@ -31,14 +31,14 @@ interface KindStyle {
  * pelo ícone). O nome do tipo sempre acompanha a cor em texto.
  */
 export const KIND_STYLES: Record<EventKind, KindStyle> = {
-  holiday: { icon: <FlagIcon />, fill: "bg-red-300", text: "text-red-300", edge: "border-red-300/40" },
-  recess: { icon: <SunIcon />, fill: "bg-yellow-200", text: "text-yellow-200", edge: "border-yellow-200/40" },
-  planning: { icon: <ClipboardIcon />, fill: "bg-emerald-200", text: "text-emerald-200", edge: "border-emerald-200/40" },
-  meeting: { icon: <NotebookIcon />, fill: "bg-emerald-200", text: "text-emerald-200", edge: "border-emerald-200/40" },
-  training: { icon: <BooksIcon />, fill: "bg-emerald-200", text: "text-emerald-200", edge: "border-emerald-200/40" },
-  council: { icon: <HourglassIcon />, fill: "bg-emerald-200", text: "text-emerald-200", edge: "border-emerald-200/40" },
-  semec: { icon: <FolderIcon />, fill: "", text: "text-orange-400", edge: "border-orange-400/40", onFill: "text-orange-700" },
-  grades: { icon: <FolderIcon />, fill: "", text: "text-pink-400", edge: "border-pink-400/40", onFill: "text-pink-700" },
+  holiday: { icon: <FlagIcon />, fill: "bg-red-300", text: "text-red-700 dark:text-red-300", edge: "border-red-300/60 dark:border-red-300/40" },
+  recess: { icon: <SunIcon />, fill: "bg-yellow-200", text: "text-yellow-800 dark:text-yellow-200", edge: "border-yellow-400/60 dark:border-yellow-200/40" },
+  planning: { icon: <ClipboardIcon />, fill: "bg-emerald-200", text: "text-emerald-700 dark:text-emerald-200", edge: "border-emerald-400/60 dark:border-emerald-200/40" },
+  meeting: { icon: <NotebookIcon />, fill: "bg-emerald-200", text: "text-emerald-700 dark:text-emerald-200", edge: "border-emerald-400/60 dark:border-emerald-200/40" },
+  training: { icon: <BooksIcon />, fill: "bg-emerald-200", text: "text-emerald-700 dark:text-emerald-200", edge: "border-emerald-400/60 dark:border-emerald-200/40" },
+  council: { icon: <HourglassIcon />, fill: "bg-emerald-200", text: "text-emerald-700 dark:text-emerald-200", edge: "border-emerald-400/60 dark:border-emerald-200/40" },
+  semec: { icon: <FolderIcon />, fill: "", text: "text-orange-700 dark:text-orange-400", edge: "border-orange-400/40", onFill: "text-orange-700" },
+  grades: { icon: <FolderIcon />, fill: "", text: "text-pink-700 dark:text-pink-400", edge: "border-pink-400/40", onFill: "text-pink-700" },
 };
 
 /** Texto escuro usado sobre os preenchimentos pastel. */

@@ -6,12 +6,16 @@
     <meta name="description" content="Lembretes e prazos da secretaria." />
     <meta name="robots" content="noindex" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Aplica o tema escolhido antes do primeiro desenho, para a página não piscar no outro tema.
+         Mesma chave e valores de src/utils/themePreference.ts. -->
+    <script>
+      try {
+        var tema = localStorage.getItem("secreta:tema");
+        if (tema === "claro" || tema === "escuro") {
+          document.documentElement.dataset.theme = tema === "escuro" ? "dark" : "light";
+        }
+      } catch (e) {}
+    </script>
     <title>Lembretes · SECRETA</title>
     <!-- Prepara em segundo plano a página do item da barra sob o mouse; ela abre quase na hora.
          O Dashboard busca a planilha inteira, então só é preparado no clique. -->

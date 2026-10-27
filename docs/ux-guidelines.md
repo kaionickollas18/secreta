@@ -6,9 +6,15 @@
 - **Uma ação, um nome**: o botão "Excluir" gera o aviso "Tarefa excluída".
 
 ## Visual
-- Fundo azul-acinzentado claro, colunas translúcidas, cartões brancos; azul vibrante só para ação principal e foco.
-- Tipografia: Schibsted Grotesk (fallback: fontes do sistema); títulos de cartão em semibold, descrições em tom suave.
-- Raios e sombras discretos; sombra maior apenas no cartão em arraste.
+- Padrão visual da Apple (Human Interface Guidelines): fundo cinza do sistema, painéis e cartões sólidos (sem vidro nem degradê), azul do sistema só para ação principal, item ativo e foco.
+- Tipografia: fonte do sistema (SF Pro no iPhone e no Mac, Segoe UI no Windows, Roboto no Android); títulos de cartão em semibold, descrições em tom suave.
+- Botões em cápsula, com pelo menos 44 px de altura e um leve "afundar" ao tocar; raios e sombras discretos.
+
+## Tema claro e escuro
+- As cores ficam em variáveis CSS em `src/index.css` (canais RGB) e o Tailwind as lê (`tailwind.config.js`). Os nomes (`canvas`, `surface`, `raised`, `ink`, `muted`, `line`, `accent`, `prio-*`) valem nos dois temas; use-os em vez de cores fixas.
+- Sem escolha, o tema acompanha o do aparelho. O botão "Modo escuro" (rodapé do menu no computador; página Perfil no celular) grava a escolha em `localStorage` (`secreta:tema`, em `utils/themePreference.ts`). Um script no `<head>` de cada `.html` aplica o tema antes do primeiro desenho, para a página não piscar.
+- Quando uma cor da paleta do Tailwind precisar de outro tom no escuro, use a variante `dark:` (ex.: `text-red-700 dark:text-red-300`).
+- `accent-strong` é o fundo de botão e item ativo com texto branco; `accent-light` é o azul de texto e ícone. Os dois passam de 4,5:1 nos dois temas.
 
 ## Cores por prioridade
 Cada prioridade tem faixa lateral no cartão e selo com **texto** (a cor nunca é o único sinal):
@@ -42,7 +48,7 @@ Tab percorre a interface; alça de arraste: espaço/Enter pega, setas movem, esp
 Contraste mínimo 4,5:1 em texto; foco visível em todos os controles; movimento reduzido respeitado.
 
 ## Papéis tipográficos
-Uma família só (Schibsted Grotesk, variável). Cada papel tem uma classe em `src/index.css`; não repita a sequência de utilitários nos componentes.
+Uma família só (fonte do sistema). Cada papel tem uma classe em `src/index.css`; não repita a sequência de utilitários nos componentes.
 
 | Papel | Classe | Uso |
 |---|---|---|
@@ -102,4 +108,4 @@ Cada área é uma página separada, mas a troca deve parecer uma tela só.
 - **Celular**: barra inferior com ícone sobre o rótulo; não há modo retraído.
 - Retraído, cada item mantém o nome para leitores de tela.
 ## Marca
-O logotipo fica em `src/components/ui/Logo.tsx`: o símbolo (`LogoMark`, um S de cinco cartões com o ponto amarelo "Lápis" `#F5B82E`) e o nome em minúsculas. Aparece no topo do menu, no título do Quadro e na tela de login (versão empilhada, com a frase da marca). O ícone da aba é `public/favicon.svg`, na versão principal do manual (fundo "Tinta" `#16213E`). O sistema mantém a paleta escura em violeta; da marca entram o símbolo, o nome e o amarelo do ponto.
+O logotipo fica em `src/components/ui/Logo.tsx`: o símbolo (`LogoMark`, um S de cinco cartões com o ponto amarelo "Lápis" `#F5B82E`) e o nome em minúsculas. Aparece no topo do menu, no título do Quadro e na tela de login (versão empilhada, com a frase da marca). O ícone da aba é `public/favicon.svg`, na versão principal do manual (fundo "Tinta" `#16213E`). O sistema segue as cores da Apple (claro e escuro); da marca entram o símbolo, o nome e o amarelo do ponto.

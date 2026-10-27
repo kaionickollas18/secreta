@@ -25,9 +25,9 @@ export function BarList({ items, label }: BarListProps) {
           className="group grid grid-cols-[4.5rem_1fr_auto] items-center gap-3 text-sm"
         >
           <span className="truncate">{item.label}</span>
-          <span className="h-2.5 overflow-hidden rounded-full bg-canvas/80">
+          <span className="h-2.5 overflow-hidden rounded-full bg-raised">
             <span
-              className="block h-full rounded-full bg-gradient-to-r from-accent to-accent-light transition-[filter] group-hover:brightness-125"
+              className="block h-full rounded-full bg-accent transition-[filter] group-hover:brightness-110"
               style={{ width: `${max === 0 ? 0 : (item.value / max) * 100}%` }}
             />
           </span>

@@ -2,16 +2,16 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "depth";
 
-/** Efeito 3D: borda inferior grossa que "afunda" ao clicar. */
-const DEPTH =
-  "border-b-4 active:translate-y-[3px] active:border-b-[1px] hover:brightness-110 transition-[transform,filter]";
-
+/*
+ * Botões no padrão da Apple: cápsula, cor sólida e um leve "afundar" ao tocar.
+ * Principal em azul; "depth" é o azul suave (ação de destaque que não é a principal).
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary: `bg-gradient-to-r from-accent to-fuchsia-600 text-white shadow-glow border-b-fuchsia-900 ${DEPTH}`,
-  depth: `bg-gradient-to-b from-raised to-surface text-accent-light border border-line border-b-[#0a0716] shadow-card hover:text-white ${DEPTH}`,
-  secondary: "border border-line bg-raised/60 text-ink hover:bg-raised",
+  primary: "bg-accent-strong text-white hover:brightness-110",
+  depth: "bg-accent-soft text-accent-light hover:bg-accent/20",
+  secondary: "bg-raised/80 text-ink hover:bg-raised",
   ghost: "text-muted hover:bg-raised hover:text-ink",
-  danger: "bg-rose-500 text-white hover:bg-rose-600",
+  danger: "bg-[#D70015] text-white hover:brightness-110",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -19,7 +19,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 function buttonClasses(variant: Variant, className: string): string {
-  return `inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md px-3.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`;
+  return `inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-[background-color,color,filter,transform] duration-100 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${VARIANTS[variant]} ${className}`;
 }
 
 export function Button({ variant = "secondary", className = "", type = "button", ...rest }: ButtonProps) {
@@ -47,7 +47,7 @@ export function IconButton({
   return (
     <button
       type={type}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-muted transition-colors hover:bg-raised hover:text-ink ${className}`}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-raised hover:text-ink ${className}`}
       {...rest}
     />
   );
