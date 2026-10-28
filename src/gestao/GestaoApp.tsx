@@ -17,7 +17,7 @@ export default function GestaoApp() {
         <p className="page-lede">
           {isMaster
             ? "Cadastre escolas e o secretário responsável por cada uma."
-            : "Cadastre auxiliares e professores e edite o perfil de cada um."}
+            : "Cadastre assistentes e professores e edite o perfil de cada um."}
         </p>
       </header>
       <main className="flex-1">{isMaster ? <MasterPanel /> : <TeamPanel />}</main>

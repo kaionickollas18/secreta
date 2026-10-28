@@ -161,7 +161,7 @@ describe("conversas (tela)", () => {
     const thread = within(screen.getByRole("region", { name: "Conversa: Anônimo" }));
     expect(thread.getByText(/Seus colegas não veem quem escreveu/)).toBeInTheDocument();
     expect(thread.getByText("Falta papel na sala 2")).toBeInTheDocument();
-    // O auxiliar não apaga o que outra pessoa escreveu.
+    // O assistente não apaga o que outra pessoa escreveu.
     expect(thread.queryByRole("button", { name: /^Apagar mensagem/ })).not.toBeInTheDocument();
 
     await user.type(thread.getByLabelText("Escrever mensagem"), "Concordo{Enter}");

@@ -81,7 +81,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       if (change.outcome === "blocked") return { error: BLOCKED, outcome: "blocked" };
 
       const row = inputToRow({ ...input, status: change.status });
-      // Só o Secretário altera responsáveis; o Auxiliar envia os demais campos.
+      // Só o Secretário altera responsáveis; o Assistente envia os demais campos.
       const { assignee_ids, ...withoutAssignees } = row;
       const patch = {
         ...(canManageTasks(role) ? { ...withoutAssignees, assignee_ids } : withoutAssignees),

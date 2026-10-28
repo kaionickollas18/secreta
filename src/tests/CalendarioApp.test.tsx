@@ -107,7 +107,7 @@ describe("CalendarioApp", () => {
     expect(screen.getByRole("button", { name: new RegExp(`^${longDate(today)}, Conselho de Classe`) })).toBeInTheDocument();
   });
 
-  it("auxiliar vê o calendário, mas não cadastra feriados", () => {
+  it("assistente vê o calendário, mas não cadastra feriados", () => {
     useHolidayStore.setState({
       holidays: [{ id: "h1", name: "Recesso", start: today, end: today, source: "school", kind: "holiday" }],
       status: "ready",

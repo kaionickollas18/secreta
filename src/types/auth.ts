@@ -13,7 +13,7 @@ export interface Profile {
   avatarPath?: string;
   /** Endereço público da foto. */
   avatarUrl?: string;
-  /** Auxiliar com acesso especial: age como secretário, menos na gestão da equipe. */
+  /** Assistente com acesso especial: age como secretário, menos na gestão da equipe. */
   elevated?: boolean;
 }
 

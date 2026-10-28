@@ -9,7 +9,7 @@ web
 ## Users
 
 - **Secretário(a) escolar** (usuário principal): responde pela secretaria de uma escola pública municipal. Distribui e acompanha o trabalho da equipe, cumpre prazos que se repetem (memorandos, sistemas do governo) e precisa saber, a qualquer momento, o que está pendente e com quem.
-- **Auxiliar administrativo**: executa as tarefas atribuídas pelo secretário, atualiza o andamento e pede a conclusão.
+- **Assistente administrativo**: executa as tarefas atribuídas pelo secretário, atualiza o andamento e pede a conclusão.
 - **Master**: administra a rede. Cadastra as escolas e o secretário de cada uma. Não participa do trabalho diário das escolas.
 
 Situação de uso: no computador da secretaria durante o expediente e no celular para consultas rápidas, mensagens e lembretes. A familiaridade da equipe com tecnologia é **mista**: parte usa com facilidade, parte tem dificuldade e depende de telas simples e textos claros.
@@ -22,12 +22,12 @@ Sucesso significa: o secretário enxerga a situação do trabalho sem perguntar 
 
 ## Positioning
 
-Um quadro de tarefas feito para a hierarquia e a rotina reais de uma secretaria escolar, não um Kanban genérico: o auxiliar não conclui sozinho (pede, e o secretário aprova), os lembretes seguem os ciclos da administração escolar (ex.: "todo mês, do dia 15 ao 20"), cada conclusão vira registro permanente, e a frequência dos alunos fica ao lado do trabalho da equipe. Cada escola só enxerga os próprios dados.
+Um quadro de tarefas feito para a hierarquia e a rotina reais de uma secretaria escolar, não um Kanban genérico: o assistente não conclui sozinho (pede, e o secretário aprova), os lembretes seguem os ciclos da administração escolar (ex.: "todo mês, do dia 15 ao 20"), cada conclusão vira registro permanente, e a frequência dos alunos fica ao lado do trabalho da equipe. Cada escola só enxerga os próprios dados.
 
 ## Operating Context
 
 - **Rotinas com prazo que se repetem**, citadas pelo secretário: entregar, do dia 15 ao dia 20 de cada mês, o memorando com o anexo da frequência de pessoal de toda a escola; preencher a cada dois meses a frequência do Sistema Presença (Bolsa Família).
-- **Fluxo de tarefas**: o secretário cria a tarefa e define os responsáveis (ele mesmo e/ou auxiliares); o auxiliar executa e pede a conclusão; o secretário aprova ou devolve.
+- **Fluxo de tarefas**: o secretário cria a tarefa e define os responsáveis (ele mesmo e/ou assistentes); o assistente executa e pede a conclusão; o secretário aprova ou devolve.
 - **Frequência dos alunos**: registrada pela escola em planilha (Google Sheets), uma aba por turma, com os ausentes de cada dia. O dashboard lê essa planilha ou arquivos CSV enviados pelo secretário.
 - **Prestação de contas**: o histórico de tarefas concluídas é baixado como planilha (CSV) por período.
 - **Comunicação**: mural único da escola, visto por toda a equipe.
@@ -36,15 +36,15 @@ Um quadro de tarefas feito para a hierarquia e a rotina reais de uma secretaria 
 ## Capabilities and Constraints
 
 **Funcionalidades confirmadas**
-- Login por e-mail e senha; ninguém se cadastra sozinho. O Master cria secretários; o secretário cria auxiliares.
+- Login por e-mail e senha; ninguém se cadastra sozinho. O Master cria secretários; o secretário cria assistentes.
 - Quadro Kanban com quatro colunas (A Fazer, Em Progresso, Em Revisão, Concluído), prioridade, vencimento, responsáveis, busca e filtros, atualização ao vivo.
 - Conclusão com aprovação do secretário e histórico permanente, com download.
 - Lembretes: uma vez, toda semana ou a cada N meses com período de dias. Só o secretário cria e marca como feito; toda a escola vê.
 - Mural de mensagens por escola, ao vivo; o secretário modera.
 - Dashboard de frequência: indicadores, pesquisa por aluno e frequência mês a mês.
-- Gestão de escolas (Master) e de auxiliares (secretário).
+- Gestão de escolas (Master) e de assistentes (secretário).
 
-**Termos do produto**: Master, Secretário, Auxiliar Administrativo, Quadro, Lembretes, Mensagens (mural), Dashboard, Equipe, Histórico, "Pedir conclusão", "Aprovar", "Devolver".
+**Termos do produto**: Master, Secretário, Assistente Administrativo, Quadro, Lembretes, Mensagens (mural), Dashboard, Equipe, Histórico, "Pedir conclusão", "Aprovar", "Devolver".
 
 **Restrições**
 - Interface em português do Brasil.

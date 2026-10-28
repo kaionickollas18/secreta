@@ -34,7 +34,7 @@ describe("directory utils", () => {
     expect(secretaryOf("s2", members)).toBeUndefined();
   });
 
-  it("lista só auxiliares, em ordem alfabética, e filtra por escola", () => {
+  it("lista só assistentes, em ordem alfabética, e filtra por escola", () => {
     expect(assistantsOf(members).map((m) => m.id)).toEqual(["a1", "x", "a2"]);
     expect(assistantsOf(members, "s1").map((m) => m.id)).toEqual(["a1", "a2"]);
   });

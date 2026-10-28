@@ -39,7 +39,7 @@ export function parseCachedProfile(raw: string | null): Profile | null {
       fullName: v.fullName,
       lastName: v.lastName,
       ...(hasPhoto ? { avatarPath: v.avatarPath as string, avatarUrl: v.avatarUrl as string } : {}),
-      // Só vale para auxiliar. Serve para a tela mostrar os botões certos; o banco decide.
+      // Só vale para assistente. Serve para a tela mostrar os botões certos; o banco decide.
       ...(v.role === "assistant" && v.elevated === true ? { elevated: true } : {}),
     };
   } catch {

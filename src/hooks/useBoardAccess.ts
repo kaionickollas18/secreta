@@ -21,7 +21,7 @@ export function useBoardAccess() {
       canManage: canManageTasks(role),
       /** Concluir, reabrir e responder pedidos de conclusão. */
       canApprove: canApproveCompletion(role),
-      /** Secretário e auxiliares ativos, na ordem de exibição. */
+      /** Secretário e assistentes ativos, na ordem de exibição. */
       people: assignableMembers(members),
       /** Sobrenome do responsável ("" se a pessoa não existe mais). */
       nameOf: (id: string) => byId.get(id)?.lastName ?? "",

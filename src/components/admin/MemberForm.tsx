@@ -31,7 +31,7 @@ interface MemberFormProps {
   /** Mostra o campo da escola (cadastro do Master). */
   withSchoolName?: boolean;
   /**
-   * Equipe da escola (área do secretário): escolhe auxiliar ou professor e, na edição, altera
+   * Equipe da escola (área do secretário): escolhe assistente ou professor e, na edição, altera
    * livremente o perfil (sobrenome, apelido, nascimento, e-mail, foto).
    */
   staff?: boolean;

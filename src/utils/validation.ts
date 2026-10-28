@@ -13,7 +13,7 @@ export type ValidationResult =
   | { valid: true; value: TaskInput }
   | { valid: false; errors: FieldErrors };
 
-/** `validAssignees`: ids das pessoas que podem ser responsáveis (secretário e auxiliares da escola). */
+/** `validAssignees`: ids das pessoas que podem ser responsáveis (secretário e assistentes da escola). */
 export function validateTaskForm(
   values: TaskFormValues,
   validAssignees: readonly string[] = [],

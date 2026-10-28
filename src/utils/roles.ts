@@ -3,7 +3,7 @@ import type { UserRole } from "../types/auth";
 export const ROLE_LABELS: Record<UserRole, string> = {
   master: "Master",
   secretary: "Secretário",
-  assistant: "Auxiliar Administrativo",
+  assistant: "Assistente Administrativo",
   teacher: "Professor(a)",
 };
 
@@ -11,7 +11,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const ELEVATED_LABEL = "Acesso de secretário";
 
 /**
- * Papel que vale para o trabalho do dia a dia. O auxiliar com acesso especial age como
+ * Papel que vale para o trabalho do dia a dia. O assistente com acesso especial age como
  * secretário (tarefas, lembretes, dashboard, mural). A gestão da equipe é a exceção: ela
  * olha o papel real (`canManageAssistants(profile.role)`), então continua só do secretário.
  */
@@ -19,7 +19,7 @@ export function effectiveRole(profile: { role: UserRole; elevated?: boolean }): 
   return profile.role === "assistant" && profile.elevated ? "secretary" : profile.role;
 }
 
-/** "Auxiliar Administrativo · Acesso de secretário", ou só o nome do papel. */
+/** "Assistente Administrativo · Acesso de secretário", ou só o nome do papel. */
 export function roleLabel(profile: { role: UserRole; elevated?: boolean }): string {
   const label = ROLE_LABELS[profile.role];
   return profile.role === "assistant" && profile.elevated ? `${label} · ${ELEVATED_LABEL}` : label;

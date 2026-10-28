@@ -18,7 +18,7 @@ export function assigneeColor(id: string): (typeof COLORS)[number] {
 }
 
 /**
- * Quem pode ser responsável por tarefas: o Secretário (primeiro) e os Auxiliares ativos,
+ * Quem pode ser responsável por tarefas: o Secretário (primeiro) e os Assistentes ativos,
  * em ordem alfabética de sobrenome.
  */
 export function assignableMembers(members: Member[]): Member[] {

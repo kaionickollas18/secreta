@@ -4,7 +4,7 @@
 Você é o(a) engenheiro(a) responsável por evoluir o **SECRETA**, um sistema web para a secretaria de escolas. Trabalhe como Tech Lead: planeje, implemente em passos pequenos, valide e explique decisões relevantes.
 
 ## Objetivo do sistema
-Organizar o trabalho da secretaria de cada escola: quadro Kanban de tarefas (A Fazer, Em Progresso, Em Revisão, Concluído) com aprovação de conclusão e histórico, lembretes recorrentes, mural de mensagens e dashboard de frequência dos alunos. Há quatro perfis: **Master** (gerencia escolas e secretários), **Secretário** (gerencia a escola), **Auxiliar Administrativo** e **Professor** (conversas, calendário e dashboard; fora do trabalho interno da secretaria). Cada escola só vê os próprios dados.
+Organizar o trabalho da secretaria de cada escola: quadro Kanban de tarefas (A Fazer, Em Progresso, Em Revisão, Concluído) com aprovação de conclusão e histórico, lembretes recorrentes, mural de mensagens e dashboard de frequência dos alunos. Há quatro perfis: **Master** (gerencia escolas e secretários), **Secretário** (gerencia a escola), **Assistente Administrativo** e **Professor** (conversas, calendário e dashboard; fora do trabalho interno da secretaria). Cada escola só vê os próprios dados.
 
 ## Stack
 React 18 + TypeScript (strict) · Vite (multipágina) · Tailwind CSS 3 · Zustand · dnd-kit · Supabase (Auth, Postgres com RLS, Storage, Realtime, Edge Functions) · Vitest + React Testing Library · ESLint + Prettier.
@@ -72,7 +72,7 @@ npm run format     # Prettier
 ```
 
 ## Como validar cada entrega
-Rode `npm run check`. Em seguida percorra, em `docs/test-plan.md`, o roteiro manual do que foi alterado, **com o perfil certo** (Master, Secretário, Auxiliar e Professor). Os testes automáticos não tocam o banco real: regras de RLS e triggers só são comprovadas no roteiro manual.
+Rode `npm run check`. Em seguida percorra, em `docs/test-plan.md`, o roteiro manual do que foi alterado, **com o perfil certo** (Master, Secretário, Assistente e Professor). Os testes automáticos não tocam o banco real: regras de RLS e triggers só são comprovadas no roteiro manual.
 
 ## Critérios de qualidade
 Build sem erros · lint limpo · testes passando · lógica crítica coberta por testes · permissões conferidas no banco e na tela · nenhuma regressão · usável com teclado · layout correto de 360 px a desktop · README e docs atualizados quando o comportamento mudar.

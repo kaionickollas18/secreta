@@ -21,7 +21,7 @@ describe("professor e equipe (regras)", () => {
     expect(schoolTeam(members, "school-1").map((m) => m.id)).toEqual(["sec", "ana", "beto", "caio", "zeca"]);
   });
 
-  it("o secretário gerencia auxiliares e professores, mas não a si mesmo", () => {
+  it("o secretário gerencia assistentes e professores, mas não a si mesmo", () => {
     expect(managedMembers([PROF, ...TEAM]).map((m) => m.id)).toEqual(["ana", "beto", "caio"]);
   });
 
@@ -101,12 +101,12 @@ describe("professor e equipe (tela)", () => {
       });
     });
 
-    it("lista auxiliares e professores com o papel de cada um", () => {
+    it("lista assistentes e professores com o papel de cada um", () => {
       render(<TeamPanel />);
       const items = screen.getAllByRole("listitem");
       expect(items.map((li) => within(li).getByRole("heading").textContent)).toEqual(["Ana Souza", "Beto Dias", "Caio Mendes"]);
       expect(within(items[2] as HTMLElement).getByText("Professor(a)")).toBeInTheDocument();
-      // Acesso de secretário é só para auxiliar.
+      // Acesso de secretário é só para assistente.
       expect(within(items[2] as HTMLElement).queryByRole("button", { name: /acesso de secretário/ })).not.toBeInTheDocument();
       expect(within(items[0] as HTMLElement).getByRole("button", { name: /Dar acesso de secretário/ })).toBeInTheDocument();
     });
@@ -144,7 +144,7 @@ describe("professor e equipe (tela)", () => {
       await user.type(dialog.getByLabelText("Nome completo *"), "Caio Mendes Rocha");
       expect(dialog.getByLabelText("Sobrenome *")).toHaveValue("Rocha");
 
-      await user.click(dialog.getByRole("radio", { name: "Auxiliar Administrativo" }));
+      await user.click(dialog.getByRole("radio", { name: "Assistente Administrativo" }));
       await user.clear(dialog.getByLabelText("Apelido"));
       await user.clear(dialog.getByLabelText("E-mail *"));
       await user.type(dialog.getByLabelText("E-mail *"), "caio.rocha@escola.com");

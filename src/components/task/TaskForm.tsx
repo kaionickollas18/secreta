@@ -55,7 +55,7 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
   ];
   /** Responsáveis atuais, na ordem em que foram marcados (visão somente leitura). */
   const assigned = values.assignees.flatMap((id) => options.find((o) => o.id === id) ?? []);
-  // O Auxiliar não conclui nem reabre: "Concluído" só aparece se a tarefa já estiver lá.
+  // O Assistente não conclui nem reabre: "Concluído" só aparece se a tarefa já estiver lá.
   const lockedDone = !canApprove && task?.status === "done";
   // Tarefa nova também não nasce concluída (o banco recusa).
   const canPickDone = lockedDone || (canApprove && task !== undefined);
@@ -218,7 +218,7 @@ export function TaskForm({ task, defaultStatus = "todo", onSubmit, onCancel }: T
           </ul>
           <p id="task-assignees-hint" className="mt-1 text-xs text-muted">
             {options.length === 0
-              ? "Nenhuma pessoa cadastrada. Cadastre auxiliares em Equipe."
+              ? "Nenhuma pessoa cadastrada. Cadastre assistentes em Equipe."
               : `Marque até ${MAX_ASSIGNEES} pessoas.`}
           </p>
           {errors.assignees && (

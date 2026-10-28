@@ -27,7 +27,7 @@ describe("perfil guardado no navegador", () => {
     );
   });
 
-  it("guarda o acesso especial só para auxiliar", () => {
+  it("guarda o acesso especial só para assistente", () => {
     const assistant = { ...secretary, role: "assistant" };
     expect(parseCachedProfile(JSON.stringify({ ...assistant, elevated: true }))).toEqual({ ...assistant, elevated: true });
     expect(parseCachedProfile(JSON.stringify({ ...assistant, elevated: "sim" }))).toEqual(assistant);

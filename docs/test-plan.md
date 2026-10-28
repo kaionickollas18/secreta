@@ -13,7 +13,7 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `validation.test.ts`, `tasks.test.ts` | Formulário de tarefa, filtros, agrupamento, `moveTask` |
 | `boardRules.test.ts` | Regra de conclusão por perfil, posição dos cartões, responsáveis, conversão de linhas do banco |
 | `taskStore.test.ts` | Carregar, criar, editar, excluir, mover (otimista e desfazer em erro), aprovar/devolver |
-| `TaskForm.test.tsx`, `App.test.tsx` | Fluxos do quadro como Secretário e como Auxiliar; histórico |
+| `TaskForm.test.tsx`, `App.test.tsx` | Fluxos do quadro como Secretário e como Assistente; histórico |
 | `history.test.ts` | Períodos e CSV (escape e proteção contra fórmulas) |
 | `reminders.test.ts` | Ciclos mensais/bimestrais/semanais/únicos, atraso, virada de ano, validação |
 | `messages.test.ts` | Validação, agrupamento por dia, não lidas |
@@ -28,33 +28,33 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `studentReport.test.tsx` | Pesquisa de aluno, resumo individual e frequência por mês |
 
 ## Roteiro manual
-Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência, duas escolas. Abra Secretário e Auxiliar em janelas diferentes (uma anônima).
+Use quatro contas (Master, Secretário, Assistente, Professor) e, de preferência, duas escolas. Abra Secretário e Assistente em janelas diferentes (uma anônima).
 
 ### 1. Login e perfis
 1. Senha errada mostra "E-mail ou senha incorretos."
 2. Master entra e cai em **Gestão de escolas**; a barra mostra só "Escolas".
-3. Secretário vê Quadro, Lembretes, Calendário, Notas, Documentos, Conversas, Dashboard e Equipe. Auxiliar não vê Equipe.
-4. Auxiliar abrindo `gestao.html` direto vê "Sem acesso a esta página".
+3. Secretário vê Quadro, Lembretes, Calendário, Notas, Documentos, Conversas, Dashboard e Equipe. Assistente não vê Equipe.
+4. Assistente abrindo `gestao.html` direto vê "Sem acesso a esta página".
    - Professor vê só Conversas, Calendário, Dashboard e Perfil. Abrindo `index.html`, `lembretes.html`, `notas.html` ou `documentos.html` direto, vai para Conversas.
 5. **Sair** volta ao login.
 
 ### 2. Gestão
 1. Master cria uma escola com secretário; renomeia; edita o secretário (nome, senha, desativar).
 2. Secretário desativado não consegue entrar; reativado, entra.
-3. Secretário cria um auxiliar; edita; desativa; exclui.
+3. Secretário cria um assistente; edita; desativa; exclui.
 4. E-mail repetido mostra "Já existe um usuário com este e-mail."
    - Secretário cria um **professor** (Nova pessoa → Professor(a)); ele aparece na lista com o papel e sem o botão de acesso de secretário.
    - Secretário edita alguém: muda nome (o sobrenome acompanha), sobrenome, apelido, nascimento e e-mail; salva; a pessoa passa a entrar com o e-mail novo e vê os dados novos no Perfil. "Remover a foto de perfil" tira a foto.
-   - Trocar um auxiliar responsável por tarefas para professor: ele sai dos responsáveis e perde o acesso de secretário, se tinha.
+   - Trocar um assistente responsável por tarefas para professor: ele sai dos responsáveis e perde o acesso de secretário, se tinha.
 5. Com duas escolas: o secretário de uma não vê pessoas, tarefas, lembretes nem mensagens da outra.
 
 ### 3. Quadro
 1. Secretário cria tarefas com responsáveis (aparecem pelo sobrenome); edita; exclui com confirmação.
 2. Arrastar entre colunas e reordenar; recarregar e conferir a ordem.
-3. Auxiliar não vê "Nova tarefa" nem a lixeira; no formulário não escolhe responsáveis nem "Concluído".
-4. Auxiliar clica em **Pedir conclusão** (ou arrasta para Concluído): a tarefa vai para Em Revisão com "Aguardando aprovação".
+3. Assistente não vê "Nova tarefa" nem a lixeira; no formulário não escolhe responsáveis nem "Concluído".
+4. Assistente clica em **Pedir conclusão** (ou arrasta para Concluído): a tarefa vai para Em Revisão com "Aguardando aprovação".
 5. Na janela do Secretário o pedido aparece **sem recarregar**; **Aprovar** conclui; **Devolver** tira o selo.
-6. Auxiliar tenta arrastar uma tarefa concluída para fora: recebe o aviso e ela volta.
+6. Assistente tenta arrastar uma tarefa concluída para fora: recebe o aviso e ela volta.
 7. Busca por título e por sobrenome; filtros de prioridade, responsável e atrasadas.
 
 ### 4. Histórico
@@ -68,30 +68,30 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 1. Secretário cria "Todo mês, do dia 15 ao 20" e "A cada 2 meses".
 2. Conferir a situação (por vir, no prazo, atrasado) de acordo com a data de hoje.
 3. **Marcar como feito** e **Desfazer**; o contador na barra acompanha.
-4. Auxiliar vê os lembretes, sem botões de criar, editar, excluir ou marcar.
+4. Assistente vê os lembretes, sem botões de criar, editar, excluir ou marcar.
 
 ### 5b. Calendário e avisos
 1. Abrir **Calendário**: o mês atual aparece com o dia de hoje marcado; os feriados nacionais já estão lá (ex.: 12/10, 02/11, 15/11).
 2. Uma tarefa com prazo aparece no dia do prazo; um lembrete "do dia 15 ao 20" aparece em cada um desses dias.
 3. Secretário: **Novo feriado** com um dia só e um recesso de vários dias; editar; excluir. Recarregar e conferir.
 3b. **Novo evento** de cada tipo (Planejamento, Reunião, Formação, Conselho, Entrega na SEMEC, Entrega das Notas): cada um aparece no dia com o seu ícone; feriado preenche o dia em vermelho pastel, recesso em amarelo pastel e Planejamento, Reunião, Formação e Conselho em verde pastel; as entregas aparecem como pasta laranja e rosa; sem nome, mostra o nome do tipo; um dia com vários eventos mostra os ícones e "+1".
-4. Auxiliar vê os feriados e eventos da escola, sem botões de criar, editar ou excluir. Com duas escolas: o feriado de uma não aparece na outra.
+4. Assistente vê os feriados e eventos da escola, sem botões de criar, editar ou excluir. Com duas escolas: o feriado de uma não aparece na outra.
 5. No **Quadro**, quem é responsável por uma tarefa que vence hoje ou está atrasada vê "Suas tarefas" no topo; quem não é responsável não vê. **Ver minhas** filtra o quadro. Concluída a tarefa, o aviso some.
 6. Com um lembrete pendente: antes das 8h não há aviso; a partir das 8h ele aparece; ao dispensar, some e volta às 12h; marcado como feito, não volta.
 
 ### 5c. Notas
 1. Criar uma **lista de marcação** (um item por linha) e uma nota de **texto**. Marcar e desmarcar itens; recarregar e conferir.
-2. Em duas janelas (Secretário e Auxiliar): marcar um item em uma aparece na outra sem recarregar; cada um marcando um item diferente ao mesmo tempo, as duas marcações ficam.
+2. Em duas janelas (Secretário e Assistente): marcar um item em uma aparece na outra sem recarregar; cada um marcando um item diferente ao mesmo tempo, as duas marcações ficam.
 3. Editar a lista acrescentando uma linha: os itens já marcados continuam marcados.
 4. Vincular a uma tarefa: abrir a tarefa no Quadro e ver a nota, marcar um item ali; o cartão mostra "faltam N itens". **Nova nota** dentro da tarefa abre o formulário já vinculado.
 5. Vincular a um lembrete: a nota aparece no cartão do lembrete.
-6. Auxiliar não vê a lixeira nas notas dos outros; o Secretário vê em todas. Excluir a tarefa vinculada: a nota continua, sem vínculo.
+6. Assistente não vê a lixeira nas notas dos outros; o Secretário vê em todas. Excluir a tarefa vinculada: a nota continua, sem vínculo.
 7. Com duas escolas: as notas de uma não aparecem na outra.
 
 ### 6. Mensagens
 1. Enviar uma mensagem em uma janela: aparece na outra sem recarregar.
 2. Em outra página, a barra mostra o contador de mensagens novas; ao abrir o mural, some.
-3. Cada um apaga a própria mensagem; o Secretário apaga a de qualquer pessoa; o Auxiliar não vê a lixeira nas mensagens dos outros.
+3. Cada um apaga a própria mensagem; o Secretário apaga a de qualquer pessoa; o Assistente não vê a lixeira nas mensagens dos outros.
 4. Enter envia; Shift+Enter quebra a linha; mensagem vazia mostra erro.
 
 ### 6b. Conversas (diretas e anônimo)
@@ -103,7 +103,7 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 6. Uma terceira conta da mesma escola não vê a conversa entre as outras duas.
 7. Sessão que já estava aberta antes desta versão: a conversa direta pede a senha uma vez; senha errada mostra o erro.
 8. Trocar a senha em Perfil, sair e entrar com a nova: as conversas antigas continuam abrindo.
-9. Secretário redefine a senha de um auxiliar em Equipe: ao entrar, o auxiliar usa **Recomeçar**; as mensagens antigas aparecem para ele como "protegida que este aparelho não consegue abrir", e o colega continua lendo as dele.
+9. Secretário redefine a senha de um assistente em Equipe: ao entrar, o assistente usa **Recomeçar**; as mensagens antigas aparecem para ele como "protegida que este aparelho não consegue abrir", e o colega continua lendo as dele.
 10. Colega que nunca entrou depois desta versão: o campo de escrever fica desligado, com o aviso.
 11. **Marcações**: no Geral, digitar `@` e parte do sobrenome de um colega, escolher com as setas e Enter; digitar `#` e parte do título de uma tarefa e escolher com o mouse. Enviar: as marcações aparecem como botões. Na conta do colega marcado, a mensagem fica em destaque ("marcou você") e o Geral mostra um `@` na lista.
 12. Repetir a marcação numa conversa direta: o colega vê a marcação; no Supabase, `ciphertext` continua ilegível.
@@ -115,7 +115,7 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 14. **Emojis**: no Windows, **Win + .** no campo de escrever insere um emoji; o botão de emoji ao lado do campo também. Os emojis aparecem coloridos para quem recebe (computador e celular).
 
 ### 7. Dashboard
-1. Sem configuração: Secretário vê "Configurar base de dados"; Auxiliar vê o aviso, sem botão.
+1. Sem configuração: Secretário vê "Configurar base de dados"; Assistente vê o aviso, sem botão.
 2. Secretário cola o link e os nomes das abas: os gráficos aparecem com "Ao vivo da planilha".
 3. Link inválido e lista de abas vazia mostram erro no campo.
 4. Enviar arquivos `.csv` (um por turma): aparecem na lista; reenviar uma turma substitui; remover uma turma; apagar tudo.
@@ -124,14 +124,14 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 7. **Pesquisar aluno**: digitar parte do nome (com e sem acento); escolher um resultado; conferir frequência geral, faltas, última falta e a frequência de cada mês (o pior mês vem destacado). Clicar em um nome na tabela "Alunos que mais faltam" abre o mesmo resumo.
 
 ### 7b. Acesso de secretário
-1. Secretário, em Equipe: **Dar acesso de secretário** a um auxiliar (confirma) e ver o selo no cartão.
-2. Esse auxiliar recarrega a página: passa a ver "Nova tarefa", a lixeira, "Aprovar/Devolver", os botões de lembrete e "Base de dados" no dashboard; **não** vê a aba Equipe.
+1. Secretário, em Equipe: **Dar acesso de secretário** a um assistente (confirma) e ver o selo no cartão.
+2. Esse assistente recarrega a página: passa a ver "Nova tarefa", a lixeira, "Aprovar/Devolver", os botões de lembrete e "Base de dados" no dashboard; **não** vê a aba Equipe.
 3. Ele cria uma tarefa, aprova um pedido e marca um lembrete como feito: tudo é aceito pelo banco.
 4. Abrindo `gestao.html` direto, ele vê "Sem acesso a esta página".
-5. Secretário retira o acesso: depois de recarregar, o auxiliar volta ao normal; uma tentativa de criar tarefa com a tela antiga aberta é recusada.
+5. Secretário retira o acesso: depois de recarregar, o assistente volta ao normal; uma tentativa de criar tarefa com a tela antiga aberta é recusada.
 
 ### 7c. Documento do aluno em PDF
-1. Secretário, no Dashboard: **Dados da escola** → conferir nome, INEP, endereço, CEP e ato de criação; enviar a logo. Auxiliar não vê esse botão.
+1. Secretário, no Dashboard: **Dados da escola** → conferir nome, INEP, endereço, CEP e ato de criação; enviar a logo. Assistente não vê esse botão.
 2. Pesquisar um aluno e clicar em **Baixar PDF**: na janela de impressão, escolher "Salvar como PDF". A folha já vem **deitada (paisagem)**. Conferir: cabeçalho com logo, dados da escola e "Documento oficial"; cartão do aluno com turma, período e situação colorida; medidor de frequência; faltas e última falta; gráfico mês a mês com as linhas tracejadas de Atenção (85%) e Crítico (75%); tabela dos meses com barras e dias das faltas; assinatura; logo clara ao fundo; cores aparecendo mesmo sem marcar "Gráficos de fundo".
 3. Aluno com o ano letivo inteiro (até 12 meses, inclusive passando de um ano para outro) e escola/aluno/turma com nomes longos: nada sai da largura da folha; se não couber, a tabela continua na página seguinte com o cabeçalho das colunas repetido e nenhuma linha cortada. O ano aparece junto do mês ("nov/25").
 4. No celular (Chrome/Safari): o mesmo botão abre a impressão do aparelho, com a opção de salvar em PDF.
@@ -148,7 +148,7 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 2. **Marcar como entregue** sem resumo mostra o erro; com resumo, data e quem recebeu, o documento vai para "Entregues" mostrando o resumo.
 3. Data de entrega anterior à do documento, ou no futuro, é recusada.
 4. **Desfazer entrega** devolve o documento para a lista de pendentes, mantendo o resumo.
-5. Auxiliar registra, edita e marca, mas não vê a lixeira; o Secretário exclui. Com duas escolas: os documentos de uma não aparecem na outra.
+5. Assistente registra, edita e marca, mas não vê a lixeira; o Secretário exclui. Com duas escolas: os documentos de uma não aparecem na outra.
 
 ### 8. Perfil
 1. Abrir **Perfil** na barra; enviar uma foto (JPG do celular): ela aparece no perfil, na barra e nos cartões em que a pessoa é responsável.

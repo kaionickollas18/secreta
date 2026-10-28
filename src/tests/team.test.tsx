@@ -76,7 +76,7 @@ describe("pessoas da escola (tela)", () => {
 
     const dialog = within(await screen.findByRole("dialog", { name: "Perfil de Aninha" }));
     expect(dialog.getByText("Ana Souza")).toBeInTheDocument();
-    expect(dialog.getByText("Auxiliar Administrativo")).toBeInTheDocument();
+    expect(dialog.getByText("Assistente Administrativo")).toBeInTheDocument();
     expect(dialog.getByText("15/03/1990")).toBeInTheDocument();
     expect(dialog.getByRole("link", { name: "ana@escola.com" })).toHaveAttribute("href", "mailto:ana@escola.com");
     expect(dialog.getByText("Emitir históricos")).toBeInTheDocument();

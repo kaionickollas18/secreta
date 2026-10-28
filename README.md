@@ -8,22 +8,22 @@ O site é estático (pode ser publicado no GitHub Pages) e usa o [Supabase](http
 | Perfil | O que faz |
 |---|---|
 | **Master** | Cadastra, renomeia e exclui escolas; cadastra e edita o secretário de cada uma. Não vê tarefas. |
-| **Secretário** | Cadastra auxiliares e professores e edita livremente o perfil deles (nome, sobrenome, apelido, nascimento, e-mail, papel, senha, foto). Cria e exclui tarefas, define responsáveis, conclui e aprova pedidos de conclusão. Cria lembretes e cadastra feriados. Configura a base de dados do dashboard. Modera o mural. |
-| **Auxiliar Administrativo** | Edita e move tarefas, pede a conclusão ao secretário. Vê lembretes e dashboard. Participa do mural. |
+| **Secretário** | Cadastra assistentes e professores e edita livremente o perfil deles (nome, sobrenome, apelido, nascimento, e-mail, papel, senha, foto). Cria e exclui tarefas, define responsáveis, conclui e aprova pedidos de conclusão. Cria lembretes e cadastra feriados. Configura a base de dados do dashboard. Modera o mural. |
+| **Assistente Administrativo** | Edita e move tarefas, pede a conclusão ao secretário. Vê lembretes e dashboard. Participa do mural. |
 | **Professor(a)** | Participa das conversas (Geral, Anônimo e diretas), vê o calendário, o dashboard de frequência e o perfil dos colegas. Não vê o quadro, os lembretes, as notas nem os memorandos e ofícios da secretaria. |
 
 As regras valem no banco (RLS e triggers), não só na tela. Detalhes em [docs/v2-supabase.md](docs/v2-supabase.md).
 
 ## Funcionalidades
 - **Login** com e-mail e senha; ninguém se cadastra sozinho.
-- **Quadro Kanban**: A Fazer, Em Progresso, Em Revisão e Concluído; arrastar e soltar (mouse, toque e teclado); prioridade, vencimento, responsáveis (secretário e auxiliares, pelo sobrenome); busca e filtros; atualização ao vivo entre usuários.
-- **Conclusão com aprovação**: o auxiliar pede, o secretário aprova ou devolve.
+- **Quadro Kanban**: A Fazer, Em Progresso, Em Revisão e Concluído; arrastar e soltar (mouse, toque e teclado); prioridade, vencimento, responsáveis (secretário e assistentes, pelo sobrenome); busca e filtros; atualização ao vivo entre usuários.
+- **Conclusão com aprovação**: o assistente pede, o secretário aprova ou devolve.
 - **Histórico** permanente das tarefas concluídas, com filtro de período e download em CSV. No quadro, a tarefa concluída fica em Concluído por 3 dias e depois aparece só no histórico.
 - **Lembretes**: uma vez, toda semana ou a cada N meses com período de dias (ex.: todo mês, do dia 15 ao 20).
 - **Mensagens**: mural único por escola, ao vivo.
 - **Conversas**: Geral, Anônimo e mensagens diretas criptografadas, com PDFs e imagens (até 10 MB) nas diretas; `@` marca uma pessoa, `#` marca uma tarefa, e há emojis (botão ou **Win + .** no Windows). O perfil de cada colega abre pelo nome e tem o botão **Conversar**.
 - **Dashboard de frequência**: lê uma planilha do Google ou arquivos CSV enviados pelo secretário. Relatórios em PDF (documento oficial, A4 deitado) do aluno e da turma (resumo + os 10 alunos que mais faltam).
-- **Gestão**: escolas e secretários (Master); auxiliares (Secretário).
+- **Gestão**: escolas e secretários (Master); assistentes (Secretário).
 - Interface em português, escura, responsiva (a partir de 360 px) e acessível por teclado.
 
 ## Stack

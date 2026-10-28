@@ -5,7 +5,7 @@ export const COLUMN_PREFIX = "column:";
 /** Máximo de responsáveis por tarefa (igual ao limite do banco). */
 export const MAX_ASSIGNEES = 3;
 
-/** Aviso ao auxiliar quando o pedido de conclusão é registrado. */
+/** Aviso ao assistente quando o pedido de conclusão é registrado. */
 export const REQUESTED_MESSAGE = "Pedido de conclusão enviado. Aguarde a aprovação do secretário.";
 
 export const LIMITS = {

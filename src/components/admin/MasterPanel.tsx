@@ -219,7 +219,7 @@ export function MasterPanel() {
         title="Excluir escola?"
         message={
           schoolToDelete
-            ? `“${schoolToDelete.name}” será excluída junto com o secretário, os auxiliares e todas as tarefas. Esta ação não pode ser desfeita.`
+            ? `“${schoolToDelete.name}” será excluída junto com o secretário, os assistentes e todas as tarefas. Esta ação não pode ser desfeita.`
             : ""
         }
         confirmLabel="Excluir"

@@ -31,7 +31,7 @@ export function makeMember(overrides: Partial<Member> & Pick<Member, "id" | "ful
   };
 }
 
-/** Equipe de exemplo: a secretária Rita Lopes e os auxiliares Ana Souza e Beto Dias. */
+/** Equipe de exemplo: a secretária Rita Lopes e os assistentes Ana Souza e Beto Dias. */
 export const TEAM: Member[] = [
   makeMember({ id: "sec", fullName: "Rita Lopes", role: "secretary" }),
   makeMember({ id: "ana", fullName: "Ana Souza" }),

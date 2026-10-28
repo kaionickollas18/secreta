@@ -17,7 +17,7 @@ export interface Member {
   active: boolean;
   /** Endereço público da foto de perfil, se a pessoa enviou uma. */
   avatarUrl?: string;
-  /** Auxiliar com acesso especial, concedido pelo secretário. */
+  /** Assistente com acesso especial, concedido pelo secretário. */
   elevated?: boolean;
   /** Como a pessoa prefere ser chamada. Ela mesma define, no Perfil. */
   nickname?: string;
@@ -32,7 +32,7 @@ export interface MemberFormValues {
   email: string;
   password: string;
   active: boolean;
-  /** Equipe da escola: auxiliar ou professor. */
+  /** Equipe da escola: assistente ou professor. */
   role: ManagedRole;
   /** Campos de perfil que o secretário edita (só na edição de alguém da equipe). */
   lastName: string;

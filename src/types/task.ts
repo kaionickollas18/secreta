@@ -10,11 +10,11 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  /** Ids (profiles) do secretário e/ou auxiliares responsáveis. */
+  /** Ids (profiles) do secretário e/ou assistentes responsáveis. */
   assignees: string[];
   /** Data no formato YYYY-MM-DD (sem fuso horário). */
   dueDate?: string;
-  /** O auxiliar pediu a conclusão e aguarda o secretário. */
+  /** O assistente pediu a conclusão e aguarda o secretário. */
   completionRequested: boolean;
   /** Ordem dentro do quadro (menor primeiro). */
   position: number;

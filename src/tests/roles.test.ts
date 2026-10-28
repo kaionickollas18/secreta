@@ -22,7 +22,7 @@ describe("permissões por papel", () => {
     expect(canManageSchools("assistant")).toBe(false);
   });
 
-  it("só o Secretário cadastra auxiliares", () => {
+  it("só o Secretário cadastra assistentes", () => {
     expect(canManageAssistants("secretary")).toBe(true);
     expect(canManageAssistants("master")).toBe(false);
     expect(canManageAssistants("assistant")).toBe(false);
@@ -36,7 +36,7 @@ describe("permissões por papel", () => {
     }
   });
 
-  it("auxiliar com acesso especial age como secretário, menos na gestão da equipe", () => {
+  it("assistente com acesso especial age como secretário, menos na gestão da equipe", () => {
     const elevated = { role: "assistant", elevated: true } as const;
     const role = effectiveRole(elevated);
     expect(role).toBe("secretary");
@@ -45,10 +45,10 @@ describe("permissões por papel", () => {
     }
     // A gestão da equipe olha o papel real, não o efetivo.
     expect(canManageAssistants(elevated.role)).toBe(false);
-    expect(roleLabel(elevated)).toBe("Auxiliar Administrativo · Acesso de secretário");
+    expect(roleLabel(elevated)).toBe("Assistente Administrativo · Acesso de secretário");
   });
 
-  it("o acesso especial só existe para auxiliar", () => {
+  it("o acesso especial só existe para assistente", () => {
     expect(effectiveRole({ role: "assistant" })).toBe("assistant");
     expect(effectiveRole({ role: "assistant", elevated: false })).toBe("assistant");
     expect(effectiveRole({ role: "master", elevated: true })).toBe("master");

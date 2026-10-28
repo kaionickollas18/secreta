@@ -51,7 +51,7 @@ describe("TaskForm", () => {
     expect(screen.queryByRole("option", { name: "Concluído" })).not.toBeInTheDocument();
   });
 
-  it("o auxiliar não escolhe responsáveis nem Concluído", () => {
+  it("o assistente não escolhe responsáveis nem Concluído", () => {
     useAuthStore.setState({ profile: ASSISTANT });
     render(
       <TaskForm task={makeTask({ assignees: ["beto"] })} onSubmit={() => {}} onCancel={() => {}} />,

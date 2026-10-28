@@ -25,14 +25,14 @@ interface MemberPatch {
   /** AAAA-MM-DD; vazio apaga. */
   birthDate?: string;
   email?: string;
-  /** Auxiliar ou professor (só o secretário muda). */
+  /** Assistente ou professor (só o secretário muda). */
   role?: ManagedRole;
   /** Apaga a foto de perfil da pessoa. */
   removePhoto?: boolean;
   /** Vazio ou ausente mantém a senha atual. */
   password?: string;
   active?: boolean;
-  /** Acesso especial do auxiliar (só o secretário altera). */
+  /** Acesso especial do assistente (só o secretário altera). */
   elevated?: boolean;
 }
 
@@ -45,7 +45,7 @@ interface DirectoryState {
   createSchool: (schoolName: string, secretary: NewMember) => Promise<string | null>;
   renameSchool: (id: string, name: string) => Promise<string | null>;
   deleteSchool: (id: string) => Promise<string | null>;
-  /** O secretário cadastra um auxiliar ou um professor da própria escola. */
+  /** O secretário cadastra um assistente ou um professor da própria escola. */
   createMember: (input: NewMember & { role: ManagedRole }) => Promise<string | null>;
   updateMember: (id: string, patch: MemberPatch) => Promise<string | null>;
   deleteMember: (id: string) => Promise<string | null>;

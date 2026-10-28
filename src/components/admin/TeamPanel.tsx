@@ -17,7 +17,7 @@ type ModalState = { kind: "create" } | { kind: "edit"; member: Member } | null;
 
 const managedRoleOf = (member: Member): ManagedRole => (member.role === "teacher" ? "teacher" : "assistant");
 
-/** Área do Secretário: cadastro e perfil dos auxiliares administrativos e dos professores. */
+/** Área do Secretário: cadastro e perfil dos assistentes administrativos e dos professores. */
 export function TeamPanel() {
   const { members, status, load, createMember, updateMember, deleteMember } = useDirectoryStore();
   const pushToast = useToastStore((s) => s.push);
@@ -59,7 +59,7 @@ export function TeamPanel() {
             tone: "success",
             message: elevated
               ? `${member.fullName} agora tem acesso de secretário.`
-              : `${member.fullName} voltou ao acesso de auxiliar.`,
+              : `${member.fullName} voltou ao acesso de assistente.`,
           },
     );
   }
@@ -68,7 +68,7 @@ export function TeamPanel() {
     <section aria-labelledby="h-team-admin" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="h-team-admin" className="panel-title">
-          Auxiliares e professores
+          Assistentes e professores
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           {all.length > 0 && (
@@ -104,7 +104,7 @@ export function TeamPanel() {
       {status === "ready" && all.length === 0 && (
         <EmptyState
           title="Ninguém cadastrado ainda"
-          description="Cadastre os auxiliares da secretaria e os professores da escola."
+          description="Cadastre os assistentes da secretaria e os professores da escola."
         />
       )}
       {status === "ready" && all.length > 0 && shown.length === 0 && (

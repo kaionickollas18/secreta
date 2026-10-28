@@ -31,7 +31,7 @@ describe("regra de conclusão (resolveStatusChange)", () => {
     );
   });
 
-  it("auxiliar que tenta concluir gera pedido em Em Revisão", () => {
+  it("assistente que tenta concluir gera pedido em Em Revisão", () => {
     expect(resolveStatusChange(open, "done", "assistant")).toEqual({
       status: "review",
       completionRequested: true,
@@ -39,18 +39,18 @@ describe("regra de conclusão (resolveStatusChange)", () => {
     });
   });
 
-  it("auxiliar não repete um pedido já feito", () => {
+  it("assistente não repete um pedido já feito", () => {
     expect(
       resolveStatusChange({ status: "review", completionRequested: true }, "done", "assistant").outcome,
     ).toBe("unchanged");
   });
 
-  it("auxiliar não reabre tarefa concluída", () => {
+  it("assistente não reabre tarefa concluída", () => {
     const done = { status: "done", completionRequested: false } as const;
     expect(resolveStatusChange(done, "todo", "assistant")).toEqual({ ...done, outcome: "blocked" });
   });
 
-  it("auxiliar que tira a tarefa da coluna cancela o pedido", () => {
+  it("assistente que tira a tarefa da coluna cancela o pedido", () => {
     expect(
       resolveStatusChange({ status: "review", completionRequested: true }, "in_progress", "assistant"),
     ).toEqual({ status: "in_progress", completionRequested: false, outcome: "moved" });
@@ -120,7 +120,7 @@ describe("responsáveis", () => {
     dueDate: "",
   };
 
-  it("são o secretário (primeiro) e os auxiliares ativos, por sobrenome", () => {
+  it("são o secretário (primeiro) e os assistentes ativos, por sobrenome", () => {
     const members = [
       ...TEAM,
       makeMember({ id: "off", fullName: "Caio Alves", active: false }),

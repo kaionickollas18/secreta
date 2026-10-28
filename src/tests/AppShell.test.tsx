@@ -45,10 +45,10 @@ describe("AppShell", () => {
     expect(screen.getByText("conteúdo")).toBeInTheDocument();
   });
 
-  it("auxiliar não vê Equipe; Master só vê Escolas", () => {
+  it("assistente não vê Equipe; Master só vê Escolas", () => {
     expect(linkNames(renderShell(ASSISTANT))).toEqual(["Quadro", "Lembretes", "Calendário", "Notas", "Documentos", "Conversas", "Dashboard", "Perfil"]);
     cleanup();
-    // Mesmo com acesso de secretário, o auxiliar não gerencia a equipe.
+    // Mesmo com acesso de secretário, o assistente não gerencia a equipe.
     expect(linkNames(renderShell({ ...ASSISTANT, elevated: true }))).toEqual([
       "Quadro",
       "Lembretes",

@@ -108,7 +108,7 @@ describe("App", () => {
     expect(db.tasks.map((t) => t.title)).toEqual(["Manter"]);
   });
 
-  it("auxiliar não cria nem exclui, e pede a conclusão", async () => {
+  it("assistente não cria nem exclui, e pede a conclusão", async () => {
     const user = userEvent.setup();
     signInAs(ASSISTANT);
     db.tasks = [makeTask({ id: "t1", title: "Arquivar pastas", status: "in_progress" })];
@@ -126,7 +126,7 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: /^Aprovar/ })).not.toBeInTheDocument();
   });
 
-  it("auxiliar com acesso de secretário cria, exclui e aprova", async () => {
+  it("assistente com acesso de secretário cria, exclui e aprova", async () => {
     const user = userEvent.setup();
     signInAs({ ...ASSISTANT, elevated: true });
     db.tasks = [makeTask({ id: "t1", title: "Arquivar pastas", status: "review", completionRequested: true })];

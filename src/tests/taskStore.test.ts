@@ -53,14 +53,14 @@ describe("taskStore", () => {
     expect(store().tasks).toHaveLength(0);
   });
 
-  it("o auxiliar não altera responsáveis ao editar", async () => {
+  it("o assistente não altera responsáveis ao editar", async () => {
     db.tasks = [makeTask({ id: "t1", assignees: ["beto"] })];
     await store().load();
     await store().updateTask("t1", { ...input, title: "Ajustada", assignees: ["ana"] }, "assistant");
     expect(store().tasks[0]).toMatchObject({ title: "Ajustada", assignees: ["beto"] });
   });
 
-  it("auxiliar que arrasta para Concluído gera pedido em Em Revisão", async () => {
+  it("assistente que arrasta para Concluído gera pedido em Em Revisão", async () => {
     db.tasks = [makeTask({ id: "t1", status: "in_progress" })];
     await store().load();
     const result = await store().moveTask("t1", "done", undefined, "assistant");
@@ -68,7 +68,7 @@ describe("taskStore", () => {
     expect(store().tasks[0]).toMatchObject({ status: "review", completionRequested: true });
   });
 
-  it("auxiliar não reabre tarefa concluída", async () => {
+  it("assistente não reabre tarefa concluída", async () => {
     db.tasks = [makeTask({ id: "t1", status: "done" })];
     await store().load();
     const result = await store().moveTask("t1", "todo", undefined, "assistant");

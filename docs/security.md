@@ -1,10 +1,10 @@
 # Segurança
 
-Escopo: site estático + Supabase. Quatro perfis (Master, Secretário, Auxiliar, Professor); cada escola só acessa os próprios dados. O sistema guarda nomes de funcionários e de alunos (menores de idade): privacidade é requisito.
+Escopo: site estático + Supabase. Quatro perfis (Master, Secretário, Assistente, Professor); cada escola só acessa os próprios dados. O sistema guarda nomes de funcionários e de alunos (menores de idade): privacidade é requisito.
 
 ## Autenticação
 - Supabase Auth com e-mail e senha. O cadastro público deve ficar **desligado** (Authentication → Sign In / Providers → Allow new users to sign up).
-- Contas só nascem pela Edge Function `manage-users`: o Master cria secretários; o Secretário cria auxiliares e professores da própria escola. O Secretário também edita o perfil deles (nome, sobrenome, apelido, nascimento, e-mail, papel, foto) pela mesma função.
+- Contas só nascem pela Edge Function `manage-users`: o Master cria secretários; o Secretário cria assistentes e professores da própria escola. O Secretário também edita o perfil deles (nome, sobrenome, apelido, nascimento, e-mail, papel, foto) pela mesma função.
 - Desativar um usuário bloqueia o login (ban) e o perfil (`active = false`).
 - A tela de login não revela se o e-mail existe.
 - Recomendado: ligar a proteção contra senhas vazadas (Authentication → Password Security).
@@ -12,10 +12,10 @@ Escopo: site estático + Supabase. Quatro perfis (Master, Secretário, Auxiliar,
 ## Autorização
 - **A autoridade é o banco.** Todas as tabelas têm RLS; o cliente nunca é confiável.
 - Isolamento por escola: as policies comparam `school_id` com `current_school_id()` (derivado da sessão).
-- Regras por papel em policies e no trigger `tasks_guard` (o auxiliar não conclui, não reabre, não cria, não exclui e não altera responsáveis).
+- Regras por papel em policies e no trigger `tasks_guard` (o assistente não conclui, não reabre, não cria, não exclui e não altera responsáveis).
 - Campos sensíveis são carimbados pelo servidor: autor da tarefa, autor/nome/horário da mensagem, data de conclusão.
 - `profiles`: o cliente só altera o próprio `last_name` e `avatar_path`. Papel, escola, situação e o acesso especial (`elevated`) só mudam pela Edge Function (service role).
-- **Acesso especial**: um auxiliar com `elevated` vale como secretário nas regras do banco (via `current_role_name()`), exceto na gestão da equipe, que confere o papel real. Só o secretário concede ou retira.
+- **Acesso especial**: um assistente com `elevated` vale como secretário nas regras do banco (via `current_role_name()`), exceto na gestão da equipe, que confere o papel real. Só o secretário concede ou retira.
 - A Edge Function valida o token, carrega o perfil de quem chama e confere papel e escola antes de cada ação.
 - A interface espelha as permissões (`utils/roles.ts`) apenas por usabilidade.
 

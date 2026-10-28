@@ -25,7 +25,7 @@ export function displayName(member: Pick<Member, "fullName" | "nickname">): stri
 }
 
 /**
- * Pessoas de uma escola (secretário, auxiliares e professores): o secretário primeiro, depois
+ * Pessoas de uma escola (secretário, assistentes e professores): o secretário primeiro, depois
  * a secretaria, os professores e, por último, os inativos; cada grupo por nome.
  */
 export function schoolTeam(members: Member[], schoolId: string): Member[] {
@@ -35,7 +35,7 @@ export function schoolTeam(members: Member[], schoolId: string): Member[] {
     .sort((a, b) => rank(a) - rank(b) || byName(a, b));
 }
 
-/** Quem o secretário cadastra e edita na Equipe: auxiliares e professores, por nome. */
+/** Quem o secretário cadastra e edita na Equipe: assistentes e professores, por nome. */
 export function managedMembers(members: Member[]): Member[] {
   return members.filter((m) => MANAGED_ROLES.some((r) => r === m.role)).sort(byName);
 }

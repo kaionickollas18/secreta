@@ -148,14 +148,14 @@ export interface StatusChange {
   status: TaskStatus;
   completionRequested: boolean;
   /**
-   * moved: mudou de coluna · requested: virou pedido de conclusão (auxiliar) ·
+   * moved: mudou de coluna · requested: virou pedido de conclusão (assistente) ·
    * blocked: não permitido para o papel · unchanged: mesma coluna.
    */
   outcome: "moved" | "requested" | "blocked" | "unchanged";
 }
 
 /**
- * Regra de conclusão: só o Secretário conclui ou reabre. Quando o Auxiliar tenta concluir,
+ * Regra de conclusão: só o Secretário conclui ou reabre. Quando o Assistente tenta concluir,
  * a tarefa vai para "Em Revisão" com o pedido de conclusão ligado.
  */
 export function resolveStatusChange(

@@ -263,7 +263,7 @@ describe("tela de notas", () => {
     expect(window.location.search).toBe("");
   });
 
-  it("o auxiliar só exclui as próprias notas; o secretário exclui qualquer uma", async () => {
+  it("o assistente só exclui as próprias notas; o secretário exclui qualquer uma", async () => {
     const notes = [makeNote({ id: "minha", title: "Minha" }), makeNote({ id: "outra", title: "Da Rita", authorId: "sec" })];
     await renderAs(ASSISTANT, notes);
     expect(await screen.findByRole("button", { name: "Excluir Minha" })).toBeInTheDocument();

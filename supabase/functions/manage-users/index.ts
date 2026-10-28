@@ -1,9 +1,9 @@
 // Edge Function (Deno): cria e gerencia usuários. Precisa da service role, que NUNCA vai ao navegador.
 // Quem pode o quê:
 //   master    → create_school (escola + secretário), delete_school, update_user/delete_user de secretários
-//   secretary → create_member (auxiliar ou professor), update_user/delete_user de auxiliares e
+//   secretary → create_member (assistente ou professor), update_user/delete_user de assistentes e
 //               professores da própria escola. `create_assistant` continua aceito (versões antigas da tela).
-// "Quem chama" é sempre o papel real (coluna role): um auxiliar com acesso especial age como
+// "Quem chama" é sempre o papel real (coluna role): um assistente com acesso especial age como
 // secretário no quadro, mas não gerencia a equipe.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -252,7 +252,7 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
         const role = staffRole(body.role);
         if (role !== target.role) {
           profilePatch.role = role;
-          // O acesso especial é só de auxiliar: quem vira professor perde.
+          // O acesso especial é só de assistente: quem vira professor perde.
           if (role !== "assistant") profilePatch.elevated = false;
         }
       }
@@ -264,12 +264,12 @@ async function handle(action: unknown, body: Record<string, unknown>, caller: Ca
         profilePatch.active = active;
         authPatch.ban_duration = active ? "none" : "876000h";
       }
-      // Acesso especial: só o secretário concede, e só a auxiliares da própria escola
+      // Acesso especial: só o secretário concede, e só a assistentes da própria escola
       // (loadManageable já garantiu as duas coisas quando quem chama é secretário).
       if (body.elevated !== undefined) {
         const finalRole = (profilePatch.role as Role | undefined) ?? target.role;
         if (caller.role !== "secretary" || finalRole !== "assistant") {
-          throw new HttpError(403, "Somente o Secretário define o acesso especial de um auxiliar.");
+          throw new HttpError(403, "Somente o Secretário define o acesso especial de um assistente.");
         }
         profilePatch.elevated = body.elevated === true;
       }

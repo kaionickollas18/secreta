@@ -29,7 +29,7 @@ export interface CardActions {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onPriorityChange: (id: string, priority: TaskPriority) => void;
-  /** Auxiliar pede a conclusão. */
+  /** Assistente pede a conclusão. */
   onRequestCompletion: (task: Task) => void;
   /** Secretário aprova (`true`) ou devolve (`false`) o pedido. */
   onRespond: (task: Task, approve: boolean) => void;
