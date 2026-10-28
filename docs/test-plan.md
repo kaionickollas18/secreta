@@ -20,7 +20,8 @@ Ferramentas: Vitest, React Testing Library, user-event, jsdom. Comando: `npm run
 | `calendar.test.ts`, `CalendarioApp.test.tsx` | Feriados nacionais, validação de feriados, grade do mês, lembretes e tarefas por dia, horários e regras dos avisos; tela do calendário por perfil |
 | `notes.test.tsx` | Validação e itens das notas, conversão do banco, vínculos, quem exclui; tela de notas e notas dentro de tarefa/lembrete |
 | `team.test.tsx` | Lista da equipe, apelido, idade, validação de apelido e nascimento; perfil de um colega na tela |
-| `chatCrypto.test.ts`, `conversas.test.tsx` | Criptografia das conversas (os dois lados leem, terceiro não, senha errada não abre, chave não exportável); lista de conversas, não lidas, canal anônimo e moderação, pedido de senha |
+| `chatCrypto.test.ts`, `conversas.test.tsx` | Criptografia das conversas (os dois lados leem, terceiro não, senha errada não abre, chave não exportável) e dos anexos; lista de conversas, não lidas, canal anônimo e moderação, pedido de senha; anexo recebido com nome, tipo, tamanho e Baixar |
+| `chatFiles.test.ts` | Anexos: tipos aceitos (inclusive pela extensão), limite de 10 MB, limpeza do nome, formato de nome/tipo/tamanho dentro da mensagem e conferência do que vem de fora |
 | `documentos.test.tsx`, `schoolIdentity.test.tsx` | Regras e tela de memorandos e ofícios (registro, entrega com resumo, ordem, quem exclui); dados da escola e conteúdo do documento do aluno em PDF |
 | `AppShell.test.tsx` | Itens da barra por perfil e avisos |
 | `attendance.test.ts`, `sheetParser.test.ts`, `attendanceSource.test.ts` | Indicadores, leitura da planilha, link, arquivos CSV e base offline |
@@ -107,6 +108,10 @@ Use quatro contas (Master, Secretário, Auxiliar, Professor) e, de preferência,
 11. **Marcações**: no Geral, digitar `@` e parte do sobrenome de um colega, escolher com as setas e Enter; digitar `#` e parte do título de uma tarefa e escolher com o mouse. Enviar: as marcações aparecem como botões. Na conta do colega marcado, a mensagem fica em destaque ("marcou você") e o Geral mostra um `@` na lista.
 12. Repetir a marcação numa conversa direta: o colega vê a marcação; no Supabase, `ciphertext` continua ilegível.
 13. Tocar na marcação da pessoa (ou no nome de quem escreveu, ou em "Ver perfil"): abre o perfil; **Conversar com …** abre a conversa direta. Tocar na marcação da tarefa: abre o resumo; **Abrir no quadro** abre a tarefa no quadro.
+14. **Anexos** numa conversa direta: o clipe anexa um PDF e, em outra mensagem, uma foto do celular, com e sem texto. Um arquivo de outro tipo (ex.: .docx) ou acima de 10 MB mostra o erro e não é enviado.
+15. Quem recebe vê nome, tipo e tamanho; **Baixar** salva o arquivo com o nome original e ele abre normalmente; na imagem, **Ver** mostra a foto na conversa.
+16. No Supabase: em Storage › `chat-files`, o arquivo não abre (bytes embaralhados) e não tem o nome original. Uma terceira conta da escola não consegue baixar o arquivo pelo caminho.
+17. Quem enviou apaga a mensagem: o arquivo some do bucket. Geral e Anônimo não mostram o clipe.
 14. **Emojis**: no Windows, **Win + .** no campo de escrever insere um emoji; o botão de emoji ao lado do campo também. Os emojis aparecem coloridos para quem recebe (computador e celular).
 
 ### 7. Dashboard

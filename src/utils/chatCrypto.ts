@@ -5,7 +5,8 @@
  * - A privada só sai do navegador embaralhada (AES-GCM) com uma chave derivada da senha da
  *   pessoa (PBKDF2). Sem a senha, o que está no banco não abre.
  * - A chave de uma conversa nasce da minha privada com a pública do colega (os dois lados
- *   chegam à mesma chave) e embaralha cada mensagem com AES-GCM.
+ *   chegam à mesma chave) e embaralha cada mensagem com AES-GCM. Os anexos usam a mesma
+ *   chave, cada um com o seu vetor.
  */
 
 const CURVE = { name: "ECDH", namedCurve: "P-256" } as const;
@@ -118,6 +119,17 @@ export async function encryptText(key: CryptoKey, text: string): Promise<{ iv: s
   const iv = randomBytes(12);
   const data = await subtle().encrypt({ name: "AES-GCM", iv }, key, encoder.encode(text));
   return { iv: toBase64(iv), ciphertext: toBase64(data) };
+}
+
+/** Embaralha os bytes de um anexo com a chave da conversa. */
+export async function encryptBytes(key: CryptoKey, data: ArrayBuffer): Promise<{ iv: string; data: ArrayBuffer }> {
+  const iv = randomBytes(12);
+  return { iv: toBase64(iv), data: await subtle().encrypt({ name: "AES-GCM", iv }, key, data) };
+}
+
+/** Rejeita (lança erro) se a chave não for a da conversa ou o arquivo tiver sido alterado. */
+export function decryptBytes(key: CryptoKey, iv: string, data: ArrayBuffer): Promise<ArrayBuffer> {
+  return subtle().decrypt({ name: "AES-GCM", iv: fromBase64(iv) }, key, data);
 }
 
 /** Rejeita (lança erro) se a chave não for a da conversa ou o texto tiver sido alterado. */

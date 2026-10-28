@@ -7,6 +7,7 @@ import { groupByDay, timeLabel } from "../../utils/messages";
 import { IconButton } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
 import { LockIcon, TrashIcon } from "../ui/Icons";
+import { AttachmentCard } from "./AttachmentCard";
 import { MessageComposer } from "./MessageComposer";
 import { RichText, type MentionResolver } from "./RichText";
 
@@ -25,8 +26,10 @@ interface MessageThreadProps {
   placeholder: string;
   /** Com texto, o campo de escrever fica desligado e o motivo aparece no lugar da dica. */
   blocked?: string;
-  /** Devolve a mensagem de erro, ou `null` se deu certo. */
-  onSend: (text: string) => Promise<string | null>;
+  /** Devolve a mensagem de erro, ou `null` se deu certo. Com anexo, o texto pode ser vazio. */
+  onSend: (text: string, file?: File) => Promise<string | null>;
+  /** Com esta função, a conversa aceita anexos e mostra os recebidos (só nas diretas). */
+  onOpenFile?: (message: ThreadMessage) => Promise<{ blob: Blob; error: null } | { blob: null; error: string }>;
   onDelete: (message: ThreadMessage) => void;
   /** Quem está lendo: as mensagens que marcam essa pessoa ficam em destaque. */
   currentUserId: string;
@@ -50,6 +53,7 @@ export function MessageThread({
   placeholder,
   blocked,
   onSend,
+  onOpenFile,
   onDelete,
   currentUserId,
   mentionOptions,
@@ -146,9 +150,16 @@ export function MessageThread({
                           Mensagem protegida que este aparelho não consegue abrir.
                         </p>
                       ) : (
-                        <p className="mt-0.5 whitespace-pre-line break-words text-base leading-normal">
-                          <RichText body={message.body} resolver={resolver} currentUserId={currentUserId} />
-                        </p>
+                        <>
+                          {message.body !== "" && (
+                            <p className="mt-0.5 whitespace-pre-line break-words text-base leading-normal">
+                              <RichText body={message.body} resolver={resolver} currentUserId={currentUserId} />
+                            </p>
+                          )}
+                          {message.file && onOpenFile && (
+                            <AttachmentCard file={message.file} onOpen={() => onOpenFile(message)} />
+                          )}
+                        </>
                       )}
                     </div>
                   </li>
@@ -165,6 +176,7 @@ export function MessageThread({
         blocked={blocked}
         mentionOptions={mentionOptions}
         audience={audience}
+        allowFiles={Boolean(onOpenFile)}
         onSend={onSend}
       />
     </>

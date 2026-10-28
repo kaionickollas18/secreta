@@ -18,6 +18,9 @@ vi.mock("../store/chatApi", () => ({
   removeAnonymousMessage: async () => null,
   removeDirectMessage: async () => null,
   sendDirectMessage: async () => ({ data: null, error: "não usado" }),
+  uploadChatFile: async () => null,
+  downloadChatFile: async () => ({ data: null, error: "sem rede no teste" }),
+  removeChatFile: async () => {},
   createChatKey: async () => ({ data: null, error: "não usado" }),
   rewrapChatKey: async () => null,
   verifyPassword: async () => false,
@@ -54,6 +57,7 @@ function direct(id: string, senderId: string, recipientId: string, hour: number)
     recipientKeyId: `k-${recipientId}`,
     iv: "iv",
     ciphertext: "embaralhado",
+    attachmentPath: null,
     createdAt: at(hour),
   };
 }
@@ -116,7 +120,7 @@ describe("conversas (tela)", () => {
 
   beforeEach(() => {
     api.anonymous = [];
-    useChatStore.setState({ keys: [], directs: [], plain: {}, anonymous: [], status: "idle", lock: "checking", hasKey: false, seen: {} });
+    useChatStore.setState({ keys: [], directs: [], plain: {}, files: {}, anonymous: [], status: "idle", lock: "checking", hasKey: false, seen: {} });
     useMessageStore.setState({
       messages: [{ id: "m1", senderId: "ana", senderName: "Ana Souza", body: "Bom dia a todos", createdAt: at(8) }],
       status: "ready",
@@ -205,6 +209,31 @@ describe("conversas (tela)", () => {
     // Só apago o que eu enviei.
     expect(thread.getAllByRole("button", { name: /^Apagar mensagem/ })).toHaveLength(1);
   });
+
+  it("mostra o anexo recebido com nome, tipo e tamanho, e o botão de baixar; só a conversa direta anexa", async () => {
+    const user = userEvent.setup();
+    await renderAs(SECRETARY, {
+      lock: "unlocked",
+      hasKey: true,
+      directs: [{ ...direct("a", "ana", "sec", 9), attachmentPath: "escola/ana/arquivo" }],
+      plain: { a: "" },
+      files: { a: { name: "Ofício 12.pdf", type: "application/pdf", size: 850 * 1024, iv: "aXY=" } },
+    });
+    await user.click(await screen.findByRole("button", { name: /Souza/ }));
+
+    const thread = within(screen.getByRole("region", { name: "Conversa: Souza" }));
+    expect(thread.getByText("Ofício 12.pdf")).toBeInTheDocument();
+    expect(thread.getByText("PDF · 850 KB")).toBeInTheDocument();
+    expect(thread.getByRole("button", { name: "Baixar Ofício 12.pdf" })).toBeInTheDocument();
+    expect(thread.getByRole("button", { name: "Anexar PDF ou imagem" })).toBeInTheDocument();
+
+    // Sem chave neste aparelho para abrir, avisa em vez de baixar.
+    await user.click(thread.getByRole("button", { name: "Baixar Ofício 12.pdf" }));
+    expect(await thread.findByRole("alert")).toHaveTextContent(/não consegue abrir/);
+
+    await user.click(screen.getByRole("button", { name: /Geral/ }));
+    expect(screen.queryByRole("button", { name: "Anexar PDF ou imagem" })).not.toBeInTheDocument();
+  });
 });
 
 describe("conversas: marcações, perfil e emojis (tela)", () => {
@@ -225,7 +254,7 @@ describe("conversas: marcações, perfil e emojis (tela)", () => {
   beforeEach(() => {
     api.anonymous = [];
     window.history.replaceState(null, "", "/");
-    useChatStore.setState({ keys: [], directs: [], plain: {}, anonymous: [], status: "idle", lock: "checking", hasKey: false, seen: {} });
+    useChatStore.setState({ keys: [], directs: [], plain: {}, files: {}, anonymous: [], status: "idle", lock: "checking", hasKey: false, seen: {} });
   });
 
   it("@ e # sugerem pessoas e tarefas, e a mensagem sai com as marcações", async () => {

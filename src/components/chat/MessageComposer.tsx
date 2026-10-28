@@ -7,9 +7,10 @@ import {
   suggestMentions,
   type MentionOption,
 } from "../../utils/mentions";
+import { CHAT_FILE_ACCEPT, formatFileSize, validateChatFile } from "../../utils/chatFiles";
 import { MESSAGE_MAX, validateMessage } from "../../utils/messages";
-import { Button } from "../ui/Button";
-import { SendIcon } from "../ui/Icons";
+import { Button, IconButton } from "../ui/Button";
+import { CloseIcon, PaperclipIcon, SendIcon } from "../ui/Icons";
 import { EmojiPicker } from "./EmojiPicker";
 
 interface MessageComposerProps {
@@ -20,13 +21,27 @@ interface MessageComposerProps {
   mentionOptions: MentionOption[];
   /** Quem lê a conversa, quando não é a escola toda: marcar outra pessoa mostra um aviso. */
   audience?: string[];
-  /** Devolve a mensagem de erro, ou `null` se deu certo. */
-  onSend: (text: string) => Promise<string | null>;
+  /** Mostra o botão de anexar PDF ou imagem (só nas conversas diretas). */
+  allowFiles?: boolean;
+  /** Devolve a mensagem de erro, ou `null` se deu certo. Com anexo, o texto pode ser vazio. */
+  onSend: (text: string, file?: File) => Promise<string | null>;
 }
 
-/** Campo de escrever: Enter envia, `@` sugere pessoas, `#` sugere tarefas, e há um botão de emojis. */
-export function MessageComposer({ placeholder, blocked, mentionOptions, audience, onSend }: MessageComposerProps) {
+/**
+ * Campo de escrever: Enter envia, `@` sugere pessoas, `#` sugere tarefas, e há um botão de
+ * emojis. Nas conversas diretas, também anexa um PDF ou uma imagem por mensagem.
+ */
+export function MessageComposer({
+  placeholder,
+  blocked,
+  mentionOptions,
+  audience,
+  allowFiles = false,
+  onSend,
+}: MessageComposerProps) {
   const [draft, setDraft] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [caret, setCaret] = useState(0);
   const [picks, setPicks] = useState<MentionOption[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -79,20 +94,32 @@ export function MessageComposer({ placeholder, blocked, mentionOptions, audience
     update(next, caret + emoji.length);
   }
 
+  function chooseFile(chosen: File | undefined) {
+    // Limpa o campo para a mesma escolha poder ser feita de novo depois de remover.
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!chosen) return;
+    const problem = validateChatFile(chosen);
+    setError(problem);
+    setFile(problem ? null : chosen);
+  }
+
   async function submit() {
-    const result = validateMessage(encodeMentions(draft, picks));
+    const encoded = encodeMentions(draft, picks);
+    // Com anexo, a mensagem pode ir sem texto.
+    const result = file && encoded.trim() === "" ? { valid: true as const, value: "" } : validateMessage(encoded);
     if (!result.valid) {
       setError(result.error);
       return;
     }
     setError(null);
     setSending(true);
-    const failure = await onSend(result.value);
+    const failure = await onSend(result.value, file ?? undefined);
     setSending(false);
     if (failure) setError(failure);
     else {
       update("", 0);
       setPicks([]);
+      setFile(null);
     }
   }
 
@@ -181,8 +208,42 @@ export function MessageComposer({ placeholder, blocked, mentionOptions, audience
           Para chamar alguém, marque no Geral.
         </p>
       )}
+      {file && (
+        <div className="mb-2 flex items-center gap-2 rounded-xl bg-raised/60 py-1 pl-3 pr-1 text-sm">
+          <PaperclipIcon />
+          <span className="min-w-0 flex-1 truncate" title={file.name}>
+            {file.name}
+          </span>
+          <span className="shrink-0 text-xs text-muted">{formatFileSize(file.size)}</span>
+          <IconButton aria-label={`Remover o anexo ${file.name}`} disabled={sending} onClick={() => setFile(null)}>
+            <CloseIcon />
+          </IconButton>
+        </div>
+      )}
       <div className="flex items-end gap-2">
         <EmojiPicker onPick={insertEmoji} disabled={Boolean(blocked)} />
+        {allowFiles && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={CHAT_FILE_ACCEPT}
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={(e) => chooseFile(e.target.files?.[0])}
+            />
+            <IconButton
+              aria-label="Anexar PDF ou imagem"
+              title="Anexar PDF ou imagem (até 10 MB)"
+              disabled={Boolean(blocked) || sending}
+              onClick={() => fileInputRef.current?.click()}
+              className="!h-11 !w-11"
+            >
+              <PaperclipIcon />
+            </IconButton>
+          </>
+        )}
         <label htmlFor="message-body" className="sr-only">
           Escrever mensagem
         </label>
@@ -220,6 +281,7 @@ export function MessageComposer({ placeholder, blocked, mentionOptions, audience
       ) : (
         <p id="message-hint" className="mt-1 hidden caption sm:block">
           Enter envia · Shift+Enter quebra a linha · @ marca uma pessoa · # marca uma tarefa · Win + . abre os emojis
+          {allowFiles ? " · o clipe anexa um PDF ou uma imagem (até 10 MB)" : ""}
         </p>
       )}
     </form>

@@ -208,6 +208,29 @@ export const CloseIcon = () => (
     <path d="M6 6l12 12M18 6 6 18" />
   </Icon>
 );
+export const PaperclipIcon = () => (
+  <Icon>
+    <path d="m21 11.5-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9" />
+  </Icon>
+);
+export const DownloadIcon = () => (
+  <Icon>
+    <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+  </Icon>
+);
+export const FileIcon = () => (
+  <Icon>
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+    <path d="M14 3v6h6M8 13h8M8 17h5" />
+  </Icon>
+);
+export const ImageIcon = () => (
+  <Icon>
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <circle cx="9" cy="10" r="1.8" />
+    <path d="m21 16-5-5-9 9" />
+  </Icon>
+);
 export const GripIcon = () => (
   <Icon>
     <circle cx="9" cy="6" r="1" />

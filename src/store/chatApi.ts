@@ -10,11 +10,15 @@ const GENERIC_ERROR = "Não foi possível enviar. Verifique sua conexão e tente
 const fail = (error: string = GENERIC_ERROR) => ({ data: null, error });
 const isText = (value: unknown): value is string => typeof value === "string" && value !== "";
 
+/** Bucket privado dos anexos das conversas diretas (só bytes embaralhados). */
+const FILES_BUCKET = "chat-files";
+
 /** Quantas mensagens diretas recentes são carregadas (somando todas as conversas). */
 export const DIRECT_PAGE = 500;
 
 const KEY_COLUMNS = "id, user_id, public_key, active";
-const DIRECT_COLUMNS = "id, sender_id, recipient_id, sender_key_id, recipient_key_id, iv, ciphertext, created_at";
+const DIRECT_COLUMNS =
+  "id, sender_id, recipient_id, sender_key_id, recipient_key_id, iv, ciphertext, attachment_path, created_at";
 
 function keyFromRow(row: Record<string, unknown>): ChatKey | null {
   if (!isText(row.id) || !isText(row.user_id) || !isPublicJwk(row.public_key)) return null;
@@ -23,10 +27,12 @@ function keyFromRow(row: Record<string, unknown>): ChatKey | null {
 }
 
 function directFromRow(row: Record<string, unknown>): DirectMessage | null {
-  const { id, sender_id, recipient_id, sender_key_id, recipient_key_id, iv, ciphertext, created_at } = row;
+  const { id, sender_id, recipient_id, sender_key_id, recipient_key_id, iv, ciphertext, attachment_path, created_at } =
+    row;
   if (!isText(id) || !isText(sender_id) || !isText(recipient_id)) return null;
   if (!isText(sender_key_id) || !isText(recipient_key_id)) return null;
   if (!isText(iv) || !isText(ciphertext) || !isText(created_at)) return null;
+  if (attachment_path !== null && attachment_path !== undefined && !isText(attachment_path)) return null;
   return {
     id,
     senderId: sender_id,
@@ -35,6 +41,7 @@ function directFromRow(row: Record<string, unknown>): DirectMessage | null {
     recipientKeyId: recipient_key_id,
     iv,
     ciphertext,
+    attachmentPath: isText(attachment_path) ? attachment_path : null,
     createdAt: created_at,
   };
 }
@@ -117,6 +124,7 @@ export async function sendDirectMessage(input: {
   recipientKeyId: string;
   iv: string;
   ciphertext: string;
+  attachmentPath?: string;
 }): Promise<ApiResult<DirectMessage>> {
   if (!supabase) return fail();
   const { data, error } = await supabase
@@ -127,12 +135,39 @@ export async function sendDirectMessage(input: {
       recipient_key_id: input.recipientKeyId,
       iv: input.iv,
       ciphertext: input.ciphertext,
+      attachment_path: input.attachmentPath ?? null,
     })
     .select(DIRECT_COLUMNS)
     .single();
   if (error) return fail(error.code === "P0001" ? error.message : GENERIC_ERROR);
   const message = directFromRow(data as Record<string, unknown>);
   return message ? { data: message, error: null } : fail();
+}
+
+/** Envia um anexo já embaralhado para a pasta de quem envia. */
+export async function uploadChatFile(path: string, data: ArrayBuffer): Promise<string | null> {
+  if (!supabase) return GENERIC_ERROR;
+  const { error } = await supabase.storage
+    .from(FILES_BUCKET)
+    .upload(path, new Blob([data], { type: "application/octet-stream" }), {
+      contentType: "application/octet-stream",
+      upsert: false,
+    });
+  return error ? "Não foi possível enviar o arquivo. Verifique sua conexão e tente de novo." : null;
+}
+
+/** Baixa os bytes embaralhados de um anexo. */
+export async function downloadChatFile(path: string): Promise<ApiResult<ArrayBuffer>> {
+  if (!supabase) return fail();
+  const { data, error } = await supabase.storage.from(FILES_BUCKET).download(path);
+  if (error) return fail("Não foi possível baixar o arquivo. Verifique sua conexão e tente de novo.");
+  return { data: await data.arrayBuffer(), error: null };
+}
+
+/** Apaga um anexo de quem enviou. Falhar aqui não impede nada: o arquivo só fica sem uso. */
+export async function removeChatFile(path: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.storage.from(FILES_BUCKET).remove([path]);
 }
 
 export async function removeDirectMessage(id: string): Promise<string | null> {

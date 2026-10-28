@@ -18,6 +18,8 @@ export interface DirectMessage {
   recipientKeyId: string;
   iv: string;
   ciphertext: string;
+  /** Caminho do anexo no bucket `chat-files`; `null` = mensagem só de texto. */
+  attachmentPath: string | null;
   /** ISO 8601 */
   createdAt: string;
 }
@@ -47,4 +49,6 @@ export interface ThreadMessage {
   authorId?: string;
   /** Semente da cor do nome (id ou nome do autor). */
   colorSeed?: string;
+  /** Anexo (só nas conversas diretas), já com nome, tipo e tamanho abertos. */
+  file?: { name: string; type: string; size: number };
 }

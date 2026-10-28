@@ -3,7 +3,9 @@
 import { describe, expect, it } from "vitest";
 import {
   conversationKey,
+  decryptBytes,
   decryptText,
+  encryptBytes,
   encryptText,
   fromBase64,
   generateKeyPair,
@@ -65,5 +67,21 @@ describe("criptografia das conversas diretas", () => {
     expect(isPublicJwk({ kty: "RSA", n: "a", e: "b" })).toBe(false);
     expect(isPublicJwk(null)).toBe(false);
     expect(toBase64(fromBase64("AAEC/w=="))).toBe("AAEC/w==");
+  });
+
+  it("o anexo é embaralhado com a chave da conversa e só o colega o abre", async () => {
+    const ana = await generateKeyPair();
+    const beto = await generateKeyPair();
+    const caio = await generateKeyPair();
+    const anaSide = await conversationKey(await importPrivateKey(ana.privateBytes), beto.publicKey);
+    const betoSide = await conversationKey(await importPrivateKey(beto.privateBytes), ana.publicKey);
+    const outsider = await conversationKey(await importPrivateKey(caio.privateBytes), ana.publicKey);
+
+    const original = new TextEncoder().encode("%PDF-1.7 conteúdo do memorando").buffer;
+    const sealed = await encryptBytes(anaSide, original);
+    expect(new TextDecoder().decode(sealed.data)).not.toContain("memorando");
+    const opened = await decryptBytes(betoSide, sealed.iv, sealed.data);
+    expect(new TextDecoder().decode(opened)).toBe("%PDF-1.7 conteúdo do memorando");
+    await expect(decryptBytes(outsider, sealed.iv, sealed.data)).rejects.toThrow();
   });
 });

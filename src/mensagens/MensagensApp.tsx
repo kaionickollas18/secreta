@@ -211,6 +211,7 @@ export default function MensagensApp() {
         createdAt: m.createdAt,
         canDelete: mine,
         colorSeed: m.senderId,
+        file: chat.files[m.id],
       };
     });
   }
@@ -290,7 +291,8 @@ export default function MensagensApp() {
             ? `${peer.lastName} ainda não ativou as conversas protegidas. Isso acontece sozinho no próximo login, ou ao abrir esta aba.`
             : undefined
         }
-        onSend={(text) => chat.sendDirect(userId, peer.id, text)}
+        onSend={(text, file) => chat.sendDirect(userId, schoolId, peer.id, text, file)}
+        onOpenFile={(message) => chat.openFile(userId, message.id)}
         onDelete={setToDelete}
         audience={[userId, peer.id]}
         currentUserId={userId}

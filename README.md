@@ -21,7 +21,7 @@ As regras valem no banco (RLS e triggers), não só na tela. Detalhes em [docs/v
 - **Histórico** permanente das tarefas concluídas, com filtro de período e download em CSV. No quadro, a tarefa concluída fica em Concluído por 3 dias e depois aparece só no histórico.
 - **Lembretes**: uma vez, toda semana ou a cada N meses com período de dias (ex.: todo mês, do dia 15 ao 20).
 - **Mensagens**: mural único por escola, ao vivo.
-- **Conversas**: Geral, Anônimo e mensagens diretas criptografadas; `@` marca uma pessoa, `#` marca uma tarefa, e há emojis (botão ou **Win + .** no Windows). O perfil de cada colega abre pelo nome e tem o botão **Conversar**.
+- **Conversas**: Geral, Anônimo e mensagens diretas criptografadas, com PDFs e imagens (até 10 MB) nas diretas; `@` marca uma pessoa, `#` marca uma tarefa, e há emojis (botão ou **Win + .** no Windows). O perfil de cada colega abre pelo nome e tem o botão **Conversar**.
 - **Dashboard de frequência**: lê uma planilha do Google ou arquivos CSV enviados pelo secretário. Relatórios em PDF (documento oficial, A4 deitado) do aluno e da turma (resumo + os 10 alunos que mais faltam).
 - **Gestão**: escolas e secretários (Master); auxiliares (Secretário).
 - Interface em português, escura, responsiva (a partir de 360 px) e acessível por teclado.
