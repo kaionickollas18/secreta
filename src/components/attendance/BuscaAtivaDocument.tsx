@@ -12,8 +12,10 @@ interface BuscaAtivaDocumentProps {
   /** Cadastro do aluno; `null` quando ele não está no cadastro (os campos saem em branco). */
   student: StudentRecord | null;
   identity: SchoolIdentity;
-  /** Dia em que o documento é emitido (YYYY-MM-DD): data do termo e do comparecimento pedido. */
+  /** Dia em que o documento é emitido (YYYY-MM-DD). */
   issuedOn: string;
+  /** Dia em que o responsável deve comparecer: o próximo dia de atendimento da escola (YYYY-MM-DD). */
+  attendOn: string;
   /** Último dia de chamada considerado na contagem das faltas (YYYY-MM-DD). */
   countedUntil: string;
 }
@@ -31,7 +33,14 @@ function Field({ area, value }: { area: string; value: string }) {
  * Escolar, com o que o sistema sabe do aluno já preenchido, e o termo de ciência e
  * responsabilidade no papel timbrado da escola. O que não há no cadastro fica em branco.
  */
-export function BuscaAtivaDocument({ report, student, identity, issuedOn, countedUntil }: BuscaAtivaDocumentProps) {
+export function BuscaAtivaDocument({
+  report,
+  student,
+  identity,
+  issuedOn,
+  attendOn,
+  countedUntil,
+}: BuscaAtivaDocumentProps) {
   const letterhead = letterheadOf(identity.inep);
   const schoolName = identity.officialName || "escola";
   const months = absenceMonthsText(report.months);
@@ -109,7 +118,7 @@ export function BuscaAtivaDocument({ report, student, identity, issuedOn, counte
               faltando a provas.
             </li>
             <li>
-              <strong>SOLICITAMOS</strong> a sua presença nessa Unidade Escolar no <b>dia {formatDay(issuedOn)}</b>,
+              <strong>SOLICITAMOS</strong> a sua presença nessa Unidade Escolar no <b>dia {formatDay(attendOn)}</b>,
               para que possamos averiguar a causa dessas faltas e assim
               justificá-las para melhor atender as necessidades do momento.
             </li>

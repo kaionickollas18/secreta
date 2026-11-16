@@ -17,6 +17,7 @@ import { ToastViewport } from "../components/ui/ToastViewport";
 import { buscaAtivaImages } from "../constants/buscaAtiva";
 import { useAttendanceData } from "../hooks/useAttendanceData";
 import { useAuthStore } from "../store/authStore";
+import { useHolidayStore } from "../store/holidayStore";
 import { useSchoolStore } from "../store/schoolStore";
 import { useStudentStore } from "../store/studentStore";
 import { useToastStore } from "../store/toastStore";
@@ -25,6 +26,7 @@ import { prefersReducedMotion } from "../utils/arrivals";
 import { todayISO } from "../utils/date";
 import { classReport } from "../utils/classReport";
 import { canConfigureDashboard, canSeeStudentRecords, effectiveRole } from "../utils/roles";
+import { nextSchoolDay } from "../utils/holidays";
 import { hasIdentity } from "../utils/schoolIdentity";
 import { findStudent, preloadImages } from "../utils/students";
 import {
@@ -119,9 +121,15 @@ export default function FrequenciaApp() {
   /** O documento de busca ativa está indo para a impressão (no lugar do resumo do aluno). */
   const [printingBusca, setPrintingBusca] = useState(false);
 
+  /** Feriados e recessos da escola: o comparecimento pedido no termo cai no próximo dia de atendimento. */
+  const schoolEvents = useHolidayStore((s) => s.holidays);
+  const loadHolidays = useHolidayStore((s) => s.load);
+
   useEffect(() => {
-    if (schoolId && canBuscaAtiva) void loadStudents(schoolId);
-  }, [schoolId, canBuscaAtiva, loadStudents]);
+    if (!schoolId || !canBuscaAtiva) return;
+    void loadStudents(schoolId);
+    void loadHolidays();
+  }, [schoolId, canBuscaAtiva, loadStudents, loadHolidays]);
 
   const view = useMemo(() => {
     const classes = selectClasses(allClasses, className);
@@ -378,6 +386,7 @@ export default function FrequenciaApp() {
                     student={studentRecord}
                     identity={identity}
                     issuedOn={todayISO()}
+                    attendOn={nextSchoolDay(todayISO(), schoolEvents)}
                     countedUntil={countedUntil}
                   />
                 )}

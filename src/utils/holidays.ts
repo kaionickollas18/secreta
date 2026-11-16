@@ -91,6 +91,26 @@ export function nationalHolidays(year: number): Holiday[] {
   ].sort((a, b) => a.start.localeCompare(b.start));
 }
 
+/** Eventos em que a escola não atende: feriado (inclusive ponto facultativo) e recesso. */
+const CLOSED_KINDS: readonly EventKind[] = ["holiday", "recess"];
+
+/**
+ * Próximo dia em que a escola atende, depois de `from` (YYYY-MM-DD): pula sábado, domingo,
+ * feriados nacionais, pontos facultativos e os feriados e recessos cadastrados pela escola.
+ */
+export function nextSchoolDay(from: string, schoolEvents: Holiday[] = []): string {
+  const closed = (date: string): boolean => {
+    const weekday = new Date(`${date}T12:00:00`).getDay();
+    if (weekday === 0 || weekday === 6) return true;
+    const events = [...nationalHolidays(Number(date.slice(0, 4))), ...schoolEvents];
+    return events.some((e) => CLOSED_KINDS.includes(e.kind) && e.start <= date && date <= e.end);
+  };
+  let day = addDays(from, 1);
+  // Limite de segurança: um recesso cadastrado tem no máximo 92 dias.
+  for (let i = 0; i < 400 && closed(day); i += 1) day = addDays(day, 1);
+  return day;
+}
+
 interface HolidayRow {
   id: unknown;
   name: unknown;

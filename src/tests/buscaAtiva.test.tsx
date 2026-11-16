@@ -6,6 +6,7 @@ import { StudentReportCard } from "../components/attendance/StudentReportCard";
 import { letterheadOf } from "../constants/buscaAtiva";
 import type { StudentReport } from "../types/attendance";
 import type { StudentRecord } from "../types/student";
+import { nextSchoolDay } from "../utils/holidays";
 import { canSeeStudentRecords } from "../utils/roles";
 import { EMPTY_IDENTITY } from "../utils/schoolIdentity";
 import { absenceMonthsText, absencesText, alertNotes, findStudent, fullAddress, studentFromRow } from "../utils/students";
@@ -114,6 +115,20 @@ describe("cadastro dos alunos", () => {
   });
 });
 
+describe("dia do comparecimento", () => {
+  it("é o dia seguinte, pulando fim de semana, feriado e recesso", () => {
+    expect(nextSchoolDay("2026-11-16")).toBe("2026-11-17"); // segunda → terça
+    expect(nextSchoolDay("2026-11-13")).toBe("2026-11-16"); // sexta → segunda
+    expect(nextSchoolDay("2026-11-14")).toBe("2026-11-16"); // sábado → segunda
+    expect(nextSchoolDay("2026-11-19")).toBe("2026-11-23"); // quinta → sexta é feriado nacional → segunda
+    expect(nextSchoolDay("2026-12-31")).toBe("2027-01-04"); // vira o ano: 1º/1 é feriado, depois fim de semana
+    const recess = { id: "r", name: "Recesso", start: "2026-11-17", end: "2026-11-18", source: "school", kind: "recess" } as const;
+    const meeting = { id: "m", name: "Reunião", start: "2026-11-19", end: "2026-11-19", source: "school", kind: "meeting" } as const;
+    // Recesso da escola fecha; reunião não.
+    expect(nextSchoolDay("2026-11-16", [recess, meeting])).toBe("2026-11-19");
+  });
+});
+
 describe("documento de busca ativa", () => {
   const renderDocument = (student: StudentRecord | null, identity = IDENTITY) =>
     render(
@@ -122,6 +137,7 @@ describe("documento de busca ativa", () => {
         student={student}
         identity={identity}
         issuedOn="2026-08-20"
+        attendOn="2026-08-21"
         countedUntil="2026-08-19"
       />,
     );
@@ -147,8 +163,8 @@ describe("documento de busca ativa", () => {
     expect(term).toContain("05 faltas escolares nos meses de julho e agosto");
     expect(term).toContain("comunicado pela EMEF Escola de Exemplo, localizada na Rua das Flores");
     expect(term).toContain("na pessoa de Maria de Exemplo");
-    // A convocação é para o dia em que o documento é emitido, sem horário.
-    expect(term).toContain("no dia 20/08/2026, para que possamos");
+    // A convocação é para o próximo dia de atendimento, sem horário.
+    expect(term).toContain("no dia 21/08/2026, para que possamos");
     expect(term).not.toContain("____");
     expect(term).toContain("Artigos 53, 55 e 56 da Lei Federal 8.069 de 13 de julho de 1990");
   });
