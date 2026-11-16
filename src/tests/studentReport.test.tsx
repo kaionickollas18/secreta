@@ -118,7 +118,7 @@ describe("pesquisa e resumo na tela", () => {
     const onPrint = vi.fn();
     render(<StudentReportCard report={report} onClose={onClose} onPrint={onPrint} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Baixar PDF" }));
+    await userEvent.click(screen.getByRole("button", { name: "Baixar resumo" }));
     expect(onPrint).toHaveBeenCalledTimes(1);
 
     expect(screen.getByRole("heading", { name: "Ana Lúcia" })).toBeInTheDocument();

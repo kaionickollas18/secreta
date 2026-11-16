@@ -2,13 +2,13 @@ import type { SchoolIdentity, SchoolIdentityErrors, SchoolIdentityForm } from ".
 import { sanitizeText } from "./validation";
 
 /** Iguais aos limites do banco (`school_settings`). */
-export const IDENTITY_LIMITS = { officialName: 160, address: 200, decree: 160 } as const;
+export const IDENTITY_LIMITS = { officialName: 160, address: 200, decree: 160, principalName: 120 } as const;
 /** Lado maior, em pixels, da logo guardada. */
 export const LOGO_PIXELS = 600;
 export const LOGO_MAX_BYTES = 10 * 1024 * 1024;
 export const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 
-export const EMPTY_IDENTITY: SchoolIdentity = { officialName: "", inep: "", address: "", cep: "", decree: "" };
+export const EMPTY_IDENTITY: SchoolIdentity = { officialName: "", inep: "", address: "", cep: "", decree: "", principalName: "" };
 
 const text = (value: unknown): string => (typeof value === "string" ? value : "");
 
@@ -22,6 +22,7 @@ export function identityFromRow(row: Record<string, unknown> | null): SchoolIden
     address: text(row.address),
     cep: text(row.cep),
     decree: text(row.decree),
+    principalName: text(row.principal_name),
     ...(logoPath ? { logoPath } : {}),
   };
 }
@@ -47,6 +48,7 @@ export function validateIdentity(form: SchoolIdentityForm): IdentityValidation {
   const officialName = sanitizeText(form.officialName).replace(/\s+/g, " ");
   const address = sanitizeText(form.address).replace(/\s+/g, " ");
   const decree = sanitizeText(form.decree).replace(/\s+/g, " ");
+  const principalName = sanitizeText(form.principalName).replace(/s+/g, " ");
   const inep = form.inep.replace(/\D/g, "");
   const cepDigits = form.cep.replace(/\D/g, "");
 
@@ -58,6 +60,9 @@ export function validateIdentity(form: SchoolIdentityForm): IdentityValidation {
   if (form.cep.trim() !== "" && cepDigits.length !== 8) errors.cep = "O CEP tem 8 dígitos.";
   if (decree.length > IDENTITY_LIMITS.decree) errors.decree = `Use no máximo ${IDENTITY_LIMITS.decree} caracteres.`;
 
+  if (principalName.length > IDENTITY_LIMITS.principalName)
+    errors.principalName = `Use no máximo ${IDENTITY_LIMITS.principalName} caracteres.`;
+
   if (Object.keys(errors).length > 0) return { valid: false, errors };
   return {
     valid: true,
@@ -67,6 +72,7 @@ export function validateIdentity(form: SchoolIdentityForm): IdentityValidation {
       address,
       cep: cepDigits ? `${cepDigits.slice(0, 5)}-${cepDigits.slice(5)}` : "",
       decree,
+      principalName,
     },
   };
 }

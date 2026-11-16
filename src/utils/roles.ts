@@ -52,6 +52,14 @@ export function isStaffRole(role: UserRole): boolean {
   return STAFF_ROLES.includes(role);
 }
 
+/**
+ * Cadastro dos alunos (responsável e endereço) e documento de busca ativa: só a equipe da
+ * secretaria. O banco também esconde a tabela `students` do professor.
+ */
+export function canSeeStudentRecords(role: UserRole): boolean {
+  return isStaffRole(role);
+}
+
 /** Somente o Secretário cria e exclui tarefas e define responsáveis. */
 export function canManageTasks(role: UserRole): boolean {
   return role === "secretary";

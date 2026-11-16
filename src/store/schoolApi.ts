@@ -9,7 +9,7 @@ import type { ApiResult } from "./taskApi";
 const BUCKET = "school-logos";
 const GENERIC_ERROR = "Não foi possível salvar. Verifique sua conexão e tente de novo.";
 const fail = (error: string = GENERIC_ERROR) => ({ data: null, error });
-const COLUMNS = "official_name, inep, address, cep, decree, logo_path";
+const COLUMNS = "official_name, inep, address, cep, decree, principal_name, logo_path";
 
 function logoUrlOf(path: string | undefined): string | undefined {
   if (!supabase || !path) return undefined;
@@ -35,6 +35,7 @@ export async function saveIdentity(schoolId: string, form: SchoolIdentityForm): 
       address: form.address || null,
       cep: form.cep || null,
       decree: form.decree || null,
+      principal_name: form.principalName || null,
     },
     { onConflict: "school_id" },
   );

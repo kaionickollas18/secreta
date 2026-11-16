@@ -43,8 +43,8 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
     if (!logoPath) return null;
     const error = await removeLogo(schoolId, logoPath);
     if (!error) {
-      const { officialName, inep, address, cep, decree } = get().identity;
-      set({ identity: { officialName, inep, address, cep, decree } });
+      const { officialName, inep, address, cep, decree, principalName } = get().identity;
+      set({ identity: { officialName, inep, address, cep, decree, principalName } });
     }
     return error;
   },

@@ -29,8 +29,8 @@ export function SchoolIdentityModal({ open, schoolId, onClose }: SchoolIdentityM
   // Ao abrir, o formulário começa com o que está salvo.
   useEffect(() => {
     if (!open) return;
-    const { officialName, inep, address, cep, decree } = useSchoolStore.getState().identity;
-    setForm({ officialName, inep, address, cep: formatCep(cep), decree });
+    const { officialName, inep, address, cep, decree, principalName } = useSchoolStore.getState().identity;
+    setForm({ officialName, inep, address, cep: formatCep(cep), decree, principalName });
     setErrors({});
     setLogoError(null);
   }, [open]);
@@ -165,6 +165,17 @@ export function SchoolIdentityModal({ open, schoolId, onClose }: SchoolIdentityM
           </label>
           <input {...field("decree")} maxLength={IDENTITY_LIMITS.decree} />
           {errorOf("decree")}
+        </div>
+        <div>
+          <label htmlFor="school-principalName" className={LABEL}>
+            Gestor(a) da escola
+          </label>
+          <input
+            {...field("principalName")}
+            maxLength={IDENTITY_LIMITS.principalName}
+            placeholder="Nome citado no termo da busca ativa"
+          />
+          {errorOf("principalName")}
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button onClick={onClose}>Cancelar</Button>

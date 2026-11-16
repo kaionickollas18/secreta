@@ -132,14 +132,16 @@ Use quatro contas (Master, Secretário, Assistente, Professor) e, de preferênci
 
 ### 7c. Documento do aluno em PDF
 1. Secretário, no Dashboard: **Dados da escola** → conferir nome, INEP, endereço, CEP e ato de criação; enviar a logo. Assistente não vê esse botão.
-2. Pesquisar um aluno e clicar em **Baixar PDF**: na janela de impressão, escolher "Salvar como PDF". A folha já vem **deitada (paisagem)**. Conferir: cabeçalho com logo, dados da escola e "Documento oficial"; cartão do aluno com turma, período e situação colorida; medidor de frequência; faltas e última falta; gráfico mês a mês com as linhas tracejadas de Atenção (85%) e Crítico (75%); tabela dos meses com barras e dias das faltas; assinatura; logo clara ao fundo; cores aparecendo mesmo sem marcar "Gráficos de fundo".
+2. Pesquisar um aluno e clicar em **Baixar resumo**: na janela de impressão, escolher "Salvar como PDF". A folha já vem **deitada (paisagem)**. Conferir: cabeçalho com logo, dados da escola e "Documento oficial"; cartão do aluno com turma, período e situação colorida; medidor de frequência; faltas e última falta; gráfico mês a mês com as linhas tracejadas de Atenção (85%) e Crítico (75%); tabela dos meses com barras e dias das faltas; assinatura; logo clara ao fundo; cores aparecendo mesmo sem marcar "Gráficos de fundo".
 3. Aluno com o ano letivo inteiro (até 12 meses, inclusive passando de um ano para outro) e escola/aluno/turma com nomes longos: nada sai da largura da folha; se não couber, a tabela continua na página seguinte com o cabeçalho das colunas repetido e nenhuma linha cortada. O ano aparece junto do mês ("nov/25").
 4. No celular (Chrome/Safari): o mesmo botão abre a impressão do aparelho, com a opção de salvar em PDF.
 
 ### 7c-2. Relatório da turma em PDF
 1. No Dashboard, escolher uma turma no filtro: aparece **Baixar relatório da turma**. Com "Todas as turmas", o botão não aparece; no "Resumo por turma", cada linha tem **PDF**.
 2. Baixar: a folha vem deitada, com o mesmo visual do relatório do aluno. **Página 1**: turma, período e dias de chamada; faltas, média por dia (com o dia de mais faltas) e alunos com falta; barras da média por mês (o mês mais alto em destaque); situação dos alunos (Crítico, Atenção, Regular); faltas por dia da semana; destaques. **Página 2**: cabeçalho de novo e os até 10 alunos que mais faltam, com faltas, frequência, seguidas, última falta e situação; assinatura no fim.
-3. Com um aluno aberto na pesquisa, baixar o relatório da turma: sai só o da turma; depois, **Baixar PDF** do aluno sai só o do aluno.
+3. Com um aluno aberto na pesquisa, baixar o relatório da turma: sai só o da turma; depois, **Baixar resumo** do aluno sai só o do aluno.
+4. **Busca ativa** (secretário ou assistente): pesquisar um aluno e clicar em **Busca ativa**. Sai um PDF de 3 páginas em pé: formulário de alerta (nome, responsável, nascimento e sexo na 1ª; endereço, CEP, bairro e observações na 2ª) e o termo no papel timbrado, com aluno, série, data, endereço, faltas e meses. Conferir que os textos caem dentro dos campos e que não há folha em branco. Em seguida, **Baixar resumo** deve sair deitado, como antes.
+5. Aluno que não está no cadastro: aparece o aviso e o documento sai só com nome, turma e faltas. Como **professor**, o botão **Busca ativa** não aparece, e `select * from students` pela API não devolve linhas.
 4. Professor também consegue baixar (só leitura).
 
 ### 7d. Memorandos e ofícios

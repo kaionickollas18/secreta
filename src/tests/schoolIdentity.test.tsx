@@ -19,6 +19,7 @@ const IDENTITY = {
   address: "Rua das Flores, sem número, Bairro: Centro",
   cep: "69400-000",
   decree: "Lei Municipal nº 100 de 01/01/2020",
+  principalName: "Maria de Exemplo",
   logoUrl: "https://exemplo.test/logo.png",
 };
 
@@ -41,14 +42,14 @@ const REPORT: StudentReport = {
 describe("dados da escola", () => {
   it("normaliza INEP e CEP e exige só o nome", () => {
     expect(
-      validateIdentity({ officialName: "  EMEF  Escola de Exemplo ", inep: "1234 5678", address: " Rua das Flores ", cep: "69.400-000", decree: "" }),
+      validateIdentity({ officialName: "  EMEF  Escola de Exemplo ", inep: "1234 5678", address: " Rua das Flores ", cep: "69.400-000", decree: "", principalName: "" }),
     ).toEqual({
       valid: true,
-      value: { officialName: "EMEF Escola de Exemplo", inep: "12345678", address: "Rua das Flores", cep: "69400-000", decree: "" },
+      value: { officialName: "EMEF Escola de Exemplo", inep: "12345678", address: "Rua das Flores", cep: "69400-000", decree: "", principalName: "" },
     });
-    expect(validateIdentity({ officialName: "Escola", inep: "", address: "", cep: "", decree: "" }).valid).toBe(true);
+    expect(validateIdentity({ officialName: "Escola", inep: "", address: "", cep: "", decree: "", principalName: "" }).valid).toBe(true);
 
-    const result = validateIdentity({ officialName: "", inep: "123", address: "", cep: "69400", decree: "" });
+    const result = validateIdentity({ officialName: "", inep: "123", address: "", cep: "69400", decree: "", principalName: "" });
     expect(result.valid ? [] : Object.keys(result.errors).sort()).toEqual(["cep", "inep", "officialName"]);
   });
 
@@ -62,6 +63,7 @@ describe("dados da escola", () => {
       address: "",
       cep: "69400-000",
       decree: "",
+      principalName: "",
       logoPath: "s/l.png",
     });
     expect(hasIdentity(EMPTY_IDENTITY)).toBe(false);

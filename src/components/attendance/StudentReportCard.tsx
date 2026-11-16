@@ -23,10 +23,12 @@ interface StudentReportCardProps {
   onClose: () => void;
   /** Abre a impressão do documento oficial (de onde se salva o PDF). */
   onPrint: () => void;
+  /** Abre a impressão do documento de busca ativa. Sem a função, o botão não aparece. */
+  onBuscaAtiva?: () => void;
 }
 
 /** Resumo de um aluno: situação geral e a frequência de cada mês. */
-export function StudentReportCard({ report, onClose, onPrint }: StudentReportCardProps) {
+export function StudentReportCard({ report, onClose, onPrint, onBuscaAtiva }: StudentReportCardProps) {
   const days = (n: number) => `${n} ${n === 1 ? "dia" : "dias"}`;
   const absencesText = (n: number) => `${n} ${n === 1 ? "falta" : "faltas"}`;
 
@@ -47,8 +49,13 @@ export function StudentReportCard({ report, onClose, onPrint }: StudentReportCar
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="depth" onClick={onPrint}>
-            Baixar PDF
+            Baixar resumo
           </Button>
+          {onBuscaAtiva && (
+            <Button variant="depth" onClick={onBuscaAtiva}>
+              Busca ativa
+            </Button>
+          )}
           <Button variant="ghost" onClick={onClose}>
             Fechar resumo
           </Button>

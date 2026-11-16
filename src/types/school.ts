@@ -8,6 +8,8 @@ export interface SchoolIdentity {
   cep: string;
   /** Ato de criação (decreto ou lei). */
   decree: string;
+  /** Nome do(a) gestor(a), citado no termo de ciência da busca ativa. */
+  principalName: string;
   /** Caminho da logo no bucket `school-logos` (para trocar ou remover). */
   logoPath?: string;
   /** Endereço público da logo. */
@@ -15,6 +17,6 @@ export interface SchoolIdentity {
 }
 
 /** Valores crus do formulário (sempre strings). */
-export type SchoolIdentityForm = Pick<SchoolIdentity, "officialName" | "inep" | "address" | "cep" | "decree">;
+export type SchoolIdentityForm = Pick<SchoolIdentity, "officialName" | "inep" | "address" | "cep" | "decree" | "principalName">;
 
 export type SchoolIdentityErrors = Partial<Record<keyof SchoolIdentityForm, string>>;

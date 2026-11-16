@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarList } from "../components/attendance/BarList";
+import { BuscaAtivaDocument } from "../components/attendance/BuscaAtivaDocument";
 import { ClassDocument } from "../components/attendance/ClassDocument";
 import { ClassesTable } from "../components/attendance/ClassesTable";
 import { DataSourceModal } from "../components/attendance/DataSourceModal";
@@ -13,16 +14,19 @@ import { WeekdayChart } from "../components/attendance/WeekdayChart";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ToastViewport } from "../components/ui/ToastViewport";
+import { buscaAtivaImages } from "../constants/buscaAtiva";
 import { useAttendanceData } from "../hooks/useAttendanceData";
 import { useAuthStore } from "../store/authStore";
 import { useSchoolStore } from "../store/schoolStore";
+import { useStudentStore } from "../store/studentStore";
 import { useToastStore } from "../store/toastStore";
 import type { AttendanceStatus, ClassData } from "../types/attendance";
 import { prefersReducedMotion } from "../utils/arrivals";
 import { todayISO } from "../utils/date";
 import { classReport } from "../utils/classReport";
-import { canConfigureDashboard, effectiveRole } from "../utils/roles";
+import { canConfigureDashboard, canSeeStudentRecords, effectiveRole } from "../utils/roles";
 import { hasIdentity } from "../utils/schoolIdentity";
+import { findStudent, preloadImages } from "../utils/students";
 import {
   buildInsights,
   dailySeries,
@@ -108,6 +112,16 @@ export default function FrequenciaApp() {
   const searchRef = useRef<HTMLElement>(null);
   const allClasses = data?.classes ?? NO_CLASSES;
   const canConfigure = profile ? canConfigureDashboard(effectiveRole(profile)) : false;
+  const canBuscaAtiva = profile ? canSeeStudentRecords(profile.role) : false;
+  const studentRecords = useStudentStore((s) => s.students);
+  const studentStatus = useStudentStore((s) => s.status);
+  const loadStudents = useStudentStore((s) => s.load);
+  /** O documento de busca ativa está indo para a impressão (no lugar do resumo do aluno). */
+  const [printingBusca, setPrintingBusca] = useState(false);
+
+  useEffect(() => {
+    if (schoolId && canBuscaAtiva) void loadStudents(schoolId);
+  }, [schoolId, canBuscaAtiva, loadStudents]);
 
   const view = useMemo(() => {
     const classes = selectClasses(allClasses, className);
@@ -132,6 +146,17 @@ export default function FrequenciaApp() {
     () => (selected ? studentReport(allClasses, selected.className, selected.name) : null),
     [allClasses, selected],
   );
+
+  const studentRecord = useMemo(
+    () => (report ? findStudent(studentRecords, report.className, report.name) : null),
+    [studentRecords, report],
+  );
+  /** Último dia de chamada da turma do aluno: até onde as faltas foram contadas. */
+  const countedUntil = useMemo(() => {
+    const records = report ? allClasses.find((c) => c.name === report.className)?.records : undefined;
+    const lastDay = records?.reduce((latest, record) => (record.date > latest ? record.date : latest), "");
+    return lastDay || report?.lastAbsence || todayISO();
+  }, [allClasses, report]);
 
   // Ao escolher um aluno (inclusive pela tabela, lá embaixo), leva a tela até o resumo.
   useEffect(() => {
@@ -189,6 +214,45 @@ export default function FrequenciaApp() {
     return () => window.removeEventListener("afterprint", done);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- imprime uma vez por pedido
   }, [classToPrint]);
+
+  /** Busca ativa: avisa o que vai faltar no documento e pede a impressão. */
+  function requestBuscaAtiva() {
+    if (studentStatus === "loading") {
+      pushToast({ tone: "info", message: "Carregando o cadastro dos alunos. Tente de novo em instantes." });
+      return;
+    }
+    if (studentStatus === "error") {
+      pushToast({
+        tone: "error",
+        message: "Não foi possível carregar o cadastro dos alunos; o documento sai sem responsável e endereço.",
+      });
+      if (schoolId) void loadStudents(schoolId);
+    } else if (!studentRecord) {
+      pushToast({
+        tone: "info",
+        message: "Aluno não encontrado no cadastro: o documento sai só com nome, turma e faltas.",
+      });
+    }
+    setPrintingBusca(true);
+  }
+
+  // Como o relatório da turma: entra na página só para imprimir, depois das imagens de fundo carregarem.
+  useEffect(() => {
+    if (!printingBusca) return;
+    if (!report) return setPrintingBusca(false);
+    let cancelled = false;
+    const done = () => setPrintingBusca(false);
+    void preloadImages(buscaAtivaImages(identity.inep)).then(() => {
+      if (cancelled) return;
+      window.addEventListener("afterprint", done, { once: true });
+      openPrint(`Busca ativa - ${report.name}`);
+    });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("afterprint", done);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- imprime uma vez por pedido
+  }, [printingBusca]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-5 px-4 py-5 sm:px-6">
@@ -306,8 +370,18 @@ export default function FrequenciaApp() {
                   report={report}
                   onClose={() => setSelected(null)}
                   onPrint={() => openPrint(`Frequência - ${report.name}`)}
+                  onBuscaAtiva={canBuscaAtiva ? requestBuscaAtiva : undefined}
                 />
-                {!classToPrint && (
+                {printingBusca && (
+                  <BuscaAtivaDocument
+                    report={report}
+                    student={studentRecord}
+                    identity={identity}
+                    issuedOn={todayISO()}
+                    countedUntil={countedUntil}
+                  />
+                )}
+                {!classToPrint && !printingBusca && (
                 <StudentDocument
                   report={report}
                   identity={identity}
