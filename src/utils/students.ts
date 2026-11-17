@@ -32,22 +32,71 @@ export function studentFromRow(row: unknown): StudentRecord | null {
 /** Sem acento, caixa nem espaços sobrando: a planilha e o cadastro escrevem os nomes de jeitos diferentes. */
 const key = (value: string): string => normalizeText(value).replace(/\s+/g, " ").trim();
 
+/** Turma sem pontuação: "5º Ano A" e "5 ano A" são a mesma. */
+const classKey = (value: string): string => key(value).replace(/[^a-z0-9]+/g, "");
+
+/**
+ * Nome reduzido à pronúncia: as listas grafam o mesmo nome de jeitos diferentes
+ * ("Evellyn" e "Evellin", "Thiago" e "Tiago", "Wesley" e "Vesley").
+ */
+export function soundKey(value: string): string {
+  return key(value)
+    .replace(/[^a-z ]+/g, "")
+    .replace(/y/g, "i")
+    .replace(/w/g, "v")
+    .replace(/ph/g, "f")
+    .replace(/th/g, "t")
+    .replace(/k/g, "c")
+    .replace(/(.)\1+/g, "$1")
+    .trim();
+}
+
+/** Distância de edição (inserir, apagar ou trocar uma letra). */
+function editDistance(a: string, b: string): number {
+  let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min((previous[j] ?? 0) + 1, (current[j - 1] ?? 0) + 1, (previous[j - 1] ?? 0) + cost);
+    }
+    previous = current;
+  }
+  return previous[b.length] ?? 0;
+}
+
+/** Diferença tolerada entre a grafia da frequência e a do cadastro, só dentro da mesma turma. */
+const MAX_TYPO_DISTANCE = 2;
+
 /**
  * Acha o cadastro do aluno da frequência. Vale a mesma turma e o mesmo nome; se a turma não
  * bater (aluno remanejado), aceita o nome quando ele é único na escola. Com mais de um ano
- * letivo, vence o mais recente.
+ * letivo, vence o mais recente. Se a grafia do nome diferir ("Evellyn" × "Evellin"), aceita o
+ * aluno da mesma turma com o nome mais parecido, desde que só um chegue tão perto.
  */
 export function findStudent(records: StudentRecord[], className: string, name: string): StudentRecord | null {
   const wantedName = key(name);
-  const wantedClass = key(className);
-  const sameName = records
-    .filter((record) => key(record.name) === wantedName)
-    .sort((a, b) => b.schoolYear - a.schoolYear);
-  const exact = sameName.find((record) => key(record.className) === wantedClass);
+  const wantedClass = classKey(className);
+  const byYear = [...records].sort((a, b) => b.schoolYear - a.schoolYear);
+  const sameName = byYear.filter((record) => key(record.name) === wantedName);
+  const exact = sameName.find((record) => classKey(record.className) === wantedClass);
   if (exact) return exact;
   const latestYear = sameName[0]?.schoolYear;
   const latest = sameName.filter((record) => record.schoolYear === latestYear);
-  return latest.length === 1 ? (latest[0] ?? null) : null;
+  if (latest.length === 1) return latest[0] ?? null;
+
+  // Grafia diferente: só na mesma turma, no ano mais recente dela, e sem empate.
+  const sameClass = byYear.filter((record) => classKey(record.className) === wantedClass);
+  const classYear = sameClass[0]?.schoolYear;
+  const wantedSound = soundKey(name);
+  const scored = sameClass
+    .filter((record) => record.schoolYear === classYear)
+    .map((record) => ({ record, distance: editDistance(soundKey(record.name), wantedSound) }))
+    .filter((candidate) => candidate.distance <= MAX_TYPO_DISTANCE)
+    .sort((a, b) => a.distance - b.distance);
+  const [best, runnerUp] = scored;
+  if (!best || (runnerUp && runnerUp.distance === best.distance)) return null;
+  return best.record;
 }
 
 /** "Rua das Flores, 10 – Centro" */

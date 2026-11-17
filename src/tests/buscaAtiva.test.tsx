@@ -105,6 +105,25 @@ describe("cadastro dos alunos", () => {
     expect(findStudent(twins, "6 ano B", "Aluno de Exemplo")?.className).toBe("6 ano B");
   });
 
+  it("acha o aluno quando a frequência grafa o nome de outro jeito, só na mesma turma", () => {
+    const evelin = { ...STUDENT, name: "MARIELLIN SOUZA DOS ANJOS", className: "5 ano A" };
+    const classmate = { ...STUDENT, name: "MARIA SOUZA DOS ANJOS", className: "5 ano A" };
+    const elsewhere = { ...STUDENT, name: "MARIELTON SOUZA DOS ANJOS", className: "7 ano C" };
+    const records = [evelin, classmate, elsewhere];
+    expect(findStudent(records, "5 ano A", "Mariellyn Souza dos Anjos")).toBe(evelin);
+    expect(findStudent(records, "5º Ano A", "Marielin Sousa dos Anjos")).toBe(evelin);
+    // Outra turma: grafia parecida não basta.
+    expect(findStudent(records, "8 ano B", "Mariellyn Souza dos Anjos")).toBeNull();
+    // Nome bem diferente: não chuta.
+    expect(findStudent(records, "5 ano A", "Joana Lima")).toBeNull();
+    // Dois igualmente parecidos: não arrisca.
+    const tie = [
+      { ...STUDENT, name: "ANA LIMA", className: "5 ano A" },
+      { ...STUDENT, name: "ANE LIMA", className: "5 ano A" },
+    ];
+    expect(findStudent(tie, "5 ano A", "Ani Lima")).toBeNull();
+  });
+
   it("monta os textos do termo e do formulário", () => {
     expect(absenceMonthsText(REPORT.months)).toBe("nos meses de julho e agosto");
     expect(absenceMonthsText(REPORT.months.slice(0, 2))).toBe("no mês de julho");
