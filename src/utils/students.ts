@@ -86,14 +86,68 @@ export function absencesText(absences: number): string {
   return `${String(absences).padStart(2, "0")} ${absences === 1 ? "falta escolar" : "faltas escolares"}`;
 }
 
-/** Linha de observações do formulário de alerta: a situação de frequência do aluno. */
-export function alertNotes(report: StudentReport): string {
+const lastOf = <T>(items: readonly T[]): T | undefined => items[items.length - 1];
+
+/** Meses que entram no documento de busca ativa: os escolhidos, já com os números somados. */
+export interface BuscaAtivaPeriod {
+  /** Meses escolhidos, em ordem. */
+  months: MonthStat[];
+  absences: number;
+  schoolDays: number;
+  /** Presenças / dias de chamada nos meses escolhidos (0 a 1). */
+  presenceRate: number;
+  /** YYYY-MM-DD */
+  lastAbsence?: string;
+  /** Último dia de chamada da turma dentro dos meses escolhidos (YYYY-MM-DD): "até a data" do termo. */
+  countedUntil: string;
+}
+
+/** Meses com falta, que podem ser escolhidos para a busca ativa. */
+export function absenceMonths(report: StudentReport): MonthStat[] {
+  return report.months.filter((month) => month.absences > 0);
+}
+
+/** Escolha inicial: o mês mais recente com falta. */
+export function defaultBuscaMonths(report: StudentReport): string[] {
+  const latest = lastOf(absenceMonths(report));
+  return latest ? [latest.month] : [];
+}
+
+/**
+ * Recorta o relatório nos meses escolhidos (YYYY-MM). `classDates` são os dias de chamada da
+ * turma, para achar até que dia as faltas foram contadas. Sem mês válido, devolve `null`.
+ */
+export function buscaAtivaPeriod(
+  report: StudentReport,
+  selected: readonly string[],
+  classDates: readonly string[],
+): BuscaAtivaPeriod | null {
+  const months = report.months.filter((month) => selected.includes(month.month));
+  if (months.length === 0) return null;
+  const absences = months.reduce((sum, month) => sum + month.absences, 0);
+  const schoolDays = months.reduce((sum, month) => sum + month.schoolDays, 0);
+  const lastAbsence = lastOf(months.flatMap((month) => month.dates).sort());
+  const chosen = new Set(months.map((month) => month.month));
+  const lastDay = lastOf(classDates.filter((date) => chosen.has(date.slice(0, 7))).sort());
+  return {
+    months,
+    absences,
+    schoolDays,
+    presenceRate: schoolDays === 0 ? 1 : 1 - absences / schoolDays,
+    lastAbsence,
+    countedUntil: lastDay ?? lastAbsence ?? `${lastOf(months)?.month ?? ""}-01`,
+  };
+}
+
+/** Linha de observações do formulário de alerta: a frequência do aluno nos meses escolhidos. */
+export function alertNotes(className: string, period: BuscaAtivaPeriod): string {
+  const months = absenceMonthsText(period.months);
   const parts = [
-    `Turma ${report.className}`,
-    `${report.absences} ${report.absences === 1 ? "falta" : "faltas"} em ${report.schoolDays} dias de chamada`,
-    `${formatPercent(report.presenceRate)} de frequência`,
+    `Turma ${className}`,
+    `${period.absences} ${period.absences === 1 ? "falta" : "faltas"}${months ? ` ${months}` : ""} (${period.schoolDays} dias de chamada)`,
+    `${formatPercent(period.presenceRate)} de frequência no período`,
   ];
-  if (report.lastAbsence) parts.push(`última falta em ${formatDay(report.lastAbsence)}`);
+  if (period.lastAbsence) parts.push(`última falta em ${formatDay(period.lastAbsence)}`);
   return parts.join(" · ");
 }
 

@@ -5,7 +5,13 @@ import type { SchoolIdentity } from "../../types/school";
 import type { StudentRecord } from "../../types/student";
 import { formatDay } from "../../utils/attendance";
 import { formatCep } from "../../utils/schoolIdentity";
-import { absenceMonthsText, absencesText, alertNotes, fullAddress } from "../../utils/students";
+import {
+  absenceMonthsText,
+  absencesText,
+  alertNotes,
+  fullAddress,
+  type BuscaAtivaPeriod,
+} from "../../utils/students";
 
 interface BuscaAtivaDocumentProps {
   report: StudentReport;
@@ -16,8 +22,8 @@ interface BuscaAtivaDocumentProps {
   issuedOn: string;
   /** Dia em que o responsável deve comparecer: o próximo dia de atendimento da escola (YYYY-MM-DD). */
   attendOn: string;
-  /** Último dia de chamada considerado na contagem das faltas (YYYY-MM-DD). */
-  countedUntil: string;
+  /** Meses escolhidos: só as faltas deles entram no termo e nas observações. */
+  period: BuscaAtivaPeriod;
 }
 
 /** Texto escrito por cima de um campo do formulário. Vazio não escreve nada. */
@@ -39,11 +45,11 @@ export function BuscaAtivaDocument({
   identity,
   issuedOn,
   attendOn,
-  countedUntil,
+  period,
 }: BuscaAtivaDocumentProps) {
   const letterhead = letterheadOf(identity.inep);
   const schoolName = identity.officialName || "escola";
-  const months = absenceMonthsText(report.months);
+  const months = absenceMonthsText(period.months);
   const address = student ? fullAddress(student) : "";
 
   return createPortal(
@@ -61,7 +67,7 @@ export function BuscaAtivaDocument({
         <Field area="address" value={student?.address ?? ""} />
         <Field area="cep" value={student?.cep ? formatCep(student.cep) : ""} />
         <Field area="neighborhood" value={student?.neighborhood ?? ""} />
-        <Field area="notes" value={alertNotes(report)} />
+        <Field area="notes" value={alertNotes(report.className, period)} />
       </section>
 
       <section className="busca-page busca-term" aria-label="Termo de ciência e responsabilidade">
@@ -110,10 +116,10 @@ export function BuscaAtivaDocument({
           <ol>
             <li>
               <strong>COMUNICAMOS</strong> que o aluno supracitado vem apresentando, até a data{" "}
-              <b>{formatDay(countedUntil)}</b>,
+              <b>{formatDay(period.countedUntil)}</b>,
             </li>
             <li>
-              {absencesText(report.absences)}
+              {absencesText(period.absences)}
               {months && ` ${months}`}, ocasionando pouco desempenho nas atividades realizadas em sala de aula ou
               faltando a provas.
             </li>

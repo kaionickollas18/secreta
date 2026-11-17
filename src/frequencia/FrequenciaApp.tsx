@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarList } from "../components/attendance/BarList";
 import { BuscaAtivaDocument } from "../components/attendance/BuscaAtivaDocument";
+import { BuscaAtivaMonthsModal } from "../components/attendance/BuscaAtivaMonthsModal";
 import { ClassDocument } from "../components/attendance/ClassDocument";
 import { ClassesTable } from "../components/attendance/ClassesTable";
 import { DataSourceModal } from "../components/attendance/DataSourceModal";
@@ -28,7 +29,7 @@ import { classReport } from "../utils/classReport";
 import { canConfigureDashboard, canSeeStudentRecords, effectiveRole } from "../utils/roles";
 import { nextSchoolDay } from "../utils/holidays";
 import { hasIdentity } from "../utils/schoolIdentity";
-import { findStudent, preloadImages } from "../utils/students";
+import { buscaAtivaPeriod, findStudent, preloadImages } from "../utils/students";
 import {
   buildInsights,
   dailySeries,
@@ -118,8 +119,11 @@ export default function FrequenciaApp() {
   const studentRecords = useStudentStore((s) => s.students);
   const studentStatus = useStudentStore((s) => s.status);
   const loadStudents = useStudentStore((s) => s.load);
-  /** O documento de busca ativa está indo para a impressão (no lugar do resumo do aluno). */
-  const [printingBusca, setPrintingBusca] = useState(false);
+  /** Janela de escolha dos meses da busca ativa aberta. */
+  const [choosingBuscaMonths, setChoosingBuscaMonths] = useState(false);
+  /** Meses escolhidos (YYYY-MM): o documento de busca ativa está indo para a impressão. */
+  const [buscaMonths, setBuscaMonths] = useState<string[] | null>(null);
+  const printingBusca = buscaMonths !== null;
 
   /** Feriados e recessos da escola: o comparecimento pedido no termo cai no próximo dia de atendimento. */
   const schoolEvents = useHolidayStore((s) => s.holidays);
@@ -159,12 +163,16 @@ export default function FrequenciaApp() {
     () => (report ? findStudent(studentRecords, report.className, report.name) : null),
     [studentRecords, report],
   );
-  /** Último dia de chamada da turma do aluno: até onde as faltas foram contadas. */
-  const countedUntil = useMemo(() => {
-    const records = report ? allClasses.find((c) => c.name === report.className)?.records : undefined;
-    const lastDay = records?.reduce((latest, record) => (record.date > latest ? record.date : latest), "");
-    return lastDay || report?.lastAbsence || todayISO();
-  }, [allClasses, report]);
+  /** Faltas dos meses escolhidos para a busca ativa, com o último dia de chamada deles. */
+  const buscaPeriod = useMemo(() => {
+    if (!report || !buscaMonths) return null;
+    const records = allClasses.find((c) => c.name === report.className)?.records ?? [];
+    return buscaAtivaPeriod(
+      report,
+      buscaMonths,
+      records.map((record) => record.date),
+    );
+  }, [allClasses, report, buscaMonths]);
 
   // Ao escolher um aluno (inclusive pela tabela, lá embaixo), leva a tela até o resumo.
   useEffect(() => {
@@ -223,12 +231,18 @@ export default function FrequenciaApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- imprime uma vez por pedido
   }, [classToPrint]);
 
-  /** Busca ativa: avisa o que vai faltar no documento e pede a impressão. */
+  /** Busca ativa: primeiro escolhe os meses que entram no documento. */
   function requestBuscaAtiva() {
     if (studentStatus === "loading") {
       pushToast({ tone: "info", message: "Carregando o cadastro dos alunos. Tente de novo em instantes." });
       return;
     }
+    setChoosingBuscaMonths(true);
+  }
+
+  /** Meses escolhidos: avisa o que vai faltar no documento e pede a impressão. */
+  function confirmBuscaAtiva(months: string[]) {
+    setChoosingBuscaMonths(false);
     if (studentStatus === "error") {
       pushToast({
         tone: "error",
@@ -241,15 +255,15 @@ export default function FrequenciaApp() {
         message: "Aluno não encontrado no cadastro: o documento sai só com nome, turma e faltas.",
       });
     }
-    setPrintingBusca(true);
+    setBuscaMonths(months);
   }
 
   // Como o relatório da turma: entra na página só para imprimir, depois das imagens de fundo carregarem.
   useEffect(() => {
     if (!printingBusca) return;
-    if (!report) return setPrintingBusca(false);
+    if (!report || !buscaPeriod) return setBuscaMonths(null);
     let cancelled = false;
-    const done = () => setPrintingBusca(false);
+    const done = () => setBuscaMonths(null);
     void preloadImages(buscaAtivaImages(identity.inep)).then(() => {
       if (cancelled) return;
       window.addEventListener("afterprint", done, { once: true });
@@ -380,14 +394,22 @@ export default function FrequenciaApp() {
                   onPrint={() => openPrint(`Frequência - ${report.name}`)}
                   onBuscaAtiva={canBuscaAtiva ? requestBuscaAtiva : undefined}
                 />
-                {printingBusca && (
+                {canBuscaAtiva && (
+                  <BuscaAtivaMonthsModal
+                    open={choosingBuscaMonths}
+                    report={report}
+                    onClose={() => setChoosingBuscaMonths(false)}
+                    onConfirm={confirmBuscaAtiva}
+                  />
+                )}
+                {buscaPeriod && (
                   <BuscaAtivaDocument
                     report={report}
                     student={studentRecord}
                     identity={identity}
                     issuedOn={todayISO()}
                     attendOn={nextSchoolDay(todayISO(), schoolEvents)}
-                    countedUntil={countedUntil}
+                    period={buscaPeriod}
                   />
                 )}
                 {!classToPrint && !printingBusca && (

@@ -9,7 +9,18 @@ import type { StudentRecord } from "../types/student";
 import { nextSchoolDay } from "../utils/holidays";
 import { canSeeStudentRecords } from "../utils/roles";
 import { EMPTY_IDENTITY } from "../utils/schoolIdentity";
-import { absenceMonthsText, absencesText, alertNotes, findStudent, fullAddress, studentFromRow } from "../utils/students";
+import { BuscaAtivaMonthsModal } from "../components/attendance/BuscaAtivaMonthsModal";
+import {
+  absenceMonthsText,
+  absencesText,
+  alertNotes,
+  buscaAtivaPeriod,
+  defaultBuscaMonths,
+  findStudent,
+  fullAddress,
+  studentFromRow,
+  type BuscaAtivaPeriod,
+} from "../utils/students";
 
 // Escola e alunos fictícios: nenhum dado real entra nos testes.
 const IDENTITY = {
@@ -50,6 +61,9 @@ const REPORT: StudentReport = {
     { month: "2026-08", label: "Agosto de 2026", schoolDays: 20, absences: 3, presenceRate: 0.85, risk: "ok", dates: ["2026-08-05", "2026-08-12", "2026-08-19"] },
   ],
 };
+
+const CLASS_DATES = ["2026-06-30", "2026-07-02", "2026-07-03", "2026-07-31", "2026-08-05", "2026-08-12", "2026-08-19", "2026-08-28"];
+const JULY_AUGUST = buscaAtivaPeriod(REPORT, ["2026-07", "2026-08"], CLASS_DATES) as BuscaAtivaPeriod;
 
 describe("cadastro dos alunos", () => {
   it("lê a linha do banco com segurança", () => {
@@ -103,8 +117,6 @@ describe("cadastro dos alunos", () => {
     expect(absencesText(12)).toBe("12 faltas escolares");
     expect(fullAddress(STUDENT)).toBe("RUA DAS FLORES, 10 – CENTRO");
     expect(fullAddress({ address: "", neighborhood: "" })).toBe("");
-    expect(alertNotes(REPORT)).toContain("Turma 6 ano A · 5 faltas em 40 dias de chamada");
-    expect(alertNotes(REPORT)).toContain("última falta em 19/08/2026");
   });
 
   it("só a equipe da secretaria vê o cadastro", () => {
@@ -112,6 +124,52 @@ describe("cadastro dos alunos", () => {
     expect(canSeeStudentRecords("assistant")).toBe(true);
     expect(canSeeStudentRecords("teacher")).toBe(false);
     expect(canSeeStudentRecords("master")).toBe(false);
+  });
+});
+
+describe("meses da busca ativa", () => {
+  it("começa com o mês mais recente com falta", () => {
+    expect(defaultBuscaMonths(REPORT)).toEqual(["2026-08"]);
+    expect(defaultBuscaMonths({ ...REPORT, months: [] })).toEqual([]);
+  });
+
+  it("soma só as faltas dos meses escolhidos e conta até o último dia de chamada deles", () => {
+    expect(JULY_AUGUST).toMatchObject({ absences: 5, schoolDays: 30, lastAbsence: "2026-08-19", countedUntil: "2026-08-28" });
+    expect(JULY_AUGUST.months.map((m) => m.month)).toEqual(["2026-07", "2026-08"]);
+
+    const july = buscaAtivaPeriod(REPORT, ["2026-07"], CLASS_DATES);
+    expect(july).toMatchObject({ absences: 2, schoolDays: 10, lastAbsence: "2026-07-03", countedUntil: "2026-07-31" });
+    expect(july?.presenceRate).toBeCloseTo(0.8);
+
+    expect(buscaAtivaPeriod(REPORT, [], CLASS_DATES)).toBeNull();
+    expect(buscaAtivaPeriod(REPORT, ["2025-01"], CLASS_DATES)).toBeNull();
+    // Sem os dias de chamada, vale a última falta.
+    expect(buscaAtivaPeriod(REPORT, ["2026-07"], [])?.countedUntil).toBe("2026-07-03");
+
+    expect(alertNotes("6 ano A", JULY_AUGUST)).toBe(
+      "Turma 6 ano A · 5 faltas nos meses de julho e agosto (30 dias de chamada) · 83% de frequência no período · última falta em 19/08/2026",
+    );
+  });
+
+  it("a janela lista só os meses com falta e gera o documento com os marcados", async () => {
+    const onConfirm = vi.fn();
+    render(<BuscaAtivaMonthsModal open report={REPORT} onClose={() => {}} onConfirm={onConfirm} />);
+    const july = screen.getByRole("checkbox", { name: /Julho de 2026/ });
+    const august = screen.getByRole("checkbox", { name: /Agosto de 2026/ });
+    expect(screen.queryByRole("checkbox", { name: /Junho de 2026/ })).not.toBeInTheDocument();
+    expect(july).not.toBeChecked();
+    expect(august).toBeChecked();
+    expect(screen.getByText(/No termo:/).textContent).toBe("No termo: 03 faltas escolares no mês de agosto.");
+
+    await userEvent.click(august);
+    expect(screen.getByText("Marque pelo menos um mês.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gerar documento" })).toBeDisabled();
+
+    await userEvent.click(july);
+    await userEvent.click(august);
+    expect(screen.getByText(/No termo:/).textContent).toBe("No termo: 05 faltas escolares nos meses de julho e agosto.");
+    await userEvent.click(screen.getByRole("button", { name: "Gerar documento" }));
+    expect(onConfirm).toHaveBeenCalledWith(["2026-07", "2026-08"]);
   });
 });
 
@@ -130,7 +188,7 @@ describe("dia do comparecimento", () => {
 });
 
 describe("documento de busca ativa", () => {
-  const renderDocument = (student: StudentRecord | null, identity = IDENTITY) =>
+  const renderDocument = (student: StudentRecord | null, identity = IDENTITY, period = JULY_AUGUST) =>
     render(
       <BuscaAtivaDocument
         report={REPORT}
@@ -138,7 +196,7 @@ describe("documento de busca ativa", () => {
         identity={identity}
         issuedOn="2026-08-20"
         attendOn="2026-08-21"
-        countedUntil="2026-08-19"
+        period={period}
       />,
     );
   const fieldText = (area: string) => document.querySelector(`.busca-field-${area}`)?.textContent ?? null;
@@ -159,14 +217,22 @@ describe("documento de busca ativa", () => {
     expect(term).toContain("RUA DAS FLORES, 10 – CENTRO");
     expect(term).toContain("6 ANO A");
     expect(term).toContain("20/08/2026");
-    expect(term).toContain("até a data 19/08/2026");
+    expect(term).toContain("até a data 28/08/2026");
     expect(term).toContain("05 faltas escolares nos meses de julho e agosto");
+    expect(fieldText("notes")).toContain("5 faltas nos meses de julho e agosto");
     expect(term).toContain("comunicado pela EMEF Escola de Exemplo, localizada na Rua das Flores");
     expect(term).toContain("na pessoa de Maria de Exemplo");
     // A convocação é para o próximo dia de atendimento, sem horário.
     expect(term).toContain("no dia 21/08/2026, para que possamos");
     expect(term).not.toContain("____");
     expect(term).toContain("Artigos 53, 55 e 56 da Lei Federal 8.069 de 13 de julho de 1990");
+  });
+
+  it("com um mês escolhido, o termo traz só as faltas dele", () => {
+    renderDocument(STUDENT, IDENTITY, buscaAtivaPeriod(REPORT, ["2026-08"], CLASS_DATES) as BuscaAtivaPeriod);
+    const term = document.querySelector(".busca-term")?.textContent ?? "";
+    expect(term).toContain("03 faltas escolares no mês de agosto");
+    expect(term).not.toContain("meses de julho");
   });
 
   it("deixa em branco o que não há no cadastro", () => {
