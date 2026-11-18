@@ -8,13 +8,23 @@ interface ClassAccordionProps {
   open: boolean;
   /** Tabelas da turma aberta, ou o andamento da carga das notas dela. */
   content: SubjectBlock[] | "loading" | "error";
+  /** Matérias já abertas (filtro de disciplina ou busca por nome); senão, todas recolhidas. */
+  subjectsOpen: boolean;
   onToggle: () => void;
   onRetry: () => void;
   onOpenStudent: (studentId: string) => void;
 }
 
 /** Uma turma: abre e fecha; ao abrir, as notas dela chegam e aparece uma tabela por disciplina. */
-export function ClassAccordion({ item, open, content, onToggle, onRetry, onOpenStudent }: ClassAccordionProps) {
+export function ClassAccordion({
+  item,
+  open,
+  content,
+  subjectsOpen,
+  onToggle,
+  onRetry,
+  onOpenStudent,
+}: ClassAccordionProps) {
   const panelId = useId();
   const { classroom, studentCount, matches } = item;
 
@@ -66,7 +76,13 @@ export function ClassAccordion({ item, open, content, onToggle, onRetry, onOpenS
             <p className="text-sm text-muted">Nenhuma nota desta turma com a disciplina ou o nome escolhidos.</p>
           ) : (
             content.map((block) => (
-              <GradeTable key={block.subject.id} classroom={classroom} block={block} onOpenStudent={onOpenStudent} />
+              <GradeTable
+                key={block.subject.id}
+                classroom={classroom}
+                block={block}
+                defaultOpen={subjectsOpen}
+                onOpenStudent={onOpenStudent}
+              />
             ))
           )}
         </div>

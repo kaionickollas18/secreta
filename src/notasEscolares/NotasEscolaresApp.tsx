@@ -311,6 +311,7 @@ export default function NotasEscolaresApp() {
                         item={item}
                         open={open}
                         content={open ? classContent(id) : "loading"}
+                        subjectsOpen={subjectId !== "" || query.trim() !== ""}
                         onToggle={() => toggle(id)}
                         onRetry={() => schoolId && void loadClass(schoolId, id, term, true)}
                         onOpenStudent={openReport}

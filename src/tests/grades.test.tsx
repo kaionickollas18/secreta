@@ -405,7 +405,15 @@ describe("tela de notas", () => {
     const fifth = await screen.findByRole("button", { name: /5º ANO - A/ });
     expect(api.classCalls).toEqual([]);
     await user.click(fifth);
-    expect(await screen.findByRole("table", { name: "5º ANO - A · LÍNGUA PORTUGUESA" })).toBeInTheDocument();
+    // As matérias chegam recolhidas: a tabela só aparece ao tocar na matéria.
+    const subject = await screen.findByRole("button", { name: /LÍNGUA PORTUGUESA/ });
+    expect(subject).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    await user.click(subject);
+    expect(screen.getByRole("table", { name: "5º ANO - A · LÍNGUA PORTUGUESA" })).toBeInTheDocument();
+    // E recolhe de novo.
+    await user.click(subject);
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
     // Fechar e abrir de novo não baixa outra vez; a outra turma nem foi pedida.
     await user.click(fifth);
     await user.click(fifth);
@@ -417,7 +425,10 @@ describe("tela de notas", () => {
     render(<NotasEscolaresApp />);
     await user.click(await screen.findByRole("button", { name: /5º ANO - A/ }));
     const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
-    expect(within(section).getByRole("heading", { name: "LÍNGUA PORTUGUESA" })).toBeInTheDocument();
+    // Recolhida mostra o nome, quantos alunos e quantos reprovados.
+    const subject = within(section).getByRole("button", { name: /LÍNGUA PORTUGUESA/ });
+    expect(subject).toHaveTextContent("2 alunos · 1 reprovado(a)");
+    await user.click(subject);
     // Sem repetir segmento, turma, turno e professores em cada matéria.
     expect(within(section).queryByText("MARIA EXEMPLO, JOSE TESTE")).not.toBeInTheDocument();
     expect(within(section).queryByText(/INTEGRAL/)).not.toBeInTheDocument();
@@ -514,6 +525,7 @@ describe("tela de notas", () => {
     render(<NotasEscolaresApp />);
     await user.click(await screen.findByRole("button", { name: /5º ANO - A/ }));
     const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
+    await user.click(within(section).getByRole("button", { name: /LÍNGUA PORTUGUESA/ }));
     await user.click(within(section).getByRole("button", { name: "Ver o boletim de ALUNA PRIMEIRA DE TESTE" }));
 
     const dialog = within(await screen.findByRole("dialog", { name: "Boletim · ALUNA PRIMEIRA DE TESTE" }));
