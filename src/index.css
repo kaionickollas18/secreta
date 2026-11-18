@@ -1251,42 +1251,40 @@
   width: 47mm;
 }
 .boletim-col-score {
-  width: 10mm;
+  width: 9.5mm;
 }
 .boletim-col-ft {
-  width: 7.5mm;
+  width: 8.5mm;
 }
 .boletim-col-total {
-  width: 10mm;
+  width: 12mm;
 }
 .boletim-col-narrow {
-  width: 14.5mm;
+  width: 14mm;
 }
-/* Faltas de cada matéria, logo depois das notas: fundo cinza-claro e um fio mais forte. */
+/* Faltas de cada matéria, ao lado da nota do bimestre: fundo cinza-claro. */
 .boletim-grades .boletim-ft {
   background: #f6f7f9;
 }
-.boletim-grades thead .boletim-ft,
-.boletim-grades thead .boletim-ft-group {
+.boletim-grades thead .boletim-ft {
   background: #e3e6ea;
 }
-.boletim-grades .boletim-ft-first,
-.boletim-grades .boletim-ft-group {
+/* Fio mais forte no começo de cada bimestre (nota | faltas) e antes do total. */
+.boletim-grades .boletim-term-group {
   border-left: 0.5mm solid #8b9099;
+}
+.boletim-grades thead tr + tr th {
+  height: 5mm;
+  padding: 0;
+  font-size: 6pt;
 }
 .boletim-grades .boletim-ft-total {
   font-weight: 700;
-}
-.boletim-unit {
-  font-size: 6pt;
 }
 .boletim-activities th,
 .boletim-activities td {
   color: #4b5563;
   font-style: italic;
-}
-.boletim-activities-note {
-  font-size: 7pt;
 }
 .boletim-grades tbody th.boletim-subject {
   overflow: hidden;

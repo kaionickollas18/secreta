@@ -73,16 +73,27 @@ const TERM_COLORS = ["#1d4ed8", "#16a34a", "#f59e0b", "#dc2626"];
 
 const percent = (share: number): string => `${Math.round(share * 100)}%`;
 
-/** Faltas de uma linha nos quatro bimestres e o total. */
-function AbsenceCells({ absences, total }: { absences: (number | null)[]; total: number | null }) {
+/** Uma linha nos quatro bimestres (nota e, ao lado, as faltas) e o total de faltas. */
+function TermCells({
+  scores,
+  absences,
+  total,
+}: {
+  scores: (number | null)[];
+  absences: (number | null)[];
+  total: number | null;
+}) {
   return (
     <>
-      {absences.map((value, i) => (
-        <td key={i} className={`boletim-ft${i === 0 ? " boletim-ft-first" : ""}`}>
-          {value ?? ""}
-        </td>
-      ))}
-      <td className="boletim-ft boletim-ft-total">{total ?? ""}</td>
+      {scores.flatMap((md, i) => [
+        <td key={`n${i}`} className="boletim-term-group">
+          {md === null ? "" : formatScore(md)}
+        </td>,
+        <td key={`f${i}`} className="boletim-ft">
+          {absences[i] ?? ""}
+        </td>,
+      ])}
+      <td className="boletim-term-group boletim-ft boletim-ft-total">{total ?? ""}</td>
     </>
   );
 }
@@ -198,12 +209,10 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
           {/* Larguras pelas colunas: com a tabela fixa, a 2ª linha do cabeçalho não as define. */}
           <colgroup>
             <col className="boletim-col-subject" />
-            {[1, 2, 3, 4].map((term) => (
-              <col key={`n${term}`} className="boletim-col-score" />
-            ))}
-            {[1, 2, 3, 4].map((term) => (
-              <col key={`f${term}`} className="boletim-col-ft" />
-            ))}
+            {[1, 2, 3, 4].flatMap((term) => [
+              <col key={`n${term}`} className="boletim-col-score" />,
+              <col key={`f${term}`} className="boletim-col-ft" />,
+            ])}
             <col className="boletim-col-total" />
             <col className="boletim-col-narrow" />
             <col className="boletim-col-narrow" />
@@ -214,11 +223,14 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
               <th rowSpan={2} scope="col" className="boletim-subject">
                 Componentes curriculares
               </th>
-              <th colSpan={4} scope="colgroup">
-                Avaliações
-              </th>
-              <th colSpan={5} scope="colgroup" className="boletim-ft-group">
-                Faltas
+              {/* Cada bimestre com a nota e, ao lado, as faltas da matéria. */}
+              {[1, 2, 3, 4].map((term) => (
+                <th key={term} colSpan={2} scope="colgroup" className="boletim-term-group">
+                  {term}º bimestre
+                </th>
+              ))}
+              <th rowSpan={2} scope="col" className="boletim-term-group boletim-ft">
+                Total de faltas
               </th>
               <th rowSpan={2} scope="col" className="boletim-narrow">
                 {report.complete ? "Média final" : "Média parcial"}
@@ -231,19 +243,14 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
               </th>
             </tr>
             <tr>
-              {[1, 2, 3, 4].map((term) => (
-                <th key={term} scope="col" className="boletim-term">
-                  {term}º<span className="boletim-unit">BIM</span>
-                </th>
-              ))}
-              {[1, 2, 3, 4].map((term) => (
-                <th key={term} scope="col" className={`boletim-term boletim-ft${term === 1 ? " boletim-ft-first" : ""}`}>
-                  {term}º
-                </th>
-              ))}
-              <th scope="col" className="boletim-term boletim-ft">
-                Total
-              </th>
+              {[1, 2, 3, 4].flatMap((term) => [
+                <th key={`n${term}`} scope="col" className="boletim-term-group">
+                  Nota
+                </th>,
+                <th key={`f${term}`} scope="col" className="boletim-ft">
+                  Faltas
+                </th>,
+              ])}
             </tr>
           </thead>
           <tbody>
@@ -252,10 +259,7 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 <th scope="row" className="boletim-subject">
                   {subject.name}
                 </th>
-                {subject.terms.map((md, i) => (
-                  <td key={i}>{md === null ? "" : formatScore(md)}</td>
-                ))}
-                <AbsenceCells absences={subject.absences} total={subject.absenceTotal} />
+                <TermCells scores={subject.terms} absences={subject.absences} total={subject.absenceTotal} />
                 <td className="boletim-average">{subject.average === null ? "" : formatScore(subject.average)}</td>
                 <td>{subject.level ? <LevelCircle level={subject.level} /> : <span className="boletim-none">—</span>}</td>
                 <td>{subject.average === null ? "" : <Evolution terms={subject.terms} />}</td>
@@ -266,10 +270,11 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 <th scope="row" className="boletim-subject" title={report.activities.names.join(", ")}>
                   Atividades sem nota ({report.activities.names.length})
                 </th>
-                <td colSpan={4} className="boletim-activities-note">
-                  só faltas
-                </td>
-                <AbsenceCells absences={report.activities.absences} total={report.activities.absenceTotal} />
+                <TermCells
+                  scores={[null, null, null, null]}
+                  absences={report.activities.absences}
+                  total={report.activities.absenceTotal}
+                />
                 <td colSpan={3} />
               </tr>
             )}

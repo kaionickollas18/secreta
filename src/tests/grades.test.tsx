@@ -522,8 +522,18 @@ describe("tela de notas", () => {
     expect(portuguese).toHaveTextContent("6,1");
     expect(portuguese).toHaveTextContent("3,5");
     expect(within(portuguese).getByRole("img", { name: "Em Desenvolvimento" })).toBeInTheDocument();
-    // Faltas da matéria logo depois das notas: 3 no 1º bimestre, 3 no 2º, total 6.
-    expect(within(portuguese).getAllByRole("cell").map((cell) => cell.textContent).slice(4, 9)).toEqual(["3", "3", "", "", "6"]);
+    // Cada bimestre com a nota e, ao lado, as faltas da matéria; depois o total de faltas.
+    expect(within(portuguese).getAllByRole("cell").map((cell) => cell.textContent).slice(0, 9)).toEqual([
+      "6,1",
+      "3",
+      "8,0",
+      "3",
+      "",
+      "",
+      "",
+      "",
+      "6",
+    ]);
     // Pizza: 3 faltas no 1º e 3 + 1 (Matemática) no 2º.
     expect(sheet.getByRole("img", { name: "Faltas por bimestre: 7 no total" })).toBeInTheDocument();
 
