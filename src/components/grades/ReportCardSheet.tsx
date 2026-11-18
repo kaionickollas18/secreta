@@ -73,16 +73,8 @@ const TERM_COLORS = ["#1d4ed8", "#16a34a", "#f59e0b", "#dc2626"];
 
 const percent = (share: number): string => `${Math.round(share * 100)}%`;
 
-/** Uma linha nos quatro bimestres (nota e, ao lado, as faltas) e o total de faltas. */
-function TermCells({
-  scores,
-  absences,
-  total,
-}: {
-  scores: (number | null)[];
-  absences: (number | null)[];
-  total: number | null;
-}) {
+/** Uma linha nos quatro bimestres: a nota e, ao lado, as faltas. */
+function TermCells({ scores, absences }: { scores: (number | null)[]; absences: (number | null)[] }) {
   return (
     <>
       {scores.flatMap((md, i) => [
@@ -93,10 +85,12 @@ function TermCells({
           {absences[i] ?? ""}
         </td>,
       ])}
-      <td className="boletim-term-group boletim-ft boletim-ft-total">{total ?? ""}</td>
     </>
   );
 }
+
+/** Total de faltas da linha (vem depois da média). */
+const TotalCell = ({ total }: { total: number | null }) => <td className="boletim-ft boletim-ft-total">{total ?? ""}</td>;
 
 /** Pizza das faltas: cada bimestre com a sua cor, do tamanho da parte dele no total. */
 function AbsencePie({ shares, total }: { shares: number[]; total: number }) {
@@ -213,8 +207,8 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
               <col key={`n${term}`} className="boletim-col-score" />,
               <col key={`f${term}`} className="boletim-col-ft" />,
             ])}
-            <col className="boletim-col-total" />
             <col className="boletim-col-narrow" />
+            <col className="boletim-col-total" />
             <col className="boletim-col-narrow" />
             <col />
           </colgroup>
@@ -229,11 +223,11 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                   {term}º bimestre
                 </th>
               ))}
-              <th rowSpan={2} scope="col" className="boletim-term-group boletim-ft">
-                Total de faltas
-              </th>
-              <th rowSpan={2} scope="col" className="boletim-narrow">
+              <th rowSpan={2} scope="col" className="boletim-term-group">
                 {report.complete ? "Média final" : "Média parcial"}
+              </th>
+              <th rowSpan={2} scope="col" className="boletim-ft">
+                Total de faltas
               </th>
               <th rowSpan={2} scope="col" className="boletim-narrow">
                 Situação
@@ -259,8 +253,11 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 <th scope="row" className="boletim-subject">
                   {subject.name}
                 </th>
-                <TermCells scores={subject.terms} absences={subject.absences} total={subject.absenceTotal} />
-                <td className="boletim-average">{subject.average === null ? "" : formatScore(subject.average)}</td>
+                <TermCells scores={subject.terms} absences={subject.absences} />
+                <td className="boletim-average boletim-term-group">
+                  {subject.average === null ? "" : formatScore(subject.average)}
+                </td>
+                <TotalCell total={subject.absenceTotal} />
                 <td>{subject.level ? <LevelCircle level={subject.level} /> : <span className="boletim-none">—</span>}</td>
                 <td>{subject.average === null ? "" : <Evolution terms={subject.terms} />}</td>
               </tr>
@@ -270,12 +267,10 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 <th scope="row" className="boletim-subject" title={report.activities.names.join(", ")}>
                   Atividades sem nota ({report.activities.names.length})
                 </th>
-                <TermCells
-                  scores={[null, null, null, null]}
-                  absences={report.activities.absences}
-                  total={report.activities.absenceTotal}
-                />
-                <td colSpan={3} />
+                <TermCells scores={[null, null, null, null]} absences={report.activities.absences} />
+                <td className="boletim-term-group" />
+                <TotalCell total={report.activities.absenceTotal} />
+                <td colSpan={2} />
               </tr>
             )}
           </tbody>
