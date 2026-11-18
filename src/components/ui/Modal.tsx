@@ -11,9 +11,11 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** "wide": para documentos (ex.: o boletim em A4). */
+  size?: "default" | "wide";
 }
 
-export function Modal({ open, title, onClose, children }: ModalProps) {
+export function Modal({ open, title, onClose, children, size = "default" }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -72,7 +74,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         onKeyDown={handleKeyDown}
-        className="max-h-[92vh] w-full animate-sheet-in overflow-y-auto rounded-t-[1.25rem] bg-surface p-5 shadow-glow sm:max-w-lg sm:animate-dialog-in sm:rounded-3xl"
+        className={`max-h-[92vh] w-full animate-sheet-in overflow-y-auto rounded-t-[1.25rem] bg-surface p-5 shadow-glow sm:animate-dialog-in sm:rounded-3xl ${size === "wide" ? "sm:max-w-[880px]" : "sm:max-w-lg"}`}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2 id={titleId} className="panel-title">

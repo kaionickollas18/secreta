@@ -190,7 +190,8 @@ Use quatro contas (Master, Secretário, Assistente, Professor) e, de preferênci
 5. Consulta: sem filtros, as turmas aparecem fechadas sob "Ensino Fundamental 1º/5º anos – Integral" e "6º/9º anos – Integral". Abrir uma turma mostra uma tabela por disciplina com Nº, Aluno, MD (9,5), FT e Histórico (APROVADO(A) em azul a partir de 6,0; REPROVADO(A) em vermelho). Transferidos têm a marca "TRF dd/mm/aaaa".
 6. Filtro de turma e de disciplina mostram só o escolhido; a busca por nome abre as turmas encontradas. O 4º bimestre mostra "Nenhuma nota do 4º bimestre ainda".
 7. Reenviar o mesmo segmento até o 3º bimestre: os números continuam os mesmos (substitui, sem duplicar).
-8. Como assistente sem acesso de secretário: envia e reenvia notas; **no banco**, `delete` em `grades` não apaga nada. No celular (360 px), a tabela rola de lado sem a página rolar.
+8. Clicar no nome de um aluno abre o boletim: cabeçalho com o nome e a logo da escola, turma, nº, "1º ao 3º bimestre" e a data de hoje; só os componentes com média; "Média parcial"; situação e evolução em cada linha; faltas somadas na Frequência. **Baixar boletim** abre a impressão com uma única folha A4 em pé (o nome sugerido do PDF é "Boletim - NOME"); fechar a impressão volta à janela.
+9. Como assistente sem acesso de secretário: envia e reenvia notas; **no banco**, `delete` em `grades` não apaga nada. No celular (360 px), a tabela rola de lado sem a página rolar.
 
 ## Casos críticos
 Um perfil fazendo o que não pode · dados de uma escola aparecendo em outra · conclusão sem aprovação · perda do histórico · lembrete com prazo errado · nomes de alunos expostos sem login.

@@ -11,10 +11,12 @@ import {
 interface GradeTableProps {
   classroom: Classroom;
   block: SubjectBlock;
+  /** Abre o boletim do aluno. */
+  onOpenStudent: (studentId: string) => void;
 }
 
 /** Notas de uma disciplina da turma no bimestre: média (MD), faltas (FT) e histórico. */
-export function GradeTable({ classroom, block }: GradeTableProps) {
+export function GradeTable({ classroom, block, onOpenStudent }: GradeTableProps) {
   const { subject, lines } = block;
   const caption = `${classDisplayName(classroom.name)} · ${subject.name}`;
 
@@ -64,7 +66,14 @@ export function GradeTable({ classroom, block }: GradeTableProps) {
               <tr key={student.id} className="border-b border-line last:border-b-0 even:bg-canvas/40">
                 <td className="px-2 py-2 text-center font-semibold">{student.rollNumber ?? ""}</td>
                 <td className="px-2 py-2">
-                  <span className="uppercase">{student.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onOpenStudent(student.id)}
+                    aria-label={`Ver o boletim de ${student.name}`}
+                    className="rounded text-left uppercase text-accent-light underline-offset-2 hover:underline"
+                  >
+                    {student.name}
+                  </button>
                   {student.notes && <span className="uppercase text-muted"> - {student.notes}</span>}
                   {student.transferred && (
                     <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-prio-medium-tint px-2 text-2xs font-semibold text-prio-medium">

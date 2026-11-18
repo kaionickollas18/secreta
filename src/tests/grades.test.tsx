@@ -18,6 +18,12 @@ vi.mock("../store/gradeApi", () => ({
     api.savedList.push(plan);
     return null;
   },
+  fetchStudentGrades: async (_school: string, studentId: string) => ({
+    data: Object.values(api.grades)
+      .flat()
+      .filter((row) => (row as { studentId: string }).studentId === studentId),
+    error: null,
+  }),
   saveGradeImport: async (_school: string, _year: number, plan: unknown, fileName: string, register: boolean) => {
     api.savedGrades.push({ plan, fileName, register });
     return { data: 7, error: null };
@@ -43,6 +49,7 @@ import {
 } from "../utils/grades";
 import { classNameOf, isAeeCourse, isoDate, segmentOfCourse, type TextItem } from "../utils/pdfText";
 import { parseReportCards, termsWithData } from "../utils/reportCardParser";
+import { buildReportCard, evaluationLabel, levelOf } from "../utils/reportCard";
 import { planStudentImport } from "../utils/studentImport";
 import { parseStudentList } from "../utils/studentListParser";
 import { SECRETARY } from "./helpers";
@@ -457,5 +464,79 @@ describe("tela de notas", () => {
     await user.click(dialog.getByRole("button", { name: "Salvar cadastro" }));
     await waitFor(() => expect(api.savedList).toHaveLength(1));
     expect(await screen.findByText(/Cadastro atualizado/)).toBeInTheDocument();
+  });
+
+  it("clica no aluno e vê o boletim, que baixa em PDF pela impressão", async () => {
+    const user = userEvent.setup();
+    api.grades = {
+      1: TERM1,
+      2: [grade({ term: 2, md: 8 }), grade({ term: 2, subjectId: "mat", md: 9.5, ft: 1 })],
+    };
+    const print = vi.spyOn(window, "print").mockImplementation(() => {});
+    render(<NotasEscolaresApp />);
+    await user.click(await screen.findByRole("button", { name: /5º ANO - A/ }));
+    const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
+    await user.click(within(section).getByRole("button", { name: "Ver o boletim de ALUNA PRIMEIRA DE TESTE" }));
+
+    const dialog = within(await screen.findByRole("dialog", { name: "Boletim · ALUNA PRIMEIRA DE TESTE" }));
+    const sheet = within(await dialog.findByRole("article", { name: "Boletim de ALUNA PRIMEIRA DE TESTE" }));
+    expect(sheet.getByText("1º e 2º bimestres")).toBeInTheDocument();
+    expect(sheet.getByText("Média parcial")).toBeInTheDocument();
+    const portuguese = sheet.getByRole("row", { name: /LÍNGUA PORTUGUESA/ });
+    // 6,1 no 1º e 8,0 no 2º: média 7,1, Satisfatório.
+    expect(portuguese).toHaveTextContent("6,1");
+    expect(portuguese).toHaveTextContent("7,1");
+    expect(within(portuguese).getByRole("img", { name: "Satisfatório" })).toBeInTheDocument();
+    expect(within(sheet.getByRole("row", { name: /MATEMÁTICA/ })).getByRole("img", { name: "Excelente" })).toBeInTheDocument();
+
+    await user.click(dialog.getByRole("button", { name: /Baixar boletim/ }));
+    await waitFor(() => expect(print).toHaveBeenCalled());
+    expect(document.querySelector(".print-document.boletim")).not.toBeNull();
+    expect(document.title).toBe("Boletim - ALUNA PRIMEIRA DE TESTE");
+    window.dispatchEvent(new Event("afterprint"));
+    await waitFor(() => expect(document.querySelector(".print-document.boletim")).toBeNull());
+    print.mockRestore();
+  });
+});
+
+describe("boletim do aluno", () => {
+  it("dá a situação pela faixa da média", () => {
+    expect(levelOf(5.9)).toBe("developing");
+    expect(levelOf(6)).toBe("satisfactory");
+    expect(levelOf(7.9)).toBe("satisfactory");
+    expect(levelOf(8)).toBe("good");
+    expect(levelOf(8.9)).toBe("good");
+    expect(levelOf(9)).toBe("excellent");
+    expect(levelOf(null)).toBeNull();
+  });
+
+  it("monta médias, situação e faltas; atividades sem nota só somam faltas", () => {
+    const subjects = [
+      { id: "port", name: "LÍNGUA PORTUGUESA", position: 0 },
+      { id: "lazer", name: "ESPORTE E LAZER", position: 1 },
+    ];
+    const report = buildReportCard(
+      [
+        grade({ term: 1, md: 9.4, ft: 2 }),
+        grade({ term: 2, md: 9.9, ft: 0 }),
+        grade({ term: 3, md: 10, ft: 1 }),
+        grade({ subjectId: "lazer", term: 1, md: null, ft: 3 }),
+      ],
+      subjects,
+    );
+    expect(report.subjects).toEqual([
+      { name: "LÍNGUA PORTUGUESA", terms: [9.4, 9.9, 10, null], average: 9.8, level: "excellent" },
+    ]);
+    expect(report.termsWithGrades).toEqual([1, 2, 3]);
+    expect(report.complete).toBe(false);
+    expect(report.absencesByTerm).toEqual([5, 0, 1, null]);
+    expect(report.absences).toBe(6);
+  });
+
+  it("descreve os bimestres avaliados", () => {
+    expect(evaluationLabel([1])).toBe("1º bimestre");
+    expect(evaluationLabel([1, 2])).toBe("1º e 2º bimestres");
+    expect(evaluationLabel([1, 2, 3])).toBe("1º ao 3º bimestre");
+    expect(evaluationLabel([])).toBe("");
   });
 });

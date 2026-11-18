@@ -95,6 +95,18 @@ export async function fetchTermGrades(schoolId: string, schoolYear: number, term
   return { data: rowsOf(rows, gradeFromRow), error: null };
 }
 
+/** Todas as notas de um aluno (os quatro bimestres), para o boletim dele. */
+export async function fetchStudentGrades(schoolId: string, studentId: string): Promise<ApiResult<GradeRow[]>> {
+  if (!supabase) return { data: null, error: "Não foi possível carregar o boletim." };
+  const { data, error } = await supabase
+    .from("grades")
+    .select("student_id, classroom_id, subject_id, term, md, ft")
+    .eq("school_id", schoolId)
+    .eq("student_id", studentId);
+  if (error) return { data: null, error: "Não foi possível carregar o boletim." };
+  return { data: rowsOf(data, gradeFromRow), error: null };
+}
+
 /** Cria ou atualiza as turmas; devolve o id de cada uma pelo nome. */
 async function upsertClassrooms(
   schoolId: string,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ClassAccordion } from "../components/grades/ClassAccordion";
 import { GradeImportModal } from "../components/grades/GradeImportModal";
+import { ReportCardModal } from "../components/grades/ReportCardModal";
 import { StudentListImportModal } from "../components/grades/StudentListImportModal";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -9,6 +10,7 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAuthStore } from "../store/authStore";
 import { useGradeStore } from "../store/gradeStore";
+import { useSchoolStore } from "../store/schoolStore";
 import { useToastStore } from "../store/toastStore";
 import type { GradeRow, Segment, Term } from "../types/grade";
 import {
@@ -43,7 +45,9 @@ const formatDateTime = (iso: string): string => {
 /** Notas: notas bimestrais por turma e disciplina (e, em breve, os históricos escolares). */
 export default function NotasEscolaresApp() {
   const schoolId = useAuthStore((s) => s.profile?.schoolId ?? null);
-  const { data, status, terms, termStatus, load, loadTerm } = useGradeStore();
+  const { data, status, terms, termStatus, load, loadTerm, students: studentGrades, loadStudent } = useGradeStore();
+  const identity = useSchoolStore((s) => s.identity);
+  const loadIdentity = useSchoolStore((s) => s.load);
   const pushToast = useToastStore((s) => s.push);
   const schoolYear = new Date().getFullYear();
 
@@ -56,10 +60,34 @@ export default function NotasEscolaresApp() {
   const [openClasses, setOpenClasses] = useState<Map<string, boolean>>(new Map());
   const [importingList, setImportingList] = useState(false);
   const [importingSegment, setImportingSegment] = useState<Segment | null>(null);
+  /** Aluno com o boletim aberto. */
+  const [reportStudentId, setReportStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (schoolId) void load(schoolId, schoolYear);
   }, [schoolId, schoolYear, load]);
+
+  // Nome e logo da escola vão no cabeçalho do boletim.
+  useEffect(() => {
+    if (schoolId) void loadIdentity(schoolId);
+  }, [schoolId, loadIdentity]);
+
+  function openReport(studentId: string) {
+    setReportStudentId(studentId);
+    if (schoolId) void loadStudent(schoolId, studentId);
+  }
+
+  const reportStudent = reportStudentId ? (data.students.find((s) => s.id === reportStudentId) ?? null) : null;
+  const reportGrades = reportStudentId ? studentGrades[reportStudentId] : undefined;
+  // A turma do boletim é a das notas do aluno (a do cadastro, se ele ainda não tiver nota).
+  const reportClassroom = (() => {
+    const fromGrades = Array.isArray(reportGrades) ? reportGrades[0]?.classroomId : undefined;
+    return (
+      data.classrooms.find((c) => c.id === fromGrades) ??
+      data.classrooms.find((c) => c.name === reportStudent?.className) ??
+      null
+    );
+  })();
 
   useEffect(() => {
     if (schoolId && status === "ready") void loadTerm(schoolId, term);
@@ -270,6 +298,7 @@ export default function NotasEscolaresApp() {
                       block={block}
                       open={isOpen(block.classroom.id)}
                       onToggle={() => toggle(block.classroom.id)}
+                      onOpenStudent={openReport}
                     />
                   ))}
                 </ul>
@@ -297,6 +326,24 @@ export default function NotasEscolaresApp() {
             previous={importingSegment ? lastImport(importingSegment) : null}
             onClose={() => setImportingSegment(null)}
             onSaved={saved}
+          />
+          <ReportCardModal
+            student={reportStudent}
+            classroom={reportClassroom}
+            subjects={data.subjects}
+            grades={reportGrades}
+            identity={identity}
+            schoolYear={schoolYear}
+            onClose={() => setReportStudentId(null)}
+            onRetry={() => {
+              if (!reportStudentId) return;
+              useGradeStore.setState((state) => {
+                const next = { ...state.students };
+                delete next[reportStudentId];
+                return { students: next };
+              });
+              void loadStudent(schoolId, reportStudentId);
+            }}
           />
         </>
       )}

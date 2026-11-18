@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { GradeRow, Term } from "../types/grade";
 import type { GradeData } from "../utils/grades";
-import { fetchGradeData, fetchTermGrades } from "./gradeApi";
+import { fetchGradeData, fetchStudentGrades, fetchTermGrades } from "./gradeApi";
 
 const EMPTY: GradeData = { classrooms: [], subjects: [], students: [], imports: [] };
 
@@ -18,6 +18,9 @@ interface GradeState {
   /** Carrega o ano (de novo quando `force`, depois de um envio; aí as notas também recarregam). */
   load: (schoolId: string, schoolYear: number, force?: boolean) => Promise<void>;
   loadTerm: (schoolId: string, term: Term) => Promise<void>;
+  /** Notas de um aluno nos quatro bimestres (boletim), por id. */
+  students: Record<string, GradeRow[] | "loading" | "error">;
+  loadStudent: (schoolId: string, studentId: string) => Promise<void>;
 }
 
 export const useGradeStore = create<GradeState>((set, get) => ({
@@ -26,11 +29,12 @@ export const useGradeStore = create<GradeState>((set, get) => ({
   schoolYear: null,
   terms: {},
   termStatus: {},
+  students: {},
 
   load: async (schoolId, schoolYear, force = false) => {
     const { status, schoolYear: loaded } = get();
     if (!force && (status === "loading" || (status === "ready" && loaded === schoolYear))) return;
-    set({ status: "loading", schoolYear, ...(force || loaded !== schoolYear ? { terms: {}, termStatus: {} } : {}) });
+    set({ status: "loading", schoolYear, ...(force || loaded !== schoolYear ? { terms: {}, termStatus: {}, students: {} } : {}) });
     const result = await fetchGradeData(schoolId, schoolYear);
     if (result.error !== null) return set({ status: "error" });
     set({ status: "ready", data: result.data });
@@ -51,5 +55,13 @@ export const useGradeStore = create<GradeState>((set, get) => ({
       terms: { ...state.terms, [term]: result.data },
       termStatus: { ...state.termStatus, [term]: "ready" },
     }));
+  },
+
+  loadStudent: async (schoolId, studentId) => {
+    const current = get().students[studentId];
+    if (current === "loading" || Array.isArray(current)) return;
+    set((state) => ({ students: { ...state.students, [studentId]: "loading" } }));
+    const result = await fetchStudentGrades(schoolId, studentId);
+    set((state) => ({ students: { ...state.students, [studentId]: result.error !== null ? "error" : result.data } }));
   },
 }));

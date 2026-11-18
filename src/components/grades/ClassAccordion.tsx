@@ -6,10 +6,11 @@ interface ClassAccordionProps {
   block: ClassBlock;
   open: boolean;
   onToggle: () => void;
+  onOpenStudent: (studentId: string) => void;
 }
 
 /** Uma turma: abre e fecha; dentro, uma tabela por disciplina. */
-export function ClassAccordion({ block, open, onToggle }: ClassAccordionProps) {
+export function ClassAccordion({ block, open, onToggle, onOpenStudent }: ClassAccordionProps) {
   const panelId = useId();
   const { classroom, subjects } = block;
 
@@ -44,7 +45,7 @@ export function ClassAccordion({ block, open, onToggle }: ClassAccordionProps) {
       {open && (
         <div id={panelId} className="flex flex-col gap-4 border-t border-line p-3 sm:p-4">
           {subjects.map((subject) => (
-            <GradeTable key={subject.subject.id} classroom={classroom} block={subject} />
+            <GradeTable key={subject.subject.id} classroom={classroom} block={subject} onOpenStudent={onOpenStudent} />
           ))}
         </div>
       )}
