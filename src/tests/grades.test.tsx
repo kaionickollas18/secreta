@@ -483,11 +483,14 @@ describe("tela de notas", () => {
     expect(sheet.getByText("1º e 2º bimestres")).toBeInTheDocument();
     expect(sheet.getByText("Média parcial")).toBeInTheDocument();
     const portuguese = sheet.getByRole("row", { name: /LÍNGUA PORTUGUESA/ });
-    // 6,1 no 1º e 8,0 no 2º: média 7,1, Satisfatório.
+    // 6,1 no 1º e 8,0 no 2º; 3º e 4º contam 0: (6,1 + 8 + 0 + 0) / 4 = 3,5.
     expect(portuguese).toHaveTextContent("6,1");
-    expect(portuguese).toHaveTextContent("7,1");
-    expect(within(portuguese).getByRole("img", { name: "Satisfatório" })).toBeInTheDocument();
-    expect(within(sheet.getByRole("row", { name: /MATEMÁTICA/ })).getByRole("img", { name: "Excelente" })).toBeInTheDocument();
+    expect(portuguese).toHaveTextContent("3,5");
+    expect(within(portuguese).getByRole("img", { name: "Em Desenvolvimento" })).toBeInTheDocument();
+    // Faltas da matéria logo depois das notas: 3 no 1º bimestre, 3 no 2º, total 6.
+    expect(within(portuguese).getAllByRole("cell").map((cell) => cell.textContent).slice(4, 9)).toEqual(["3", "3", "", "", "6"]);
+    // Pizza: 3 faltas no 1º e 3 + 1 (Matemática) no 2º.
+    expect(sheet.getByRole("img", { name: "Faltas por bimestre: 7 no total" })).toBeInTheDocument();
 
     await user.click(dialog.getByRole("button", { name: /Baixar boletim/ }));
     await waitFor(() => expect(print).toHaveBeenCalled());
@@ -524,13 +527,32 @@ describe("boletim do aluno", () => {
       ],
       subjects,
     );
+    // Média sobre os quatro bimestres, o 4º sem nota conta 0: (9,4 + 9,9 + 10 + 0) / 4 = 7,3.
     expect(report.subjects).toEqual([
-      { name: "LÍNGUA PORTUGUESA", terms: [9.4, 9.9, 10, null], average: 9.8, level: "excellent" },
+      {
+        name: "LÍNGUA PORTUGUESA",
+        terms: [9.4, 9.9, 10, null],
+        average: 7.3,
+        level: "satisfactory",
+        absences: [2, 0, 1, null],
+        absenceTotal: 3,
+      },
     ]);
+    expect(report.activities).toEqual({ names: ["ESPORTE E LAZER"], absences: [3, null, null, null], absenceTotal: 3 });
     expect(report.termsWithGrades).toEqual([1, 2, 3]);
     expect(report.complete).toBe(false);
     expect(report.absencesByTerm).toEqual([5, 0, 1, null]);
     expect(report.absences).toBe(6);
+    expect(report.absenceShares.map((share) => Math.round(share * 100))).toEqual([83, 0, 17, 0]);
+  });
+
+  it("média: 10 nos três primeiros bimestres dá 7,5 até o 4º ter nota", () => {
+    const subjects = [{ id: "port", name: "LÍNGUA PORTUGUESA", position: 0 }];
+    const partial = buildReportCard([1, 2, 3].map((term) => grade({ term: term as 1 | 2 | 3, md: 10 })), subjects);
+    expect(partial.subjects[0]?.average).toBe(7.5);
+    const full = buildReportCard([1, 2, 3, 4].map((term) => grade({ term: term as 1 | 2 | 3 | 4, md: 10 })), subjects);
+    expect(full.subjects[0]?.average).toBe(10);
+    expect(full.complete).toBe(true);
   });
 
   it("descreve os bimestres avaliados", () => {

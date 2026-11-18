@@ -68,6 +68,55 @@ function Evolution({ terms }: { terms: (number | null)[] }) {
   );
 }
 
+/** Uma cor por bimestre na pizza de faltas (distintas também impressas em tons de cinza). */
+const TERM_COLORS = ["#1d4ed8", "#16a34a", "#f59e0b", "#dc2626"];
+
+const percent = (share: number): string => `${Math.round(share * 100)}%`;
+
+/** Faltas de uma linha nos quatro bimestres e o total. */
+function AbsenceCells({ absences, total }: { absences: (number | null)[]; total: number | null }) {
+  return (
+    <>
+      {absences.map((value, i) => (
+        <td key={i} className={`boletim-ft${i === 0 ? " boletim-ft-first" : ""}`}>
+          {value ?? ""}
+        </td>
+      ))}
+      <td className="boletim-ft boletim-ft-total">{total ?? ""}</td>
+    </>
+  );
+}
+
+/** Pizza das faltas: cada bimestre com a sua cor, do tamanho da parte dele no total. */
+function AbsencePie({ shares, total }: { shares: number[]; total: number }) {
+  const r = 16;
+  let start = 0;
+  const slices = shares.flatMap((share, i) => {
+    if (share <= 0) return [];
+    const from = start;
+    start += share;
+    if (share >= 0.9999) return [<circle key={i} cx="18" cy="18" r={r} fill={TERM_COLORS[i]} />];
+    const point = (fraction: number) =>
+      `${18 + r * Math.sin(fraction * 2 * Math.PI)} ${18 - r * Math.cos(fraction * 2 * Math.PI)}`;
+    return [
+      <path
+        key={i}
+        d={`M18 18 L${point(from)} A${r} ${r} 0 ${share > 0.5 ? 1 : 0} 1 ${point(start)} Z`}
+        fill={TERM_COLORS[i]}
+      />,
+    ];
+  });
+  return (
+    <svg viewBox="0 0 36 36" className="boletim-pie" role="img" aria-label={`Faltas por bimestre: ${total} no total`}>
+      {total > 0 ? slices : <circle cx="18" cy="18" r={r} fill="#eceef1" />}
+      <circle cx="18" cy="18" r="7.5" fill="#fff" />
+      <text x="18" y="20.6" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#111">
+        {total}
+      </text>
+    </svg>
+  );
+}
+
 const Stars = () => (
   <span className="boletim-stars" aria-hidden="true">
     ☆☆☆☆☆
@@ -146,6 +195,20 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
       <section className="boletim-box boletim-grades">
         <h2 className="boletim-tab">Desempenho por componentes curriculares</h2>
         <table>
+          {/* Larguras pelas colunas: com a tabela fixa, a 2ª linha do cabeçalho não as define. */}
+          <colgroup>
+            <col className="boletim-col-subject" />
+            {[1, 2, 3, 4].map((term) => (
+              <col key={`n${term}`} className="boletim-col-score" />
+            ))}
+            {[1, 2, 3, 4].map((term) => (
+              <col key={`f${term}`} className="boletim-col-ft" />
+            ))}
+            <col className="boletim-col-total" />
+            <col className="boletim-col-narrow" />
+            <col className="boletim-col-narrow" />
+            <col />
+          </colgroup>
           <thead>
             <tr>
               <th rowSpan={2} scope="col" className="boletim-subject">
@@ -153,6 +216,9 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
               </th>
               <th colSpan={4} scope="colgroup">
                 Avaliações
+              </th>
+              <th colSpan={5} scope="colgroup" className="boletim-ft-group">
+                Faltas
               </th>
               <th rowSpan={2} scope="col" className="boletim-narrow">
                 {report.complete ? "Média final" : "Média parcial"}
@@ -167,9 +233,17 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
             <tr>
               {[1, 2, 3, 4].map((term) => (
                 <th key={term} scope="col" className="boletim-term">
-                  {term}ºBIM
+                  {term}º<span className="boletim-unit">BIM</span>
                 </th>
               ))}
+              {[1, 2, 3, 4].map((term) => (
+                <th key={term} scope="col" className={`boletim-term boletim-ft${term === 1 ? " boletim-ft-first" : ""}`}>
+                  {term}º
+                </th>
+              ))}
+              <th scope="col" className="boletim-term boletim-ft">
+                Total
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -181,11 +255,24 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 {subject.terms.map((md, i) => (
                   <td key={i}>{md === null ? "" : formatScore(md)}</td>
                 ))}
+                <AbsenceCells absences={subject.absences} total={subject.absenceTotal} />
                 <td className="boletim-average">{subject.average === null ? "" : formatScore(subject.average)}</td>
                 <td>{subject.level ? <LevelCircle level={subject.level} /> : <span className="boletim-none">—</span>}</td>
                 <td>{subject.average === null ? "" : <Evolution terms={subject.terms} />}</td>
               </tr>
             ))}
+            {report.activities && (
+              <tr className="boletim-activities">
+                <th scope="row" className="boletim-subject" title={report.activities.names.join(", ")}>
+                  Atividades sem nota ({report.activities.names.length})
+                </th>
+                <td colSpan={4} className="boletim-activities-note">
+                  só faltas
+                </td>
+                <AbsenceCells absences={report.activities.absences} total={report.activities.absenceTotal} />
+                <td colSpan={3} />
+              </tr>
+            )}
           </tbody>
         </table>
       </section>
@@ -194,32 +281,30 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
         <section className="boletim-card">
           <h2>Frequência</h2>
           <div className="boletim-frequency">
-            <div className="boletim-ring" aria-hidden="true">
-              <span>%</span>
-            </div>
+            <AbsencePie shares={report.absenceShares} total={report.absences} />
             <dl>
-              <div>
-                <dt>Presenças:</dt>
-                <dd />
-              </div>
-              <div>
-                <dt>Faltas:</dt>
-                <dd>{report.absences > 0 || report.absencesByTerm.some((v) => v !== null) ? report.absences : ""}</dd>
-              </div>
-              <div>
-                <dt>Justificadas:</dt>
-                <dd />
-              </div>
-              <div>
-                <dt>Não justificadas:</dt>
-                <dd />
+              {report.absencesByTerm.map((value, i) => (
+                <div key={i}>
+                  <dt>
+                    <span className="boletim-swatch" style={{ background: TERM_COLORS[i] }} aria-hidden="true" />
+                    {i + 1}º bim:
+                  </dt>
+                  <dd>
+                    {value === null ? "–" : `${value} ${value === 1 ? "falta" : "faltas"}`}
+                    {value !== null && report.absences > 0 && (
+                      <span className="boletim-share"> ({percent(report.absenceShares[i] ?? 0)})</span>
+                    )}
+                  </dd>
+                </div>
+              ))}
+              <div className="boletim-total">
+                <dt>Total:</dt>
+                <dd>
+                  {report.absences} {report.absences === 1 ? "falta" : "faltas"}
+                </dd>
               </div>
             </dl>
           </div>
-          <p className="boletim-note">
-            Faltas por bimestre:{" "}
-            {report.absencesByTerm.map((value, i) => `${i + 1}º ${value ?? "–"}`).join(" · ")}
-          </p>
         </section>
         <section className="boletim-card">
           <h2>Participação</h2>

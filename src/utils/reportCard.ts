@@ -32,13 +32,26 @@ export interface ReportSubject {
   name: string;
   /** MD do 1º ao 4º bimestre (`null` = sem nota). */
   terms: (number | null)[];
-  /** Média dos bimestres com nota, uma casa; `null` se a disciplina não tem nota. */
+  /** Soma das médias dos quatro bimestres ÷ 4 (sem nota conta 0), uma casa. */
   average: number | null;
   level: ReportLevel | null;
+  /** Faltas (FT) do 1º ao 4º bimestre (`null` = bimestre sem lançamento) e o total. */
+  absences: (number | null)[];
+  absenceTotal: number | null;
+}
+
+/** As atividades sem nota (só faltas), juntas numa linha. */
+export interface ReportActivities {
+  names: string[];
+  absences: (number | null)[];
+  absenceTotal: number | null;
 }
 
 export interface ReportCardData {
   subjects: ReportSubject[];
+  activities: ReportActivities | null;
+  /** Parte de cada bimestre no total de faltas (0 a 1); tudo 0 sem faltas. */
+  absenceShares: number[];
   /** Bimestres com alguma média. */
   termsWithGrades: Term[];
   /** Todos os quatro bimestres têm média: a média é a final. */
@@ -68,23 +81,40 @@ export function buildReportCard(grades: GradeRow[], subjects: Subject[]): Report
     if (row.ft !== null) absencesByTerm[row.term - 1] = (absencesByTerm[row.term - 1] ?? 0) + row.ft;
   }
 
-  // Só os componentes com média: as atividades sem nota ("--" no boletim da rede) entram
-  // apenas na soma das faltas.
-  const rows: ReportSubject[] = sortSubjects(subjects)
-    .filter((subject) => grades.some((row) => row.subjectId === subject.id && row.md !== null))
-    .map((subject) => {
-      const terms = TERMS.map((term) => grades.find((row) => row.subjectId === subject.id && row.term === term)?.md ?? null);
-      const scores = terms.filter((md): md is number => md !== null);
-      const average = scores.length > 0 ? round1(scores.reduce((sum, md) => sum + md, 0) / scores.length) : null;
-      return { name: subject.name, terms, average, level: levelOf(average) };
-    });
+  const rowOf = (subjectId: string, term: Term) =>
+    grades.find((row) => row.subjectId === subjectId && row.term === term);
+  const sumOf = (values: (number | null)[]): number | null =>
+    values.some((value) => value !== null) ? values.reduce<number>((sum, value) => sum + (value ?? 0), 0) : null;
 
+  // Componentes com média, cada um com a sua linha. As atividades sem nota ("--" no boletim da
+  // rede) ficam juntas numa linha só, com as faltas delas: a folha cabe numa página.
+  const present = sortSubjects(subjects).filter((subject) => grades.some((row) => row.subjectId === subject.id));
+  const graded = present.filter((subject) => grades.some((row) => row.subjectId === subject.id && row.md !== null));
+  const rows: ReportSubject[] = graded.map((subject) => {
+    const terms = TERMS.map((term) => rowOf(subject.id, term)?.md ?? null);
+    // Média sempre sobre os quatro bimestres: o que ainda não tem nota conta como 0.
+    // Ex.: 10, 10 e 10 → (10 + 10 + 10 + 0) / 4 = 7,5.
+    const average = round1(terms.reduce<number>((sum, md) => sum + (md ?? 0), 0) / TERMS.length);
+    const absences = TERMS.map((term) => rowOf(subject.id, term)?.ft ?? null);
+    return { name: subject.name, terms, average, level: levelOf(average), absences, absenceTotal: sumOf(absences) };
+  });
+
+  const others = present.filter((subject) => !graded.includes(subject));
+  const activityAbsences = TERMS.map((term) => sumOf(others.map((subject) => rowOf(subject.id, term)?.ft ?? null)));
+  const activities =
+    others.length > 0
+      ? { names: others.map((subject) => subject.name), absences: activityAbsences, absenceTotal: sumOf(activityAbsences) }
+      : null;
+
+  const absences = absencesByTerm.reduce<number>((sum, value) => sum + (value ?? 0), 0);
   const termsWithGrades = TERMS.filter((term) => withGrades.has(term));
   return {
     subjects: rows,
+    activities,
     termsWithGrades,
     complete: termsWithGrades.length === TERMS.length,
     absencesByTerm,
-    absences: absencesByTerm.reduce<number>((sum, value) => sum + (value ?? 0), 0),
+    absences,
+    absenceShares: absencesByTerm.map((value) => (absences > 0 ? (value ?? 0) / absences : 0)),
   };
 }

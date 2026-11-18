@@ -1245,14 +1245,48 @@
   text-transform: uppercase;
 }
 .boletim-grades thead th.boletim-subject {
-  width: 58mm;
   text-align: center;
 }
-.boletim-grades thead th.boletim-narrow {
-  width: 18mm;
+.boletim-col-subject {
+  width: 47mm;
 }
-.boletim-grades .boletim-term {
-  width: 13mm;
+.boletim-col-score {
+  width: 10mm;
+}
+.boletim-col-ft {
+  width: 7.5mm;
+}
+.boletim-col-total {
+  width: 10mm;
+}
+.boletim-col-narrow {
+  width: 14.5mm;
+}
+/* Faltas de cada matéria, logo depois das notas: fundo cinza-claro e um fio mais forte. */
+.boletim-grades .boletim-ft {
+  background: #f6f7f9;
+}
+.boletim-grades thead .boletim-ft,
+.boletim-grades thead .boletim-ft-group {
+  background: #e3e6ea;
+}
+.boletim-grades .boletim-ft-first,
+.boletim-grades .boletim-ft-group {
+  border-left: 0.5mm solid #8b9099;
+}
+.boletim-grades .boletim-ft-total {
+  font-weight: 700;
+}
+.boletim-unit {
+  font-size: 6pt;
+}
+.boletim-activities th,
+.boletim-activities td {
+  color: #4b5563;
+  font-style: italic;
+}
+.boletim-activities-note {
+  font-size: 7pt;
 }
 .boletim-grades tbody th.boletim-subject {
   overflow: hidden;
@@ -1294,7 +1328,8 @@
 /* Frequência, participação e desenvolvimento */
 .boletim-trio {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* A frequência é a única com dados: fica um pouco mais larga. */
+  grid-template-columns: 1.3fr 1fr 1fr;
   gap: 3mm;
 }
 .boletim-card {
@@ -1344,39 +1379,53 @@
   display: flex;
   align-items: center;
   gap: 3mm;
-  padding: 2.4mm 3mm 1mm;
+  padding: 2.4mm 3mm;
 }
-.boletim-ring {
-  display: flex;
+.boletim-pie {
   flex: none;
-  width: 17mm;
-  height: 17mm;
-  align-items: center;
-  justify-content: center;
-  border: 3.2mm solid var(--b-soft);
-  border-radius: 50%;
-  font-size: 11pt;
-  font-weight: 700;
+  width: 23mm;
+  height: 23mm;
 }
 .boletim-frequency dl {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 1.5mm;
+  gap: 1.2mm;
   min-width: 0;
 }
 .boletim-frequency dl > div {
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: 1.5mm;
+  border-bottom: 0.25mm solid var(--b-line);
+  padding-bottom: 0.4mm;
   font-size: 8pt;
 }
+.boletim-frequency dt {
+  display: flex;
+  align-items: center;
+  gap: 1.2mm;
+  white-space: nowrap;
+}
 .boletim-frequency dd {
-  flex: 1;
-  min-height: 3.4mm;
-  border-bottom: 0.25mm solid var(--b-line);
   font-weight: 700;
-  text-align: center;
+  white-space: nowrap;
+}
+.boletim-frequency .boletim-total {
+  border-bottom: 0;
+  font-size: 8.5pt;
+  font-weight: 700;
+}
+.boletim-swatch {
+  display: inline-block;
+  width: 2.6mm;
+  height: 2.6mm;
+  border-radius: 0.6mm;
+}
+.boletim-share {
+  color: #4b5563;
+  font-weight: 400;
 }
 .boletim-note {
   padding: 0 3mm 2mm;
