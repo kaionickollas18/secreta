@@ -1,12 +1,5 @@
 import type { Classroom } from "../../types/grade";
-import {
-  brDate,
-  classDisplayName,
-  formatScore,
-  RESULT_LABELS,
-  SEGMENT_LABELS,
-  type SubjectBlock,
-} from "../../utils/grades";
+import { brDate, classDisplayName, formatScore, RESULT_LABELS, type SubjectBlock } from "../../utils/grades";
 
 interface GradeTableProps {
   classroom: Classroom;
@@ -22,21 +15,10 @@ export function GradeTable({ classroom, block, onOpenStudent }: GradeTableProps)
 
   return (
     <section className="glass overflow-hidden rounded-2xl" aria-label={caption}>
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-line px-4 py-3">
-        <div className="min-w-0">
-          <p className="text-2xs font-semibold uppercase tracking-wide text-accent-light">
-            {SEGMENT_LABELS[classroom.segment]}
-          </p>
-          <p className="card-title uppercase">
-            {classDisplayName(classroom.name)} · {classroom.shift}
-          </p>
-          <p className="text-sm font-semibold uppercase text-accent-light">{subject.name}</p>
-        </div>
-        {/* O boletim não diz quem dá cada disciplina: vão os professores da turma. */}
-        <div className="min-w-0 max-w-full sm:max-w-[50%] sm:text-right">
-          <p className="text-2xs font-semibold uppercase tracking-wide text-accent-light">Professores da turma</p>
-          <p className="text-sm font-semibold uppercase">{classroom.teachers || "Não informados"}</p>
-        </div>
+      {/* Só a matéria: segmento, turma e turno já estão no título do segmento e na barra da turma.
+          O professor da matéria entra aqui quando houver um documento com ele. */}
+      <header className="border-b border-line px-4 py-2.5">
+        <h4 className="text-sm font-semibold uppercase text-accent-light">{subject.name}</h4>
       </header>
 
       <div className="overflow-x-auto">

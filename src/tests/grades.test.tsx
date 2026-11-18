@@ -412,12 +412,15 @@ describe("tela de notas", () => {
     expect(api.classCalls).toEqual(["c5a:1"]);
   });
 
-  it("mostra média, faltas, histórico, transferido, observação e os professores da turma", async () => {
+  it("mostra média, faltas, histórico, transferido e observação; o cabeçalho é só a matéria", async () => {
     const user = userEvent.setup();
     render(<NotasEscolaresApp />);
     await user.click(await screen.findByRole("button", { name: /5º ANO - A/ }));
     const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
-    expect(within(section).getByText("MARIA EXEMPLO, JOSE TESTE")).toBeInTheDocument();
+    expect(within(section).getByRole("heading", { name: "LÍNGUA PORTUGUESA" })).toBeInTheDocument();
+    // Sem repetir segmento, turma, turno e professores em cada matéria.
+    expect(within(section).queryByText("MARIA EXEMPLO, JOSE TESTE")).not.toBeInTheDocument();
+    expect(within(section).queryByText(/INTEGRAL/)).not.toBeInTheDocument();
     const rows = within(section).getAllByRole("row");
     expect(rows[1]).toHaveTextContent("ALUNA PRIMEIRA DE TESTE");
     expect(rows[1]).toHaveTextContent("TRF 04/08/2026");
