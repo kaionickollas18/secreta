@@ -180,6 +180,17 @@ Use quatro contas (Master, Secretário, Assistente, Professor) e, de preferênci
 4. Perfil → Pessoas da escola: o perfil dos colegas não mostra "Tarefas em aberto".
 5. **No banco** (SQL Editor, como o professor, ou pelo console do navegador com a sessão dele): `select` em `tasks`, `task_history`, `reminders`, `notes` e `official_documents` volta vazio.
 6. Numa conversa direta, marcar com `@` alguém de fora mostra o aviso de que essa pessoa não vai ver a mensagem.
+7. Professor não vê o item **Notas** nem **Anotações**; abrir `notas-escolares.html` direto leva para a página inicial dele. **No banco**, `select` em `grades` e `classrooms` volta vazio.
+
+### 11. Notas (notas bimestrais)
+1. Como secretário: o menu mostra **Anotações** (a antiga "Notas") e **Notas**. Notas abre na aba "Notas bimestrais"; "Históricos escolares" mostra "Em breve".
+2. **Cadastro de alunos** → enviar a "Relação de alunos matriculados por turma": a prévia lista cada turma com o total, os transferidos (TRF e data) e as observações; as turmas de A.E.E. aparecem como ignoradas. Salvar e enviar de novo: o total do cadastro não muda (não duplica).
+3. **Enviar notas EF I** → sem bimestre, "Salvar notas" fica desativado. Escolher "Até o 3º bimestre" e enviar o boletim do EF I: a prévia avisa que o 4º bimestre do arquivo não será gravado e lista os alunos não encontrados (se houver). Salvar: o aviso de sucesso aparece e o 1º bimestre mostra as turmas.
+4. Enviar o boletim do EF II pelo botão do EF I: a prévia avisa que o arquivo não tem boletins do EF I e não deixa salvar.
+5. Consulta: sem filtros, as turmas aparecem fechadas sob "Ensino Fundamental 1º/5º anos – Integral" e "6º/9º anos – Integral". Abrir uma turma mostra uma tabela por disciplina com Nº, Aluno, MD (9,5), FT e Histórico (APROVADO(A) em azul a partir de 6,0; REPROVADO(A) em vermelho). Transferidos têm a marca "TRF dd/mm/aaaa".
+6. Filtro de turma e de disciplina mostram só o escolhido; a busca por nome abre as turmas encontradas. O 4º bimestre mostra "Nenhuma nota do 4º bimestre ainda".
+7. Reenviar o mesmo segmento até o 3º bimestre: os números continuam os mesmos (substitui, sem duplicar).
+8. Como assistente sem acesso de secretário: envia e reenvia notas; **no banco**, `delete` em `grades` não apaga nada. No celular (360 px), a tabela rola de lado sem a página rolar.
 
 ## Casos críticos
 Um perfil fazendo o que não pode · dados de uma escola aparecendo em outra · conclusão sem aprovação · perda do histórico · lembrete com prazo errado · nomes de alunos expostos sem login.

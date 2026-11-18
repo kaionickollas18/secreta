@@ -14,6 +14,7 @@ import { LogoMark } from "../ui/Logo";
 import {
   BellIcon,
   BoardIcon,
+  BooksIcon,
   CalendarIcon,
   ChartIcon,
   ChatIcon,
@@ -26,7 +27,7 @@ import {
   UsersIcon,
 } from "../ui/Icons";
 
-export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "documentos" | "mensagens" | "dashboard" | "gestao" | "perfil";
+export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "notasEscolares" | "documentos" | "mensagens" | "dashboard" | "gestao" | "perfil";
 
 interface NavItem {
   key: NavKey;
@@ -190,7 +191,8 @@ export function AppShell({ active, children }: AppShellProps) {
           badgeLabel: `${due} ${due === 1 ? "lembrete pede" : "lembretes pedem"} atenção`,
         },
         calendar,
-        { key: "notas", label: "Notas", href: "notas.html", icon: <NoteIcon /> },
+        { key: "notas", label: "Anotações", href: "notas.html", icon: <NoteIcon /> },
+        { key: "notasEscolares", label: "Notas", href: "notas-escolares.html", icon: <BooksIcon /> },
         { key: "documentos", label: "Documentos", href: "documentos.html", icon: <SendIcon /> },
         conversations,
         dashboard,

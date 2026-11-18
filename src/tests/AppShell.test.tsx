@@ -39,20 +39,21 @@ describe("AppShell", () => {
 
   it("secretário vê todas as áreas, com a página atual marcada", () => {
     const nav = within(renderShell(SECRETARY, "dashboard"));
-    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Quadro", "Lembretes", "Calendário", "Notas", "Documentos", "Conversas", "Dashboard", "Equipe", "Perfil"]);
+    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Quadro", "Lembretes", "Calendário", "Anotações", "Notas", "Documentos", "Conversas", "Dashboard", "Equipe", "Perfil"]);
     expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
     expect(nav.getByRole("link", { name: "Quadro" })).not.toHaveAttribute("aria-current");
     expect(screen.getByText("conteúdo")).toBeInTheDocument();
   });
 
   it("assistente não vê Equipe; Master só vê Escolas", () => {
-    expect(linkNames(renderShell(ASSISTANT))).toEqual(["Quadro", "Lembretes", "Calendário", "Notas", "Documentos", "Conversas", "Dashboard", "Perfil"]);
+    expect(linkNames(renderShell(ASSISTANT))).toEqual(["Quadro", "Lembretes", "Calendário", "Anotações", "Notas", "Documentos", "Conversas", "Dashboard", "Perfil"]);
     cleanup();
     // Mesmo com acesso de secretário, o assistente não gerencia a equipe.
     expect(linkNames(renderShell({ ...ASSISTANT, elevated: true }))).toEqual([
       "Quadro",
       "Lembretes",
       "Calendário",
+      "Anotações",
       "Notas",
       "Documentos",
       "Conversas",

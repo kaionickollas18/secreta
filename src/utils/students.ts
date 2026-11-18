@@ -74,7 +74,11 @@ const MAX_TYPO_DISTANCE = 2;
  * letivo, vence o mais recente. Se a grafia do nome diferir ("Evellyn" × "Evellin"), aceita o
  * aluno da mesma turma com o nome mais parecido, desde que só um chegue tão perto.
  */
-export function findStudent(records: StudentRecord[], className: string, name: string): StudentRecord | null {
+export function findStudent<T extends Pick<StudentRecord, "schoolYear" | "className" | "name">>(
+  records: T[],
+  className: string,
+  name: string,
+): T | null {
   const wantedName = key(name);
   const wantedClass = classKey(className);
   const byYear = [...records].sort((a, b) => b.schoolYear - a.schoolYear);

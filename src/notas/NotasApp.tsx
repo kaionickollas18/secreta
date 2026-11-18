@@ -86,7 +86,7 @@ export default function NotasApp() {
     <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-5 px-4 py-5 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Notas</h1>
+          <h1 className="page-title">Anotações</h1>
           <p className="page-lede">
             {pending > 0
               ? `${pending} ${pending === 1 ? "item ainda falta" : "itens ainda faltam"} nas listas.`
