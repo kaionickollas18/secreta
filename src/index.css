@@ -1247,20 +1247,22 @@
 .boletim-grades thead th.boletim-subject {
   text-align: center;
 }
+/* O nome do componente fica estreito (quebra em duas linhas se preciso) para sobrar espaço
+   para as notas, as faltas, a média e o total. */
 .boletim-col-subject {
-  width: 47mm;
+  width: 34mm;
 }
 .boletim-col-score {
-  width: 9.5mm;
+  width: 11mm;
 }
 .boletim-col-ft {
-  width: 8.5mm;
+  width: 10mm;
 }
 .boletim-col-total {
-  width: 12mm;
+  width: 14mm;
 }
 .boletim-col-narrow {
-  width: 14mm;
+  width: 15.5mm;
 }
 /* Faltas de cada matéria, ao lado da nota do bimestre: fundo cinza-claro. */
 .boletim-grades .boletim-ft {
@@ -1288,12 +1290,11 @@
 }
 .boletim-grades tbody th.boletim-subject {
   overflow: hidden;
-  font-size: 7.8pt;
+  font-size: 7.2pt;
   font-weight: 700;
+  line-height: 1.1;
   text-align: left;
-  text-overflow: ellipsis;
   text-transform: uppercase;
-  white-space: nowrap;
 }
 .boletim-grades tr > :first-child {
   border-left: 0;
