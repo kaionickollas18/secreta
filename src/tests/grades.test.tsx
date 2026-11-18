@@ -7,13 +7,20 @@ vi.mock("../store/supabaseClient", () => ({ supabase: null }));
 const api = vi.hoisted(() => ({
   data: null as unknown,
   grades: {} as Record<number, unknown[]>,
+  classCalls: [] as string[],
   savedList: [] as unknown[],
   savedGrades: [] as { plan: unknown; fileName: string; register: boolean }[],
   pdf: [] as unknown[],
 }));
 vi.mock("../store/gradeApi", () => ({
   fetchGradeData: async () => ({ data: api.data, error: null }),
-  fetchTermGrades: async (_school: string, _year: number, term: number) => ({ data: api.grades[term] ?? [], error: null }),
+  fetchClassGrades: async (_school: string, classroomId: string, term: number) => {
+    api.classCalls.push(`${classroomId}:${term}`);
+    return {
+      data: (api.grades[term] ?? []).filter((row) => (row as { classroomId: string }).classroomId === classroomId),
+      error: null,
+    };
+  },
   saveStudentList: async (_school: string, plan: unknown) => {
     api.savedList.push(plan);
     return null;
@@ -40,7 +47,8 @@ import { gradeFromRow, gradeStudentFromRow } from "../utils/gradeRows";
 import {
   classDisplayName,
   formatScore,
-  groupGrades,
+  groupClassGrades,
+  listClasses,
   parseScore,
   resultOf,
   segmentOfClass,
@@ -190,7 +198,11 @@ const DATA: GradeData = {
     student({ id: "s2", name: "ALUNO SEGUNDO EXEMPLO", rollNumber: 2, registration: "12", notes: "TEA/AUTISMO" }),
     student({ id: "s3", name: "OUTRO ALUNO", className: "6 ano A", rollNumber: 1 }),
   ],
-  imports: [],
+  // Os dois segmentos já enviados até o 3º bimestre.
+  imports: [
+    { segment: "ef1", upToTerm: 3, fileName: "EFI.pdf", rowCount: 4, importedByName: "", importedAt: "" },
+    { segment: "ef2", upToTerm: 3, fileName: "EFII.pdf", rowCount: 1, importedByName: "", importedAt: "" },
+  ],
 };
 
 const TERM1: GradeRow[] = [
@@ -340,22 +352,31 @@ describe("regras das notas", () => {
     });
   });
 
-  it("agrupa por segmento, turma e disciplina, e filtra", () => {
-    const all = groupGrades(DATA, TERM1, { term: 1, classroomId: "", subjectId: "", query: "" });
+  it("lista as turmas por segmento sem precisar das notas, e filtra", () => {
+    const all = listClasses(DATA, { term: 1, classroomId: "", query: "" });
     expect(all.map((s) => s.title)).toEqual([
       "Ensino Fundamental 1º/5º anos – Integral",
       "Ensino Fundamental 6º/9º anos – Integral",
     ]);
-    const fifth = all[0]?.classes[0];
-    expect(fifth?.subjects.map((s) => s.subject.name)).toEqual(["LÍNGUA PORTUGUESA", "MATEMÁTICA"]);
-    expect(fifth?.subjects[0]?.lines.map((l) => [l.student.name, l.result])).toEqual([
+    expect(all[0]?.classes.map((item) => [item.classroom.name, item.studentCount])).toEqual([["5 ano A", 2]]);
+    expect(listClasses(DATA, { term: 1, classroomId: "c5a", query: "" }).map((s) => s.segment)).toEqual(["ef1"]);
+    const searched = listClasses(DATA, { term: 1, classroomId: "", query: "outro" });
+    expect(searched.map((s) => s.segment)).toEqual(["ef2"]);
+    expect(searched[0]?.classes[0]?.matches).toBe(1);
+    // Bimestre ainda não enviado: nenhuma turma.
+    expect(listClasses(DATA, { term: 4, classroomId: "", query: "" })).toEqual([]);
+  });
+
+  it("monta as tabelas da turma aberta, por disciplina", () => {
+    const fifth = TERM1.filter((row) => row.classroomId === "c5a");
+    const blocks = groupClassGrades(fifth, DATA, { subjectId: "", query: "" });
+    expect(blocks.map((b) => b.subject.name)).toEqual(["LÍNGUA PORTUGUESA", "MATEMÁTICA"]);
+    expect(blocks[0]?.lines.map((l) => [l.student.name, l.result])).toEqual([
       ["ALUNA PRIMEIRA DE TESTE", "approved"],
       ["ALUNO SEGUNDO EXEMPLO", "failed"],
     ]);
-    const filtered = groupGrades(DATA, TERM1, { term: 1, classroomId: "c5a", subjectId: "mat", query: "" });
-    expect(filtered[0]?.classes[0]?.subjects.map((s) => s.subject.id)).toEqual(["mat"]);
-    const searched = groupGrades(DATA, TERM1, { term: 1, classroomId: "", subjectId: "", query: "outro" });
-    expect(searched.map((s) => s.segment)).toEqual(["ef2"]);
+    expect(groupClassGrades(fifth, DATA, { subjectId: "mat", query: "" }).map((b) => b.subject.id)).toEqual(["mat"]);
+    expect(groupClassGrades(fifth, DATA, { subjectId: "", query: "segundo" })[0]?.lines).toHaveLength(1);
   });
 });
 
@@ -365,7 +386,8 @@ describe("tela de notas", () => {
     api.grades = { 1: TERM1 };
     api.savedList = [];
     api.savedGrades = [];
-    useGradeStore.setState({ status: "idle", schoolYear: null, terms: {}, termStatus: {} });
+    api.classCalls = [];
+    useGradeStore.setState({ status: "idle", schoolYear: null, classes: {}, students: {} });
     useAuthStore.setState({ status: "signedIn", profile: SECRETARY, error: null });
   });
 
@@ -375,6 +397,19 @@ describe("tela de notas", () => {
     expect(screen.getByRole("combobox", { name: "Bimestre" })).toHaveValue("1");
     expect(screen.getByRole("button", { name: /5º ANO - A/ })).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("só baixa as notas da turma que é aberta, uma vez por bimestre", async () => {
+    const user = userEvent.setup();
+    render(<NotasEscolaresApp />);
+    const fifth = await screen.findByRole("button", { name: /5º ANO - A/ });
+    expect(api.classCalls).toEqual([]);
+    await user.click(fifth);
+    expect(await screen.findByRole("table", { name: "5º ANO - A · LÍNGUA PORTUGUESA" })).toBeInTheDocument();
+    // Fechar e abrir de novo não baixa outra vez; a outra turma nem foi pedida.
+    await user.click(fifth);
+    await user.click(fifth);
+    expect(api.classCalls).toEqual(["c5a:1"]);
   });
 
   it("mostra média, faltas, histórico, transferido, observação e os professores da turma", async () => {

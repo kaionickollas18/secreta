@@ -1,18 +1,22 @@
 import { useId } from "react";
-import { classDisplayName, type ClassBlock } from "../../utils/grades";
+import { classDisplayName, type ClassItem, type SubjectBlock } from "../../utils/grades";
+import { Skeleton } from "../ui/Skeleton";
 import { GradeTable } from "./GradeTable";
 
 interface ClassAccordionProps {
-  block: ClassBlock;
+  item: ClassItem;
   open: boolean;
+  /** Tabelas da turma aberta, ou o andamento da carga das notas dela. */
+  content: SubjectBlock[] | "loading" | "error";
   onToggle: () => void;
+  onRetry: () => void;
   onOpenStudent: (studentId: string) => void;
 }
 
-/** Uma turma: abre e fecha; dentro, uma tabela por disciplina. */
-export function ClassAccordion({ block, open, onToggle, onOpenStudent }: ClassAccordionProps) {
+/** Uma turma: abre e fecha; ao abrir, as notas dela chegam e aparece uma tabela por disciplina. */
+export function ClassAccordion({ item, open, content, onToggle, onRetry, onOpenStudent }: ClassAccordionProps) {
   const panelId = useId();
-  const { classroom, subjects } = block;
+  const { classroom, studentCount, matches } = item;
 
   return (
     <li className="glass rounded-2xl">
@@ -26,7 +30,7 @@ export function ClassAccordion({ block, open, onToggle, onOpenStudent }: ClassAc
         >
           <span className="card-title">{classDisplayName(classroom.name)}</span>
           <span className="flex items-center gap-3 text-sm text-muted">
-            {subjects.length} {subjects.length === 1 ? "disciplina" : "disciplinas"}
+            {matches > 0 ? `${matches} de ${studentCount} alunos` : `${studentCount} alunos`}
             <svg
               viewBox="0 0 24 24"
               aria-hidden="true"
@@ -44,9 +48,27 @@ export function ClassAccordion({ block, open, onToggle, onOpenStudent }: ClassAc
       </h3>
       {open && (
         <div id={panelId} className="flex flex-col gap-4 border-t border-line p-3 sm:p-4">
-          {subjects.map((subject) => (
-            <GradeTable key={subject.subject.id} classroom={classroom} block={subject} onOpenStudent={onOpenStudent} />
-          ))}
+          {content === "loading" ? (
+            <>
+              <p role="status" className="sr-only">
+                Carregando as notas da turma…
+              </p>
+              <Skeleton className="h-40 rounded-2xl" />
+            </>
+          ) : content === "error" ? (
+            <p role="alert" className="text-sm text-prio-urgent">
+              Não foi possível carregar as notas desta turma.{" "}
+              <button type="button" className="underline" onClick={onRetry}>
+                Tentar de novo
+              </button>
+            </p>
+          ) : content.length === 0 ? (
+            <p className="text-sm text-muted">Nenhuma nota desta turma com a disciplina ou o nome escolhidos.</p>
+          ) : (
+            content.map((block) => (
+              <GradeTable key={block.subject.id} classroom={classroom} block={block} onOpenStudent={onOpenStudent} />
+            ))
+          )}
         </div>
       )}
     </li>

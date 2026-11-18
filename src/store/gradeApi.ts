@@ -77,8 +77,15 @@ export async function fetchGradeData(schoolId: string, schoolYear: number): Prom
   };
 }
 
-/** Notas de um bimestre (todas as turmas). */
-export async function fetchTermGrades(schoolId: string, schoolYear: number, term: Term): Promise<ApiResult<GradeRow[]>> {
+/**
+ * Notas de uma turma num bimestre (umas 700 linhas: cabe num pedido só). A página baixa só as
+ * turmas que forem abertas, em vez do bimestre inteiro da escola.
+ */
+export async function fetchClassGrades(
+  schoolId: string,
+  classroomId: string,
+  term: Term,
+): Promise<ApiResult<GradeRow[]>> {
   const db = supabase;
   if (!db) return { data: null, error: LOAD_FAIL };
   const rows = await fetchAll((from, to) =>
@@ -86,7 +93,7 @@ export async function fetchTermGrades(schoolId: string, schoolYear: number, term
       .from("grades")
       .select("student_id, classroom_id, subject_id, term, md, ft")
       .eq("school_id", schoolId)
-      .eq("school_year", schoolYear)
+      .eq("classroom_id", classroomId)
       .eq("term", term)
       .order("id")
       .range(from, to),

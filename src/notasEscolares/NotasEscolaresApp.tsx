@@ -9,19 +9,22 @@ import { SearchIcon } from "../components/ui/Icons";
 import { Skeleton } from "../components/ui/Skeleton";
 import { ToastViewport } from "../components/ui/ToastViewport";
 import { useAuthStore } from "../store/authStore";
-import { useGradeStore } from "../store/gradeStore";
+import { classKey, useGradeStore } from "../store/gradeStore";
 import { useSchoolStore } from "../store/schoolStore";
 import { useToastStore } from "../store/toastStore";
-import type { GradeRow, Segment, Term } from "../types/grade";
+import type { Segment, Term } from "../types/grade";
 import {
   classDisplayName,
   compareClassrooms,
-  groupGrades,
+  groupClassGrades,
   isTerm,
+  listClasses,
   SEGMENTS,
   sortSubjects,
   TERMS,
   termLabel,
+  termSent,
+  type SubjectBlock,
 } from "../utils/grades";
 
 type Tab = "bimestrais" | "historicos";
@@ -32,7 +35,6 @@ const TABS: { key: Tab; label: string; soon?: boolean }[] = [
 ];
 
 const SELECT = "glass min-h-[44px] w-full rounded-full px-3 text-sm sm:w-auto";
-const NO_GRADES: GradeRow[] = [];
 const SEGMENT_BUTTONS: Record<Segment, string> = { ef1: "Enviar notas EF I", ef2: "Enviar notas EF II" };
 
 const formatDateTime = (iso: string): string => {
@@ -45,7 +47,7 @@ const formatDateTime = (iso: string): string => {
 /** Notas: notas bimestrais por turma e disciplina (e, em breve, os históricos escolares). */
 export default function NotasEscolaresApp() {
   const schoolId = useAuthStore((s) => s.profile?.schoolId ?? null);
-  const { data, status, terms, termStatus, load, loadTerm, students: studentGrades, loadStudent } = useGradeStore();
+  const { data, status, classes: classGrades, load, loadClass, students: studentGrades, loadStudent } = useGradeStore();
   const identity = useSchoolStore((s) => s.identity);
   const loadIdentity = useSchoolStore((s) => s.load);
   const pushToast = useToastStore((s) => s.push);
@@ -89,22 +91,30 @@ export default function NotasEscolaresApp() {
     );
   })();
 
-  useEffect(() => {
-    if (schoolId && status === "ready") void loadTerm(schoolId, term);
-  }, [schoolId, status, term, loadTerm]);
-
-  const grades = terms[term] ?? NO_GRADES;
   const classrooms = useMemo(() => [...data.classrooms].sort(compareClassrooms), [data.classrooms]);
   const subjects = useMemo(() => sortSubjects(data.subjects), [data.subjects]);
-  const segments = useMemo(
-    () => groupGrades(data, grades, { term, classroomId, subjectId, query }),
-    [data, grades, term, classroomId, subjectId, query],
-  );
+  // Só a lista de turmas: as notas de cada uma vêm quando ela é aberta.
+  const segments = useMemo(() => listClasses(data, { term, classroomId, query }), [data, term, classroomId, query]);
   // Com filtro de turma ou busca por nome, as turmas encontradas já aparecem abertas.
   const filtering = classroomId !== "" || query.trim() !== "";
   const isOpen = (id: string): boolean => openClasses.get(id) ?? filtering;
-  const termState = termStatus[term] ?? "idle";
-  const loading = status === "idle" || status === "loading" || (status === "ready" && termState !== "ready" && termState !== "error");
+  const loading = status === "idle" || status === "loading";
+  const termAvailable = SEGMENTS.some((segment) => termSent(data, segment, term));
+  const openIds = segments.flatMap((segment) => segment.classes.map((item) => item.classroom.id)).filter(isOpen);
+  const openKey = openIds.join(",");
+
+  // Baixa as notas das turmas abertas (cada uma uma vez por bimestre).
+  useEffect(() => {
+    if (!schoolId || status !== "ready") return;
+    for (const id of openKey ? openKey.split(",") : []) void loadClass(schoolId, id, term);
+  }, [schoolId, status, term, openKey, loadClass]);
+
+  function classContent(classroomId: string): SubjectBlock[] | "loading" | "error" {
+    const loaded = classGrades[classKey(classroomId, term)];
+    if (loaded === undefined || loaded === "loading") return "loading";
+    if (loaded === "error") return "error";
+    return groupClassGrades(loaded, data, { subjectId, query });
+  }
 
   function toggle(id: string) {
     setOpenClasses((current) => new Map(current).set(id, !isOpen(id)));
@@ -256,7 +266,7 @@ export default function NotasEscolaresApp() {
             </div>
           </div>
 
-          {status === "error" || termState === "error" ? (
+          {status === "error" ? (
             <p role="alert" className="text-sm text-prio-urgent">
               Não foi possível carregar as notas.{" "}
               <button
@@ -278,13 +288,13 @@ export default function NotasEscolaresApp() {
                 <Skeleton className="h-12 rounded-2xl" />
               </div>
             </div>
-          ) : grades.length === 0 ? (
+          ) : !termAvailable ? (
             <EmptyState
               title={`Nenhuma nota do ${termLabel(term)} ainda`}
               description="As notas aparecem aqui depois que o boletim em PDF de cada segmento for enviado."
             />
           ) : segments.length === 0 ? (
-            <EmptyState title="Nada encontrado" description="Nenhuma nota bate com a turma, a disciplina ou o nome buscado." />
+            <EmptyState title="Nada encontrado" description="Nenhuma turma ou aluno bate com o filtro ou o nome buscado." />
           ) : (
             segments.map((segment) => (
               <section key={segment.segment} aria-label={segment.title} className="flex flex-col gap-3">
@@ -292,15 +302,21 @@ export default function NotasEscolaresApp() {
                   {segment.title}
                 </h2>
                 <ul className="flex flex-col gap-3">
-                  {segment.classes.map((block) => (
-                    <ClassAccordion
-                      key={block.classroom.id}
-                      block={block}
-                      open={isOpen(block.classroom.id)}
-                      onToggle={() => toggle(block.classroom.id)}
-                      onOpenStudent={openReport}
-                    />
-                  ))}
+                  {segment.classes.map((item) => {
+                    const id = item.classroom.id;
+                    const open = isOpen(id);
+                    return (
+                      <ClassAccordion
+                        key={id}
+                        item={item}
+                        open={open}
+                        content={open ? classContent(id) : "loading"}
+                        onToggle={() => toggle(id)}
+                        onRetry={() => schoolId && void loadClass(schoolId, id, term, true)}
+                        onOpenStudent={openReport}
+                      />
+                    );
+                  })}
                 </ul>
               </section>
             ))
@@ -335,15 +351,7 @@ export default function NotasEscolaresApp() {
             identity={identity}
             schoolYear={schoolYear}
             onClose={() => setReportStudentId(null)}
-            onRetry={() => {
-              if (!reportStudentId) return;
-              useGradeStore.setState((state) => {
-                const next = { ...state.students };
-                delete next[reportStudentId];
-                return { students: next };
-              });
-              void loadStudent(schoolId, reportStudentId);
-            }}
+            onRetry={() => reportStudentId && void loadStudent(schoolId, reportStudentId, true)}
           />
         </>
       )}

@@ -173,16 +173,20 @@ export interface SubjectBlock {
   lines: GradeLine[];
 }
 
-export interface ClassBlock {
+/** Uma turma na lista da consulta (as notas dela só são baixadas quando ela é aberta). */
+export interface ClassItem {
   classroom: Classroom;
-  subjects: SubjectBlock[];
+  /** Alunos da turma no cadastro. */
+  studentCount: number;
+  /** Com busca por nome: quantos alunos da turma batem. */
+  matches: number;
 }
 
 export interface SegmentBlock {
   segment: Segment;
   /** "Ensino Fundamental 1º/5º anos – Integral" (o turno das turmas do segmento). */
   title: string;
-  classes: ClassBlock[];
+  classes: ClassItem[];
 }
 
 export interface GradeData {
@@ -196,55 +200,72 @@ const titleCase = (value: string): string =>
   value.toLowerCase().replace(/(^|\s)(\p{L})/gu, (_, space: string, letter: string) => space + letter.toUpperCase());
 
 /** Turnos das turmas do segmento: "Integral", ou "Integral/Manhã" se houver mais de um. */
-function segmentTitle(segment: Segment, classes: ClassBlock[]): string {
-  const shifts = [...new Set(classes.map((block) => titleCase(block.classroom.shift.trim())))].filter(Boolean);
+function segmentTitle(segment: Segment, classes: ClassItem[]): string {
+  const shifts = [...new Set(classes.map((item) => titleCase(item.classroom.shift.trim())))].filter(Boolean);
   return shifts.length > 0 ? `${SEGMENT_LABELS[segment]} – ${shifts.join("/")}` : SEGMENT_LABELS[segment];
 }
 
 export const sortSubjects = (subjects: Subject[]): Subject[] =>
   [...subjects].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name, "pt-BR"));
 
-/**
- * Monta a consulta de um bimestre (`grades` já é só dele): só a turma, a disciplina e os alunos
- * que batem com os filtros. Turmas e disciplinas sem nenhuma linha ficam de fora.
- */
-export function groupGrades(data: GradeData, grades: GradeRow[], filters: GradeFilters): SegmentBlock[] {
-  const students = new Map(data.students.map((student) => [student.id, student]));
-  const needle = nameKey(filters.query);
-  const subjects = sortSubjects(data.subjects);
-  const rows = grades.filter(
-    (row) =>
-      row.term === filters.term &&
-      (!filters.classroomId || row.classroomId === filters.classroomId) &&
-      (!filters.subjectId || row.subjectId === filters.subjectId),
-  );
+/** O bimestre já foi enviado para o segmento (o último envio vai até ele ou depois). */
+export const termSent = (data: GradeData, segment: Segment, term: Term): boolean =>
+  data.imports.some((item) => item.segment === segment && item.upToTerm >= term);
 
-  const classBlocks: ClassBlock[] = [...data.classrooms]
+/**
+ * Lista da consulta: as turmas dos segmentos que já têm o bimestre enviado, só a turma
+ * filtrada e, com busca, só as turmas que têm algum aluno com aquele nome. Não precisa das
+ * notas: elas vêm turma a turma, quando a turma é aberta.
+ */
+export function listClasses(data: GradeData, filters: Omit<GradeFilters, "subjectId">): SegmentBlock[] {
+  const needle = nameKey(filters.query);
+  const items: ClassItem[] = [...data.classrooms]
     .sort(compareClassrooms)
-    .map((classroom) => ({
-      classroom,
-      subjects: subjects
-        .map((subject) => ({
-          subject,
-          lines: rows
-            .filter((row) => row.classroomId === classroom.id && row.subjectId === subject.id)
-            .flatMap((row) => {
-              const student = students.get(row.studentId);
-              if (!student || (needle && !nameKey(student.name).includes(needle))) return [];
-              return [{ row, student, result: resultOf(row.md) }];
-            })
-            .sort(
-              (x, y) =>
-                (x.student.rollNumber ?? 999) - (y.student.rollNumber ?? 999) ||
-                x.student.name.localeCompare(y.student.name, "pt-BR"),
-            ),
-        }))
-        .filter((block) => block.lines.length > 0),
-    }))
-    .filter((block) => block.subjects.length > 0);
+    .filter((classroom) => termSent(data, classroom.segment, filters.term))
+    .filter((classroom) => !filters.classroomId || classroom.id === filters.classroomId)
+    .map((classroom) => {
+      const students = data.students.filter((student) => student.className === classroom.name);
+      return {
+        classroom,
+        studentCount: students.length,
+        matches: needle ? students.filter((student) => nameKey(student.name).includes(needle)).length : 0,
+      };
+    })
+    .filter((item) => !needle || item.matches > 0);
 
   return SEGMENTS.map((segment) => {
-    const classes = classBlocks.filter((block) => block.classroom.segment === segment);
+    const classes = items.filter((item) => item.classroom.segment === segment);
     return { segment, title: segmentTitle(segment, classes), classes };
   }).filter((block) => block.classes.length > 0);
+}
+
+/**
+ * As tabelas de uma turma aberta: uma por disciplina (só a filtrada, se houver), com os alunos
+ * que batem com a busca. `grades` são as notas da turma no bimestre.
+ */
+export function groupClassGrades(
+  grades: GradeRow[],
+  data: Pick<GradeData, "subjects" | "students">,
+  filters: Pick<GradeFilters, "subjectId" | "query">,
+): SubjectBlock[] {
+  const students = new Map(data.students.map((student) => [student.id, student]));
+  const needle = nameKey(filters.query);
+  return sortSubjects(data.subjects)
+    .filter((subject) => !filters.subjectId || subject.id === filters.subjectId)
+    .map((subject) => ({
+      subject,
+      lines: grades
+        .filter((row) => row.subjectId === subject.id)
+        .flatMap((row) => {
+          const student = students.get(row.studentId);
+          if (!student || (needle && !nameKey(student.name).includes(needle))) return [];
+          return [{ row, student, result: resultOf(row.md) }];
+        })
+        .sort(
+          (x, y) =>
+            (x.student.rollNumber ?? 999) - (y.student.rollNumber ?? 999) ||
+            x.student.name.localeCompare(y.student.name, "pt-BR"),
+        ),
+    }))
+    .filter((block) => block.lines.length > 0);
 }
