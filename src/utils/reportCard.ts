@@ -3,8 +3,8 @@ import { sortSubjects, TERMS } from "./grades";
 
 /**
  * Boletim de um aluno ("Acompanhamento do estudante"): médias dos quatro bimestres por
- * componente curricular, média, situação e faltas. Participação, desenvolvimento, presenças e
- * faltas justificadas não existem no sistema e saem em branco, para preencher à mão.
+ * componente curricular, média parcial (só dos bimestres lançados), situação e faltas. Foto,
+ * participação e observações não existem no sistema e saem em branco, para preencher à mão.
  */
 
 /** Legenda da situação, da menor para a maior. */
@@ -32,7 +32,7 @@ export interface ReportSubject {
   name: string;
   /** MD do 1º ao 4º bimestre (`null` = sem nota). */
   terms: (number | null)[];
-  /** Soma das médias dos quatro bimestres ÷ 4 (sem nota conta 0), uma casa. */
+  /** Média dos bimestres já lançados, uma casa; `null` se a disciplina não tem nota. */
   average: number | null;
   level: ReportLevel | null;
   /** Faltas (FT) do 1º ao 4º bimestre (`null` = bimestre sem lançamento) e o total. */
@@ -61,7 +61,8 @@ export interface ReportCardData {
   absences: number;
 }
 
-const round1 = (value: number): number => Math.round(value * 10) / 10;
+/** Uma casa, arredondando para cima no meio (7,05 → 7,1), sem o erro de ponto flutuante. */
+const round1 = (value: number): number => Math.round(value * 10 + 1e-9) / 10;
 
 /** "1º bimestre", "1º e 2º bimestres", "1º ao 3º bimestre". */
 export function evaluationLabel(terms: Term[]): string {
@@ -92,9 +93,9 @@ export function buildReportCard(grades: GradeRow[], subjects: Subject[]): Report
   const graded = present.filter((subject) => grades.some((row) => row.subjectId === subject.id && row.md !== null));
   const rows: ReportSubject[] = graded.map((subject) => {
     const terms = TERMS.map((term) => rowOf(subject.id, term)?.md ?? null);
-    // Média sempre sobre os quatro bimestres: o que ainda não tem nota conta como 0.
-    // Ex.: 10, 10 e 10 → (10 + 10 + 10 + 0) / 4 = 7,5.
-    const average = round1(terms.reduce<number>((sum, md) => sum + (md ?? 0), 0) / TERMS.length);
+    // Média parcial: só dos bimestres já lançados. Ex.: 5,5, 5,8 e 6,0 → 17,3 / 3 = 5,8.
+    const scores = terms.filter((md): md is number => md !== null);
+    const average = scores.length > 0 ? round1(scores.reduce((sum, md) => sum + md, 0) / scores.length) : null;
     const absences = TERMS.map((term) => rowOf(subject.id, term)?.ft ?? null);
     return { name: subject.name, terms, average, level: levelOf(average), absences, absenceTotal: sumOf(absences) };
   });

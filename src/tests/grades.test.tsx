@@ -518,10 +518,12 @@ describe("tela de notas", () => {
     expect(sheet.getByText("1º e 2º bimestres")).toBeInTheDocument();
     expect(sheet.getByText("Média parcial")).toBeInTheDocument();
     const portuguese = sheet.getByRole("row", { name: /LÍNGUA PORTUGUESA/ });
-    // 6,1 no 1º e 8,0 no 2º; 3º e 4º contam 0: (6,1 + 8 + 0 + 0) / 4 = 3,5.
+    // Média parcial só dos bimestres lançados: (6,1 + 8,0) / 2 = 7,05 → 7,1, Satisfatório.
     expect(portuguese).toHaveTextContent("6,1");
-    expect(portuguese).toHaveTextContent("3,5");
-    expect(within(portuguese).getByRole("img", { name: "Em Desenvolvimento" })).toBeInTheDocument();
+    expect(portuguese).toHaveTextContent("7,1");
+    expect(within(portuguese).getByRole("img", { name: "Satisfatório" })).toBeInTheDocument();
+    expect(sheet.getByText("Foto do aluno")).toBeInTheDocument();
+    expect(sheet.queryByText("Desenvolvimento")).not.toBeInTheDocument();
     // Cada bimestre com a nota e, ao lado, as faltas da matéria; depois a média e o total de faltas.
     expect(within(portuguese).getAllByRole("cell").map((cell) => cell.textContent).slice(0, 10)).toEqual([
       "6,1",
@@ -532,7 +534,7 @@ describe("tela de notas", () => {
       "",
       "",
       "",
-      "3,5",
+      "7,1",
       "6",
     ]);
     // Pizza: 3 faltas no 1º e 3 + 1 (Matemática) no 2º.
@@ -573,13 +575,13 @@ describe("boletim do aluno", () => {
       ],
       subjects,
     );
-    // Média sobre os quatro bimestres, o 4º sem nota conta 0: (9,4 + 9,9 + 10 + 0) / 4 = 7,3.
+    // Média parcial só dos bimestres lançados: (9,4 + 9,9 + 10) / 3 = 9,77 → 9,8.
     expect(report.subjects).toEqual([
       {
         name: "LÍNGUA PORTUGUESA",
         terms: [9.4, 9.9, 10, null],
-        average: 7.3,
-        level: "satisfactory",
+        average: 9.8,
+        level: "excellent",
         absences: [2, 0, 1, null],
         absenceTotal: 3,
       },
@@ -592,10 +594,13 @@ describe("boletim do aluno", () => {
     expect(report.absenceShares.map((share) => Math.round(share * 100))).toEqual([83, 0, 17, 0]);
   });
 
-  it("média: 10 nos três primeiros bimestres dá 7,5 até o 4º ter nota", () => {
+  it("média parcial: só os bimestres lançados entram na conta", () => {
     const subjects = [{ id: "port", name: "LÍNGUA PORTUGUESA", position: 0 }];
-    const partial = buildReportCard([1, 2, 3].map((term) => grade({ term: term as 1 | 2 | 3, md: 10 })), subjects);
-    expect(partial.subjects[0]?.average).toBe(7.5);
+    const scores = [5.5, 5.8, 6];
+    const partial = buildReportCard(scores.map((md, i) => grade({ term: (i + 1) as 1 | 2 | 3, md })), subjects);
+    // (5,5 + 5,8 + 6,0) / 3 = 5,77 → 5,8.
+    expect(partial.subjects[0]?.average).toBe(5.8);
+    expect(partial.complete).toBe(false);
     const full = buildReportCard([1, 2, 3, 4].map((term) => grade({ term: term as 1 | 2 | 3 | 4, md: 10 })), subjects);
     expect(full.subjects[0]?.average).toBe(10);
     expect(full.complete).toBe(true);

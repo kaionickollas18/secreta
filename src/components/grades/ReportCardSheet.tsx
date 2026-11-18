@@ -1,7 +1,7 @@
 import type { Classroom, GradeStudent } from "../../types/grade";
 import type { SchoolIdentity } from "../../types/school";
 import { formatDay } from "../../utils/attendance";
-import { brDate, classDisplayName, formatScore } from "../../utils/grades";
+import { brDate, classDisplayName, formatScore, PASSING_MD } from "../../utils/grades";
 import {
   evaluationLabel,
   LEVEL_LABELS,
@@ -78,7 +78,7 @@ function TermCells({ scores, absences }: { scores: (number | null)[]; absences: 
   return (
     <>
       {scores.flatMap((md, i) => [
-        <td key={`n${i}`} className="boletim-term-group">
+        <td key={`n${i}`} className={`boletim-term-group${lowClass(md)}`}>
           {md === null ? "" : formatScore(md)}
         </td>,
         <td key={`f${i}`} className="boletim-ft">
@@ -128,28 +128,22 @@ const Stars = () => (
   </span>
 );
 
-const Dots = () => (
-  <span className="boletim-dots" aria-hidden="true">
-    {[0, 1, 2, 3, 4].map((i) => (
-      <span key={i} />
-    ))}
-  </span>
-);
-
 const PARTICIPATION = ["Participação em sala", "Realiza as atividades", "Interação e respeito", "Organização", "Autonomia"];
-const DEVELOPMENT = ["Cognitivo", "Socioemocional", "Comunicação", "Criatividade", "Responsabilidade"];
+
+/** Nota abaixo da média mínima sai em vermelho. */
+const lowClass = (md: number | null): string => (md !== null && md < PASSING_MD ? " boletim-low" : "");
 
 /**
- * Boletim do aluno numa folha A4 em pé, no modelo "Acompanhamento do estudante". Médias e
- * faltas vêm do boletim da rede; o resto (participação, desenvolvimento, presenças,
- * observações) sai em branco para preencher à mão.
+ * Boletim do aluno numa folha A4 deitada, no modelo "Acompanhamento do estudante": à esquerda a
+ * identificação e o desempenho; à direita a foto 3×4, a frequência e a participação. Médias e
+ * faltas vêm do boletim da rede; foto, participação e observações saem em branco, para
+ * preencher à mão.
  */
 export function ReportCardSheet({ student, classroom, report, identity, schoolYear, issuedOn }: ReportCardSheetProps) {
   const schoolName = identity.officialName || "Escola";
-  const compact = report.subjects.length > 12;
 
   return (
-    <article className={`boletim-sheet${compact ? " boletim-compact" : ""}`} aria-label={`Boletim de ${student.name}`}>
+    <article className="boletim-sheet" aria-label={`Boletim de ${student.name}`}>
       <header className="boletim-head">
         <div className="boletim-badge">
           {identity.logoUrl ? <img src={identity.logoUrl} alt="" /> : null}
@@ -165,174 +159,176 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
         </div>
       </header>
 
-      <section className="boletim-box">
-        <h2 className="boletim-tab">Identificação do estudante</h2>
-        <dl className="boletim-id">
-          <div className="boletim-id-wide">
-            <dt>Nome completo:</dt>
-            <dd>
-              {student.name}
-              {student.notes ? ` - ${student.notes}` : ""}
-              {student.transferred ? ` (TRF${student.transferredOn ? ` ${brDate(student.transferredOn)}` : ""})` : ""}
-            </dd>
-          </div>
-          <div className="boletim-id-wide">
-            <dt>Turma:</dt>
-            <dd>
-              {classroom ? `${classDisplayName(classroom.name)} · ${classroom.shift}` : student.className.toUpperCase()}
-            </dd>
-          </div>
-          <div>
-            <dt>Nº:</dt>
-            <dd>{student.rollNumber ?? ""}</dd>
-          </div>
-          <div className="boletim-id-wide">
-            <dt>Avaliação:</dt>
-            <dd>{evaluationLabel(report.termsWithGrades)}</dd>
-          </div>
-          <div>
-            <dt>Data:</dt>
-            <dd>{formatDay(issuedOn)}</dd>
-          </div>
-        </dl>
-      </section>
+      <div className="boletim-body">
+        <section className="boletim-box boletim-identity">
+          <h2 className="boletim-tab">Identificação do estudante</h2>
+          <dl className="boletim-id">
+            <div>
+              <dt>Nome completo:</dt>
+              <dd>
+                {student.name}
+                {student.notes ? ` - ${student.notes}` : ""}
+                {student.transferred ? ` (TRF${student.transferredOn ? ` ${brDate(student.transferredOn)}` : ""})` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt>Turma:</dt>
+              <dd>
+                {classroom ? `${classDisplayName(classroom.name)} · ${classroom.shift}` : student.className.toUpperCase()}
+              </dd>
+            </div>
+            <div>
+              <dt>Nº:</dt>
+              <dd>{student.rollNumber ?? ""}</dd>
+            </div>
+            <div>
+              <dt>Avaliação:</dt>
+              <dd>{evaluationLabel(report.termsWithGrades)}</dd>
+            </div>
+            <div>
+              <dt>Data:</dt>
+              <dd>{formatDay(issuedOn)}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <section className="boletim-box boletim-grades">
-        <h2 className="boletim-tab">Desempenho por componentes curriculares</h2>
-        <table>
-          {/* Larguras pelas colunas: com a tabela fixa, a 2ª linha do cabeçalho não as define. */}
-          <colgroup>
-            <col className="boletim-col-subject" />
-            {[1, 2, 3, 4].flatMap((term) => [
-              <col key={`n${term}`} className="boletim-col-score" />,
-              <col key={`f${term}`} className="boletim-col-ft" />,
-            ])}
-            <col className="boletim-col-narrow" />
-            <col className="boletim-col-total" />
-            <col className="boletim-col-narrow" />
-            <col />
-          </colgroup>
-          <thead>
-            <tr>
-              <th rowSpan={2} scope="col" className="boletim-subject">
-                Componentes curriculares
-              </th>
-              {/* Cada bimestre com a nota e, ao lado, as faltas da matéria. */}
-              {[1, 2, 3, 4].map((term) => (
-                <th key={term} colSpan={2} scope="colgroup" className="boletim-term-group">
-                  {term}º bimestre
-                </th>
-              ))}
-              <th rowSpan={2} scope="col" className="boletim-term-group">
-                {report.complete ? "Média final" : "Média parcial"}
-              </th>
-              <th rowSpan={2} scope="col" className="boletim-ft">
-                Total de faltas
-              </th>
-              <th rowSpan={2} scope="col" className="boletim-narrow">
-                Situação
-              </th>
-              <th rowSpan={2} scope="col">
-                Evolução
-              </th>
-            </tr>
-            <tr>
+        <div className="boletim-box boletim-photo">
+          <div>
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+            </svg>
+            <strong>Foto do aluno</strong>
+            <span>3×4</span>
+          </div>
+        </div>
+
+        <section className="boletim-box boletim-grades">
+          <h2 className="boletim-tab">Desempenho por componentes curriculares</h2>
+          <table>
+            {/* Larguras pelas colunas: com a tabela fixa, a 2ª linha do cabeçalho não as define. */}
+            <colgroup>
+              <col className="boletim-col-subject" />
               {[1, 2, 3, 4].flatMap((term) => [
-                <th key={`n${term}`} scope="col" className="boletim-term-group">
-                  Nota
-                </th>,
-                <th key={`f${term}`} scope="col" className="boletim-ft">
-                  Faltas
-                </th>,
+                <col key={`n${term}`} className="boletim-col-score" />,
+                <col key={`f${term}`} className="boletim-col-ft" />,
               ])}
-            </tr>
-          </thead>
-          <tbody>
-            {report.subjects.map((subject) => (
-              <tr key={subject.name}>
-                <th scope="row" className="boletim-subject">
-                  {subject.name}
+              <col className="boletim-col-narrow" />
+              <col className="boletim-col-total" />
+              <col className="boletim-col-narrow" />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th rowSpan={2} scope="col" className="boletim-subject">
+                  Componentes curriculares
                 </th>
-                <TermCells scores={subject.terms} absences={subject.absences} />
-                <td className="boletim-average boletim-term-group">
-                  {subject.average === null ? "" : formatScore(subject.average)}
-                </td>
-                <TotalCell total={subject.absenceTotal} />
-                <td>{subject.level ? <LevelCircle level={subject.level} /> : <span className="boletim-none">—</span>}</td>
-                <td>{subject.average === null ? "" : <Evolution terms={subject.terms} />}</td>
-              </tr>
-            ))}
-            {report.activities && (
-              <tr className="boletim-activities">
-                <th scope="row" className="boletim-subject" title={report.activities.names.join(", ")}>
-                  Atividades sem nota ({report.activities.names.length})
+                {/* Cada bimestre com a nota e, ao lado, as faltas da matéria. */}
+                {[1, 2, 3, 4].map((term) => (
+                  <th key={term} colSpan={2} scope="colgroup" className="boletim-term-group">
+                    {term}º bimestre
+                  </th>
+                ))}
+                <th rowSpan={2} scope="col" className="boletim-term-group">
+                  {report.complete ? "Média final" : "Média parcial"}
                 </th>
-                <TermCells scores={[null, null, null, null]} absences={report.activities.absences} />
-                <td className="boletim-term-group" />
-                <TotalCell total={report.activities.absenceTotal} />
-                <td colSpan={2} />
+                <th rowSpan={2} scope="col" className="boletim-ft">
+                  Total de faltas
+                </th>
+                <th rowSpan={2} scope="col">
+                  Situação
+                </th>
+                <th rowSpan={2} scope="col">
+                  Evolução
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
+              <tr>
+                {[1, 2, 3, 4].flatMap((term) => [
+                  <th key={`n${term}`} scope="col" className="boletim-term-group">
+                    Nota
+                  </th>,
+                  <th key={`f${term}`} scope="col" className="boletim-ft">
+                    Faltas
+                  </th>,
+                ])}
+              </tr>
+            </thead>
+            <tbody>
+              {report.subjects.map((subject) => (
+                <tr key={subject.name}>
+                  <th scope="row" className="boletim-subject">
+                    {subject.name}
+                  </th>
+                  <TermCells scores={subject.terms} absences={subject.absences} />
+                  <td className={`boletim-average boletim-term-group${lowClass(subject.average)}`}>
+                    {subject.average === null ? "" : formatScore(subject.average)}
+                  </td>
+                  <TotalCell total={subject.absenceTotal} />
+                  <td>{subject.level ? <LevelCircle level={subject.level} /> : <span className="boletim-none">—</span>}</td>
+                  <td>{subject.average === null ? "" : <Evolution terms={subject.terms} />}</td>
+                </tr>
+              ))}
+              {report.activities && (
+                <tr className="boletim-activities">
+                  <th scope="row" className="boletim-subject" title={report.activities.names.join(", ")}>
+                    Atividades sem nota ({report.activities.names.length})
+                  </th>
+                  <TermCells scores={[null, null, null, null]} absences={report.activities.absences} />
+                  <td className="boletim-term-group" />
+                  <TotalCell total={report.activities.absenceTotal} />
+                  <td colSpan={2} />
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </section>
 
-      <div className="boletim-trio">
-        <section className="boletim-card">
-          <h2>Frequência</h2>
-          <div className="boletim-frequency">
-            <AbsencePie shares={report.absenceShares} total={report.absences} />
-            <dl>
-              {report.absencesByTerm.map((value, i) => (
-                <div key={i}>
-                  <dt>
-                    <span className="boletim-swatch" style={{ background: TERM_COLORS[i] }} aria-hidden="true" />
-                    {i + 1}º bim:
-                  </dt>
+        <div className="boletim-side">
+          <section className="boletim-card">
+            <h2>Frequência</h2>
+            <div className="boletim-frequency">
+              <AbsencePie shares={report.absenceShares} total={report.absences} />
+              <dl>
+                {report.absencesByTerm.map((value, i) => (
+                  <div key={i}>
+                    <dt>
+                      <span className="boletim-swatch" style={{ background: TERM_COLORS[i] }} aria-hidden="true" />
+                      {i + 1}º bim:
+                    </dt>
+                    <dd>
+                      {value === null ? "–" : `${value} ${value === 1 ? "falta" : "faltas"}`}
+                      {value !== null && report.absences > 0 && (
+                        <span className="boletim-share"> ({percent(report.absenceShares[i] ?? 0)})</span>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+                <div className="boletim-total">
+                  <dt>Total:</dt>
                   <dd>
-                    {value === null ? "–" : `${value} ${value === 1 ? "falta" : "faltas"}`}
-                    {value !== null && report.absences > 0 && (
-                      <span className="boletim-share"> ({percent(report.absenceShares[i] ?? 0)})</span>
-                    )}
+                    {report.absences} {report.absences === 1 ? "falta" : "faltas"}
                   </dd>
                 </div>
+              </dl>
+            </div>
+          </section>
+          <section className="boletim-card">
+            <h2>Participação</h2>
+            <ul>
+              {PARTICIPATION.map((item) => (
+                <li key={item}>
+                  <span>{item}</span>
+                  <Stars />
+                </li>
               ))}
-              <div className="boletim-total">
-                <dt>Total:</dt>
-                <dd>
-                  {report.absences} {report.absences === 1 ? "falta" : "faltas"}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-        <section className="boletim-card">
-          <h2>Participação</h2>
-          <ul>
-            {PARTICIPATION.map((item) => (
-              <li key={item}>
-                <span>{item}</span>
-                <Stars />
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className="boletim-card">
-          <h2>Desenvolvimento</h2>
-          <ul>
-            {DEVELOPMENT.map((item) => (
-              <li key={item}>
-                <span>{item}</span>
-                <Dots />
-              </li>
-            ))}
-          </ul>
-        </section>
+            </ul>
+          </section>
+        </div>
       </div>
 
       <section className="boletim-box boletim-notes">
         <h2>Observações da escola</h2>
-        {[0, 1, 2, 3, 4].map((line) => (
+        {[0, 1, 2].map((line) => (
           <span key={line} />
         ))}
       </section>
@@ -349,7 +345,8 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
         </ul>
       </div>
       <p className="boletim-note boletim-scale">
-        Em Desenvolvimento: média abaixo de 6,0 · Satisfatório: 6,0 a 7,9 · Bom: 8,0 a 8,9 · Excelente: 9,0 ou mais.
+        Média parcial = média dos bimestres já lançados. Em Desenvolvimento: abaixo de 6,0 · Satisfatório: 6,0 a 7,9 ·
+        Bom: 8,0 a 8,9 · Excelente: 9,0 ou mais.
       </p>
 
       <footer className="boletim-signatures">

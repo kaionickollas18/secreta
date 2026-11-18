@@ -23,9 +23,9 @@ interface ReportCardModalProps {
   onRetry: () => void;
 }
 
-/** Largura e altura da folha A4 em pixels de tela (96 por polegada). */
-const SHEET_WIDTH = (210 / 25.4) * 96;
-const SHEET_HEIGHT = (296.6 / 25.4) * 96;
+/** Largura e altura da folha A4 deitada em pixels de tela (96 por polegada). */
+const SHEET_WIDTH = (297 / 25.4) * 96;
+const SHEET_HEIGHT = (209.6 / 25.4) * 96;
 
 /** Boletim do aluno: a folha na tela, reduzida para caber, e o botão para baixar em PDF. */
 export function ReportCardModal({
@@ -107,7 +107,7 @@ export function ReportCardModal({
             <p role="status" className="sr-only">
               Carregando o boletim…
             </p>
-            <Skeleton className="aspect-[210/297] w-full rounded-xl" />
+            <Skeleton className="aspect-[297/210] w-full rounded-xl" />
           </div>
         ) : report.subjects.length === 0 ? (
           <p className="text-sm">Este aluno ainda não tem notas enviadas.</p>
@@ -115,7 +115,7 @@ export function ReportCardModal({
           <>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="caption">
-                Participação, desenvolvimento, presenças e observações saem em branco, para preencher à mão.
+                Foto, participação e observações saem em branco, para preencher à mão.
               </p>
               <Button variant="primary" onClick={() => setPrinting(true)} disabled={printing}>
                 <DownloadIcon />
