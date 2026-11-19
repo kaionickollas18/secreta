@@ -5,7 +5,12 @@ import { useMessageStore } from "../../store/messageStore";
 import { useReminderStore } from "../../store/reminderStore";
 import { totalUnread, unreadByChannel } from "../../utils/chat";
 import { countUnread } from "../../utils/messages";
-import { readNavCollapsed, writeNavCollapsed } from "../../utils/navPreference";
+import {
+  readNavCollapsed,
+  readNavGroupOpen,
+  writeNavCollapsed,
+  writeNavGroupOpen,
+} from "../../utils/navPreference";
 import { countDue } from "../../utils/reminders";
 import { canManageAssistants, isSchoolRole, isStaffRole, ROLE_LABELS } from "../../utils/roles";
 import { useTheme } from "../../hooks/useTheme";
@@ -19,6 +24,7 @@ import {
   ChartIcon,
   ChatIcon,
   ChevronLeftIcon,
+  FolderIcon,
   LogoutIcon,
   MoonIcon,
   NoteIcon,
@@ -41,6 +47,21 @@ interface NavItem {
   /** Só na barra do celular (no computador, o topo do menu já leva ao perfil). */
   mobileOnly?: boolean;
 }
+
+/** Itens agrupados no menu (ex.: "Administrativo"). */
+interface NavGroup {
+  key: "administrativo";
+  label: string;
+  icon: ReactNode;
+  items: NavItem[];
+}
+
+type NavEntry = NavItem | NavGroup;
+
+const isGroup = (entry: NavEntry): entry is NavGroup => "items" in entry;
+
+/** Páginas do grupo "Administrativo" (o trabalho interno da secretaria). */
+const ADMIN_KEYS: readonly NavKey[] = ["quadro", "lembretes", "calendario", "notas", "documentos"];
 
 interface AppShellProps {
   /** Página atual, destacada no menu. */
@@ -110,7 +131,29 @@ export function AppShell({ active, children }: AppShellProps) {
   const watchChat = useChatStore((s) => s.watch);
   // Lido já no primeiro desenho, para o menu não abrir num modo e mudar em seguida.
   const [collapsed, setCollapsed] = useState(readNavCollapsed);
+  // Grupo "Administrativo": aberto na página de um item dele; senão, como a pessoa deixou.
+  const [groupOpen, setGroupOpen] = useState(() => ADMIN_KEYS.includes(active) || readNavGroupOpen());
+  // No celular o grupo abre um painel sobre a barra de baixo.
+  const [groupSheet, setGroupSheet] = useState(false);
+  const groupRef = useRef<HTMLLIElement>(null);
   const { theme, toggle: toggleTheme } = useTheme();
+
+  // Fecha o painel do celular ao tocar fora dele ou apertar Esc.
+  useEffect(() => {
+    if (!groupSheet) return;
+    const outside = (event: PointerEvent) => {
+      if (!groupRef.current?.contains(event.target as Node)) setGroupSheet(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setGroupSheet(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [groupSheet]);
 
   const currentLink = useRef<HTMLAnchorElement>(null);
 
@@ -142,6 +185,18 @@ export function AppShell({ active, children }: AppShellProps) {
     const next = !collapsed;
     writeNavCollapsed(next);
     setCollapsed(next);
+  }
+
+  /** No computador, abre/fecha o grupo no menu; no celular, abre/fecha o painel. */
+  function toggleGroup() {
+    const desktop = window.matchMedia?.("(min-width: 768px)").matches ?? true;
+    if (!desktop) {
+      setGroupSheet((open) => !open);
+      return;
+    }
+    const next = !groupOpen;
+    writeNavGroupOpen(next);
+    setGroupOpen(next);
   }
 
   const due = countDue(reminders, doneKeys);
@@ -179,21 +234,29 @@ export function AppShell({ active, children }: AppShellProps) {
   const calendar: NavItem = { key: "calendario", label: "Calendário", href: "calendario.html", icon: <CalendarIcon /> };
   const dashboard: NavItem = { key: "dashboard", label: "Dashboard", href: "frequencia.html", icon: <ChartIcon /> };
 
-  const items: NavItem[] = staff
+  const items: NavEntry[] = staff
     ? [
-        { key: "quadro", label: "Quadro", href: "./", icon: <BoardIcon /> },
+        // O trabalho interno da secretaria fica junto, num grupo que abre e fecha.
         {
-          key: "lembretes",
-          label: "Lembretes",
-          href: "lembretes.html",
-          icon: <BellIcon />,
-          badge: due,
-          badgeLabel: `${due} ${due === 1 ? "lembrete pede" : "lembretes pedem"} atenção`,
+          key: "administrativo",
+          label: "Administrativo",
+          icon: <FolderIcon />,
+          items: [
+            { key: "quadro", label: "Quadro", href: "./", icon: <BoardIcon /> },
+            {
+              key: "lembretes",
+              label: "Lembretes",
+              href: "lembretes.html",
+              icon: <BellIcon />,
+              badge: due,
+              badgeLabel: `${due} ${due === 1 ? "lembrete pede" : "lembretes pedem"} atenção`,
+            },
+            calendar,
+            { key: "notas", label: "Anotações", href: "notas.html", icon: <NoteIcon /> },
+            { key: "documentos", label: "Documentos", href: "documentos.html", icon: <SendIcon /> },
+          ],
         },
-        calendar,
-        { key: "notas", label: "Anotações", href: "notas.html", icon: <NoteIcon /> },
         { key: "notasEscolares", label: "Notas", href: "notas-escolares.html", icon: <BooksIcon /> },
-        { key: "documentos", label: "Documentos", href: "documentos.html", icon: <SendIcon /> },
         conversations,
         dashboard,
         ...(canManageAssistants(profile.role)
@@ -207,6 +270,34 @@ export function AppShell({ active, children }: AppShellProps) {
       : [{ key: "gestao", label: "Escolas", href: "gestao.html", icon: <UsersIcon /> }, profileItem];
 
   const onProfile = active === "perfil";
+
+  /** Link de um item do menu (solto ou dentro de um grupo). */
+  function renderLink(item: NavItem) {
+    const current = item.key === active;
+    return (
+      <a
+        href={item.href}
+        ref={current ? currentLink : undefined}
+        aria-current={current ? "page" : undefined}
+        title={collapsed ? item.label : undefined}
+        className={`${ITEM} ${current ? "text-accent-light md:text-white" : "text-muted hover:bg-raised hover:text-ink"}`}
+      >
+        {/* O destaque é uma camada própria: na troca de página ele desliza até o item novo.
+            No celular, como na barra de abas do iPhone, o item atual só fica azul. */}
+        {current && (
+          <span aria-hidden="true" className="nav-pill absolute inset-0 hidden rounded-xl bg-accent-strong md:block" />
+        )}
+        <span className={ICON_SLOT}>
+          <span className="relative">
+            {item.icon}
+            {item.badge ? <NavBadge count={item.badge} /> : null}
+          </span>
+        </span>
+        <span className={`relative max-w-full truncate ${fading(collapsed)}`}>{item.label}</span>
+        {item.badge ? <span className="sr-only">({item.badgeLabel})</span> : null}
+      </a>
+    );
+  }
 
   return (
     <div
@@ -259,37 +350,77 @@ export function AppShell({ active, children }: AppShellProps) {
 
           {/* No celular os itens têm largura mínima e a barra rola de lado quando não cabem todos. */}
           <ul className="nav-items flex flex-1 items-stretch gap-1 overflow-x-auto [scrollbar-width:none] md:flex-none md:flex-col md:overflow-visible">
-            {items.map((item) => {
-              const current = item.key === active;
-              return (
-                <li
-                  key={item.key}
-                  className={`min-w-[72px] flex-1 shrink-0 md:min-w-0 md:flex-none ${item.mobileOnly ? "md:hidden" : ""}`}
-                >
-                  <a
-                    href={item.href}
-                    ref={current ? currentLink : undefined}
-                    aria-current={current ? "page" : undefined}
-                    title={collapsed ? item.label : undefined}
-                    className={`${ITEM} ${current ? "text-accent-light md:text-white" : "text-muted hover:bg-raised hover:text-ink"}`}
+            {items.map((entry) => {
+              if (!isGroup(entry)) {
+                return (
+                  <li
+                    key={entry.key}
+                    className={`min-w-[72px] flex-1 shrink-0 md:min-w-0 md:flex-none ${entry.mobileOnly ? "md:hidden" : ""}`}
                   >
-                    {/* O destaque é uma camada própria: na troca de página ele desliza até o item novo.
-                        No celular, como na barra de abas do iPhone, o item atual só fica azul. */}
-                    {current && (
-                      <span
-                        aria-hidden="true"
-                        className="nav-pill absolute inset-0 hidden rounded-xl bg-accent-strong md:block"
-                      />
-                    )}
+                    {renderLink(entry)}
+                  </li>
+                );
+              }
+              const inside = entry.items.some((item) => item.key === active);
+              const badge = entry.items.reduce((sum, item) => sum + (item.badge ?? 0), 0);
+              // Fechado, o grupo mostra o aviso dos itens dele (ex.: lembretes pendentes).
+              const showBadge = badge > 0 && !groupOpen;
+              return (
+                <li key={entry.key} ref={groupRef} className="relative min-w-[72px] flex-1 shrink-0 md:min-w-0 md:flex-none">
+                  <button
+                    type="button"
+                    onClick={toggleGroup}
+                    aria-expanded={groupSheet || groupOpen}
+                    aria-controls="menu-administrativo"
+                    aria-label={`${entry.label}${showBadge ? ` (${badge} com aviso)` : ""}`}
+                    title={collapsed ? entry.label : undefined}
+                    className={`${ITEM} ${inside ? "text-accent-light md:text-ink" : "text-muted"} hover:bg-raised hover:text-ink`}
+                  >
                     <span className={ICON_SLOT}>
                       <span className="relative">
-                        {item.icon}
-                        {item.badge ? <NavBadge count={item.badge} /> : null}
+                        {entry.icon}
+                        {showBadge ? <NavBadge count={badge} /> : null}
                       </span>
                     </span>
-                    <span className={`relative max-w-full truncate ${fading(collapsed)}`}>{item.label}</span>
-                    {item.badge ? <span className="sr-only">({item.badgeLabel})</span> : null}
-                  </a>
+                    {/* Na barra do celular o nome inteiro não cabe: lá vai "Adm.". */}
+                    <span className={`relative max-w-full truncate ${fading(collapsed)}`}>
+                      <span className="md:hidden">Adm.</span>
+                      <span className="hidden md:inline">{entry.label}</span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`ml-auto hidden md:block ${fading(collapsed)} transition-transform ${groupOpen ? "rotate-90" : "-rotate-90"}`}
+                    >
+                      <ChevronLeftIcon />
+                    </span>
+                  </button>
+
+                  {/* Computador: os itens logo abaixo, recuados (com o menu retraído, só os ícones). */}
+                  {groupOpen && (
+                    <ul
+                      id="menu-administrativo"
+                      aria-label={entry.label}
+                      className={`hidden flex-col gap-1 md:mt-1 md:flex ${
+                        collapsed ? "" : "md:ml-4 md:border-l md:border-line md:pl-2"
+                      }`}
+                    >
+                      {entry.items.map((item) => (
+                        <li key={item.key}>{renderLink(item)}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Celular: um painel sobre a barra de baixo, com os itens do grupo. */}
+                  {groupSheet && (
+                    <div className="fixed inset-x-2 bottom-[76px] z-40 rounded-2xl border border-line bg-surface p-2 shadow-glow md:hidden">
+                      <p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted">{entry.label}</p>
+                      <ul aria-label={entry.label} className="grid grid-cols-3 gap-1">
+                        {entry.items.map((item) => (
+                          <li key={item.key}>{renderLink(item)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </li>
               );
             })}

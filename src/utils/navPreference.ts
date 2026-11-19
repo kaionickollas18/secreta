@@ -18,6 +18,26 @@ export function readNavCollapsed(): boolean {
   }
 }
 
+/** Chave da preferência do grupo "Administrativo" do menu (aberto ou fechado). */
+export const NAV_GROUP_KEY = "secreta:menu-administrativo";
+
+/** O grupo começa fechado; só fica aberto se a pessoa deixou assim. */
+export function readNavGroupOpen(): boolean {
+  try {
+    return window.localStorage.getItem(NAV_GROUP_KEY) === "aberto";
+  } catch {
+    return false;
+  }
+}
+
+export function writeNavGroupOpen(open: boolean): void {
+  try {
+    window.localStorage.setItem(NAV_GROUP_KEY, open ? "aberto" : "fechado");
+  } catch {
+    // sem armazenamento local: a escolha vale só até trocar de página
+  }
+}
+
 export function writeNavCollapsed(collapsed: boolean): void {
   try {
     window.localStorage.setItem(NAV_PREFERENCE_KEY, serializeNavCollapsed(collapsed));

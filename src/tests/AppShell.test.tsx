@@ -10,7 +10,7 @@ import { useMessageStore } from "../store/messageStore";
 import { useReminderStore } from "../store/reminderStore";
 import type { Profile } from "../types/auth";
 import { todayISO } from "../utils/date";
-import { NAV_PREFERENCE_KEY, parseNavCollapsed } from "../utils/navPreference";
+import { NAV_GROUP_KEY, NAV_PREFERENCE_KEY, parseNavCollapsed } from "../utils/navPreference";
 import { ASSISTANT, SECRETARY, TEACHER } from "./helpers";
 
 const MASTER: Profile = { id: "m", role: "master", schoolId: null, fullName: "Kaio Ribeiro", lastName: "Ribeiro" };
@@ -26,36 +26,64 @@ function renderShell(profile: Profile, active: Parameters<typeof AppShell>[0]["a
 }
 
 const linkNames = (nav: HTMLElement) =>
-  // O rótulo visível de cada item da lista (sem o ícone, o avatar nem o contador).
-  within(within(nav).getByRole("list"))
+  // O rótulo visível de cada item do menu (sem o ícone, o avatar nem o contador), na ordem,
+  // inclusive os de dentro de um grupo aberto.
+  within(within(nav).getAllByRole("list")[0] as HTMLElement)
     .getAllByRole("link")
     .map((link) => link.querySelector("span.truncate")?.textContent);
 
+const ADMIN = ["Quadro", "Lembretes", "Calendário", "Anotações", "Documentos"];
+
 describe("AppShell", () => {
   beforeEach(() => {
+    window.localStorage.clear();
     useReminderStore.setState({ reminders: [], doneKeys: new Set(), status: "idle" });
     useMessageStore.setState({ messages: [], status: "idle", lastSeen: null });
   });
 
   it("secretário vê todas as áreas, com a página atual marcada", () => {
     const nav = within(renderShell(SECRETARY, "dashboard"));
-    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Quadro", "Lembretes", "Calendário", "Anotações", "Notas", "Documentos", "Conversas", "Dashboard", "Equipe", "Perfil"]);
+    // Fora das páginas do Administrativo, o grupo começa fechado.
+    expect(nav.getByRole("button", { name: "Administrativo" })).toHaveAttribute("aria-expanded", "false");
+    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Notas", "Conversas", "Dashboard", "Equipe", "Perfil"]);
     expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
-    expect(nav.getByRole("link", { name: "Quadro" })).not.toHaveAttribute("aria-current");
     expect(screen.getByText("conteúdo")).toBeInTheDocument();
   });
 
+  it("Quadro, Lembretes, Calendário, Anotações e Documentos ficam no grupo Administrativo", async () => {
+    // Numa página do grupo, ele já vem aberto, com a página marcada.
+    const nav = within(renderShell(SECRETARY, "lembretes"));
+    expect(nav.getByRole("button", { name: "Administrativo" })).toHaveAttribute("aria-expanded", "true");
+    expect(within(nav.getByRole("list", { name: "Administrativo" })).getAllByRole("link").map((l) => l.textContent)).toEqual(ADMIN);
+    expect(nav.getByRole("link", { name: "Lembretes" })).toHaveAttribute("aria-current", "page");
+
+    // Fecha e abre, lembrando a escolha.
+    await userEvent.click(nav.getByRole("button", { name: "Administrativo" }));
+    expect(nav.queryByRole("link", { name: "Quadro" })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(NAV_GROUP_KEY)).toBe("fechado");
+    await userEvent.click(nav.getByRole("button", { name: "Administrativo" }));
+    expect(nav.getByRole("link", { name: "Quadro" })).toBeInTheDocument();
+    expect(window.localStorage.getItem(NAV_GROUP_KEY)).toBe("aberto");
+    cleanup();
+    // Deixado aberto, ele continua aberto nas outras páginas.
+    expect(linkNames(renderShell(SECRETARY, "dashboard"))).toEqual([...ADMIN, "Notas", "Conversas", "Dashboard", "Equipe", "Perfil"]);
+  });
+
+  it("com o grupo fechado, o aviso de lembretes aparece no Administrativo", () => {
+    useReminderStore.setState({
+      reminders: [{ id: "r1", title: "Hoje", schedule: { kind: "once", dueDate: todayISO() }, createdOn: "2026-01-01" }],
+    });
+    const nav = within(renderShell(SECRETARY, "dashboard"));
+    expect(nav.getByRole("button", { name: /Administrativo.*1 com aviso/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("assistente não vê Equipe; Master só vê Escolas", () => {
-    expect(linkNames(renderShell(ASSISTANT))).toEqual(["Quadro", "Lembretes", "Calendário", "Anotações", "Notas", "Documentos", "Conversas", "Dashboard", "Perfil"]);
+    expect(linkNames(renderShell(ASSISTANT))).toEqual([...ADMIN, "Notas", "Conversas", "Dashboard", "Perfil"]);
     cleanup();
     // Mesmo com acesso de secretário, o assistente não gerencia a equipe.
     expect(linkNames(renderShell({ ...ASSISTANT, elevated: true }))).toEqual([
-      "Quadro",
-      "Lembretes",
-      "Calendário",
-      "Anotações",
+      ...ADMIN,
       "Notas",
-      "Documentos",
       "Conversas",
       "Dashboard",
       "Perfil",

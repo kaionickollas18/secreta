@@ -183,7 +183,7 @@ Use quatro contas (Master, Secretário, Assistente, Professor) e, de preferênci
 7. Professor não vê o item **Notas** nem **Anotações**; abrir `notas-escolares.html` direto leva para a página inicial dele. **No banco**, `select` em `grades` e `classrooms` volta vazio.
 
 ### 11. Notas (notas bimestrais)
-1. Como secretário: o menu mostra **Anotações** (a antiga "Notas") e **Notas**. Notas abre direto nas notas bimestrais, sem abas (não há "Históricos escolares" na página).
+1. Como secretário: o menu tem o grupo **Administrativo** (Quadro, Lembretes, Calendário, Anotações e Documentos), que abre e fecha e vem aberto numa página dele; fechado, mostra o aviso de lembretes pendentes; a escolha de aberto ou fechado fica guardada. No celular, "Adm." na barra de baixo abre um painel com os cinco itens (fecha ao tocar fora ou com Esc). Fora do grupo: **Notas**, Conversas, Dashboard, Equipe. Notas abre direto nas notas bimestrais, sem abas (não há "Históricos escolares" na página).
 2. **Cadastro de alunos** → enviar a "Relação de alunos matriculados por turma": a prévia lista cada turma com o total, os transferidos (TRF e data) e as observações; as turmas de A.E.E. aparecem como ignoradas. Salvar e enviar de novo: o total do cadastro não muda (não duplica).
 3. **Enviar notas EF I** → sem bimestre, "Salvar notas" fica desativado. Escolher "Até o 3º bimestre" e enviar o boletim do EF I: a prévia avisa que o 4º bimestre do arquivo não será gravado e lista os alunos não encontrados (se houver). Salvar: o aviso de sucesso aparece e o 1º bimestre mostra as turmas.
 4. Enviar o boletim do EF II pelo botão do EF I: a prévia avisa que o arquivo não tem boletins do EF I e não deixa salvar.
