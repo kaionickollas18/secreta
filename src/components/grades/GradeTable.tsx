@@ -114,7 +114,7 @@ export function GradeTable({
                     <button
                       type="button"
                       onClick={() => onOpenStudent(student.id)}
-                      aria-label={`Ver o boletim de ${student.name}`}
+                      aria-label={`Ver o perfil de ${student.name}`}
                       className="rounded text-left uppercase text-accent-light underline-offset-2 hover:underline"
                     >
                       {student.name}

@@ -454,13 +454,41 @@ describe("tela de notas", () => {
     expect(screen.queryByRole("button", { name: /5º ANO - A/ })).not.toBeInTheDocument();
   });
 
-  it("avisa quando o bimestre não tem notas e mostra os históricos como em breve", async () => {
+  it("abre direto nas notas bimestrais e avisa quando o bimestre não tem notas", async () => {
     const user = userEvent.setup();
     render(<NotasEscolaresApp />);
     await user.selectOptions(await screen.findByRole("combobox", { name: "Bimestre" }), "4º bimestre");
     expect(await screen.findByText("Nenhuma nota do 4º bimestre ainda")).toBeInTheDocument();
-    await user.click(screen.getByRole("tab", { name: /Históricos escolares/ }));
-    expect(screen.getByText("Históricos escolares: em breve")).toBeInTheDocument();
+    // O histórico escolar fica no perfil do aluno, não como aba da página.
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Históricos escolares/)).not.toBeInTheDocument();
+  });
+
+  it("o nome do aluno abre o perfil, com a evolução do ano e os documentos", async () => {
+    const user = userEvent.setup();
+    api.grades = {
+      1: TERM1,
+      2: [grade({ term: 2, md: 4 }), grade({ term: 2, subjectId: "mat", md: 9.5, ft: 1 })],
+    };
+    render(<NotasEscolaresApp />);
+    await user.click(await screen.findByRole("button", { name: /5º ANO - A/ }));
+    const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
+    await user.click(within(section).getByRole("button", { name: /LÍNGUA PORTUGUESA/ }));
+    await user.click(within(section).getByRole("button", { name: "Ver o perfil de ALUNA PRIMEIRA DE TESTE" }));
+
+    const dialog = within(await screen.findByRole("dialog", { name: "ALUNA PRIMEIRA DE TESTE" }));
+    expect(dialog.getByText("Transferido(a) em 04/08/2026")).toBeInTheDocument();
+    // Os documentos: boletim agora; avaliações bimestrais e histórico escolar em breve.
+    expect(dialog.getByRole("button", { name: "Boletim" })).toBeEnabled();
+    expect(dialog.getByRole("button", { name: /Avaliações bimestrais/ })).toBeDisabled();
+    expect(dialog.getByRole("button", { name: /Histórico escolar/ })).toBeDisabled();
+    // Evolução: Português 6,1 → 4,0 (média 5,1) e Matemática só no 2º (9,5).
+    // Média geral do 1º = 6,1; do 2º = (4 + 9,5) / 2 = 6,8.
+    expect(await dialog.findByRole("img", { name: /1º bim 6,1, 2º bim 6,8, 3º bim sem nota/ })).toBeInTheDocument();
+    expect(dialog.getByRole("img", { name: /Faltas por bimestre: 1º bim 3, 2º bim 4/ })).toBeInTheDocument();
+    const portuguese = dialog.getByRole("row", { name: /LÍNGUA PORTUGUESA/ });
+    expect(portuguese).toHaveTextContent("5,1");
+    expect(dialog.getByText("Matérias abaixo de 6,0").nextSibling).toHaveTextContent("1");
   });
 
   it("envia o boletim do EF I até o 3º bimestre, com a prévia e os não encontrados", async () => {
@@ -515,7 +543,7 @@ describe("tela de notas", () => {
     expect(await screen.findByText(/Cadastro atualizado/)).toBeInTheDocument();
   });
 
-  it("clica no aluno e vê o boletim, que baixa em PDF pela impressão", async () => {
+  it("do perfil do aluno abre o boletim, que baixa em PDF pela impressão", async () => {
     const user = userEvent.setup();
     api.grades = {
       1: TERM1,
@@ -526,7 +554,9 @@ describe("tela de notas", () => {
     await user.click(await screen.findByRole("button", { name: /5º ANO - A/ }));
     const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
     await user.click(within(section).getByRole("button", { name: /LÍNGUA PORTUGUESA/ }));
-    await user.click(within(section).getByRole("button", { name: "Ver o boletim de ALUNA PRIMEIRA DE TESTE" }));
+    await user.click(within(section).getByRole("button", { name: "Ver o perfil de ALUNA PRIMEIRA DE TESTE" }));
+    const profile = within(await screen.findByRole("dialog", { name: "ALUNA PRIMEIRA DE TESTE" }));
+    await user.click(profile.getByRole("button", { name: "Boletim" }));
 
     const dialog = within(await screen.findByRole("dialog", { name: "Boletim · ALUNA PRIMEIRA DE TESTE" }));
     const sheet = within(await dialog.findByRole("article", { name: "Boletim de ALUNA PRIMEIRA DE TESTE" }));

@@ -119,3 +119,17 @@ export function buildReportCard(grades: GradeRow[], subjects: Subject[]): Report
     absenceShares: absencesByTerm.map((value) => (absences > 0 ? (value ?? 0) / absences : 0)),
   };
 }
+
+/** Média geral de cada bimestre: a média das matérias com nota naquele bimestre (uma casa). */
+export function termAverages(report: ReportCardData): (number | null)[] {
+  return TERMS.map((_, i) => {
+    const scores = report.subjects.map((subject) => subject.terms[i]).filter((md): md is number => typeof md === "number");
+    return scores.length > 0 ? round1(scores.reduce((sum, md) => sum + md, 0) / scores.length) : null;
+  });
+}
+
+/** Média geral do ano até agora: a média das médias parciais das matérias (uma casa). */
+export function overallAverage(report: ReportCardData): number | null {
+  const averages = report.subjects.map((subject) => subject.average).filter((md): md is number => md !== null);
+  return averages.length > 0 ? round1(averages.reduce((sum, md) => sum + md, 0) / averages.length) : null;
+}
