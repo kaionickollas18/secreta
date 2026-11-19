@@ -10,6 +10,8 @@ interface ClassAccordionProps {
   content: SubjectBlock[] | "loading" | "error";
   /** Matérias já abertas (filtro de disciplina ou busca por nome); senão, todas recolhidas. */
   subjectsOpen: boolean;
+  /** Alunos da turma de reforço. */
+  reinforced: ReadonlySet<string>;
   onToggle: () => void;
   onRetry: () => void;
   onOpenStudent: (studentId: string) => void;
@@ -21,6 +23,7 @@ export function ClassAccordion({
   open,
   content,
   subjectsOpen,
+  reinforced,
   onToggle,
   onRetry,
   onOpenStudent,
@@ -40,7 +43,9 @@ export function ClassAccordion({
         >
           <span className="card-title">{classDisplayName(classroom.name)}</span>
           <span className="flex items-center gap-3 text-sm text-muted">
-            {matches > 0 ? `${matches} de ${studentCount} alunos` : `${studentCount} alunos`}
+            {matches > 0
+              ? `${matches} de ${studentCount} alunos`
+              : `${studentCount} alunos`}
             <svg
               viewBox="0 0 24 24"
               aria-hidden="true"
@@ -73,7 +78,9 @@ export function ClassAccordion({
               </button>
             </p>
           ) : content.length === 0 ? (
-            <p className="text-sm text-muted">Nenhuma nota desta turma com a disciplina ou o nome escolhidos.</p>
+            <p className="text-sm text-muted">
+              Nenhuma nota desta turma com a disciplina ou o nome escolhidos.
+            </p>
           ) : (
             content.map((block) => (
               <GradeTable
@@ -81,6 +88,7 @@ export function ClassAccordion({
                 classroom={classroom}
                 block={block}
                 defaultOpen={subjectsOpen}
+                reinforced={reinforced}
                 onOpenStudent={onOpenStudent}
               />
             ))

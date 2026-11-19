@@ -42,7 +42,10 @@ export function ReportCardModal({
   const [scale, setScale] = useState(1);
   const frame = useRef<HTMLDivElement>(null);
   const issuedOn = todayISO();
-  const report = useMemo(() => (Array.isArray(grades) ? buildReportCard(grades, subjects) : null), [grades, subjects]);
+  const report = useMemo(
+    () => (Array.isArray(grades) ? buildReportCard(grades, subjects) : null),
+    [grades, subjects],
+  );
 
   // A folha tem 210 mm; na tela ela encolhe para a largura da janela.
   useLayoutEffect(() => {
@@ -117,20 +120,36 @@ export function ReportCardModal({
               <p className="caption">
                 Foto, participação e observações saem em branco, para preencher à mão.
               </p>
-              <Button variant="primary" onClick={() => setPrinting(true)} disabled={printing}>
+              <Button
+                variant="primary"
+                onClick={() => setPrinting(true)}
+                disabled={printing}
+              >
                 <DownloadIcon />
                 Baixar boletim
               </Button>
             </div>
-            <div ref={frame} className="boletim-preview" style={{ height: SHEET_HEIGHT * scale }}>
-              <div className="boletim-preview-inner" style={{ transform: `scale(${scale})`, width: SHEET_WIDTH }}>
+            <div
+              ref={frame}
+              className="boletim-preview"
+              style={{ height: SHEET_HEIGHT * scale }}
+            >
+              <div
+                className="boletim-preview-inner"
+                style={{ transform: `scale(${scale})`, width: SHEET_WIDTH }}
+              >
                 {sheet?.("tela")}
               </div>
             </div>
           </>
         )}
       </div>
-      {printing && sheet && createPortal(<div className="print-document boletim">{sheet("impressao")}</div>, document.body)}
+      {printing &&
+        sheet &&
+        createPortal(
+          <div className="print-document boletim">{sheet("impressao")}</div>,
+          document.body,
+        )}
     </Modal>
   );
 }

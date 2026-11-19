@@ -22,12 +22,16 @@ export function PdfPicker({ label, disabled = false, onRead }: PdfPickerProps) {
     setError(null);
     setProgress("Abrindo o arquivo…");
     try {
-      const items = await readPdfText(file, (page, pages) => setProgress(`Lendo a página ${page} de ${pages}…`));
+      const items = await readPdfText(file, (page, pages) =>
+        setProgress(`Lendo a página ${page} de ${pages}…`),
+      );
       setProgress(null);
       onRead(items, file.name);
     } catch (cause) {
       setProgress(null);
-      setError(cause instanceof Error ? cause.message : "Não foi possível ler o arquivo.");
+      setError(
+        cause instanceof Error ? cause.message : "Não foi possível ler o arquivo.",
+      );
     }
   }
 

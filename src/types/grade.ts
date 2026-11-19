@@ -53,6 +53,16 @@ export interface GradeStudent {
   notes: string;
 }
 
+/** Aluno na turma de reforço (acompanhado de perto pela secretaria). */
+export interface ReinforcementEntry {
+  studentId: string;
+  /** Motivo ou foco (ex.: "Matemática: frações"); vazio se não informado. */
+  note: string;
+  /** ISO. */
+  addedAt: string;
+  addedByName: string;
+}
+
 /** Último envio de boletins de um segmento. */
 export interface GradeImport {
   segment: Segment;

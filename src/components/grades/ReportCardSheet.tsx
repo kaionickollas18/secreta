@@ -21,23 +21,39 @@ interface ReportCardSheetProps {
 }
 
 /** Quanto do círculo da situação vem preenchido em cada nível (a legenda mostra os quatro). */
-const LEVEL_FILL: Record<ReportLevel, number> = { developing: 0.25, satisfactory: 0.5, good: 0.75, excellent: 1 };
+const LEVEL_FILL: Record<ReportLevel, number> = {
+  developing: 0.25,
+  satisfactory: 0.5,
+  good: 0.75,
+  excellent: 1,
+};
 
 /** Círculo da situação: a parte preenchida cresce com o nível (legível também em preto e branco). */
-function LevelCircle({ level, decorative = false }: { level: ReportLevel; decorative?: boolean }) {
+function LevelCircle({
+  level,
+  decorative = false,
+}: {
+  level: ReportLevel;
+  decorative?: boolean;
+}) {
   const fill = LEVEL_FILL[level];
   const r = 7;
   const angle = fill * 2 * Math.PI;
   const x = 8 + r * Math.sin(angle);
   const y = 8 - r * Math.cos(angle);
-  const a11y = decorative ? { "aria-hidden": true } : { role: "img", "aria-label": LEVEL_LABELS[level] };
+  const a11y = decorative
+    ? { "aria-hidden": true }
+    : { role: "img", "aria-label": LEVEL_LABELS[level] };
   return (
     <svg viewBox="0 0 16 16" className="boletim-level" {...a11y}>
       <circle cx="8" cy="8" r={r} fill="#fff" stroke="#111" strokeWidth="1.2" />
       {fill >= 1 ? (
         <circle cx="8" cy="8" r={r} fill="#111" />
       ) : (
-        <path d={`M8 8 L8 1 A${r} ${r} 0 ${fill > 0.5 ? 1 : 0} 1 ${x} ${y} Z`} fill="#111" />
+        <path
+          d={`M8 8 L8 1 A${r} ${r} 0 ${fill > 0.5 ? 1 : 0} 1 ${x} ${y} Z`}
+          fill="#111"
+        />
       )}
     </svg>
   );
@@ -55,13 +71,32 @@ function Evolution({ terms }: { terms: (number | null)[] }) {
   return (
     <svg viewBox="0 0 76 22" className="boletim-evolution" aria-hidden="true">
       {points.length > 1 && (
-        <polyline points={points.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#9ca3af" strokeWidth="2" />
+        <polyline
+          points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+          fill="none"
+          stroke="#9ca3af"
+          strokeWidth="2"
+        />
       )}
       {terms.map((md, i) =>
         md === null ? (
-          <circle key={i} cx={xs[i]} cy={11} r={3} fill="#fff" stroke="#c4c8cf" strokeWidth="1.2" />
+          <circle
+            key={i}
+            cx={xs[i]}
+            cy={11}
+            r={3}
+            fill="#fff"
+            stroke="#c4c8cf"
+            strokeWidth="1.2"
+          />
         ) : (
-          <circle key={i} cx={xs[i]} cy={yOf(md)} r={4} fill={i === lastIndex ? "#111" : "#9ca3af"} />
+          <circle
+            key={i}
+            cx={xs[i]}
+            cy={yOf(md)}
+            r={4}
+            fill={i === lastIndex ? "#111" : "#9ca3af"}
+          />
         ),
       )}
     </svg>
@@ -74,7 +109,13 @@ const TERM_COLORS = ["#1d4ed8", "#16a34a", "#f59e0b", "#dc2626"];
 const percent = (share: number): string => `${Math.round(share * 100)}%`;
 
 /** Uma linha nos quatro bimestres: a nota e, ao lado, as faltas. */
-function TermCells({ scores, absences }: { scores: (number | null)[]; absences: (number | null)[] }) {
+function TermCells({
+  scores,
+  absences,
+}: {
+  scores: (number | null)[];
+  absences: (number | null)[];
+}) {
   return (
     <>
       {scores.flatMap((md, i) => [
@@ -90,7 +131,9 @@ function TermCells({ scores, absences }: { scores: (number | null)[]; absences: 
 }
 
 /** Total de faltas da linha (vem depois da média). */
-const TotalCell = ({ total }: { total: number | null }) => <td className="boletim-ft boletim-ft-total">{total ?? ""}</td>;
+const TotalCell = ({ total }: { total: number | null }) => (
+  <td className="boletim-ft boletim-ft-total">{total ?? ""}</td>
+);
 
 /** Pizza das faltas: cada bimestre com a sua cor, do tamanho da parte dele no total. */
 function AbsencePie({ shares, total }: { shares: number[]; total: number }) {
@@ -100,7 +143,8 @@ function AbsencePie({ shares, total }: { shares: number[]; total: number }) {
     if (share <= 0) return [];
     const from = start;
     start += share;
-    if (share >= 0.9999) return [<circle key={i} cx="18" cy="18" r={r} fill={TERM_COLORS[i]} />];
+    if (share >= 0.9999)
+      return [<circle key={i} cx="18" cy="18" r={r} fill={TERM_COLORS[i]} />];
     const point = (fraction: number) =>
       `${18 + r * Math.sin(fraction * 2 * Math.PI)} ${18 - r * Math.cos(fraction * 2 * Math.PI)}`;
     return [
@@ -112,10 +156,22 @@ function AbsencePie({ shares, total }: { shares: number[]; total: number }) {
     ];
   });
   return (
-    <svg viewBox="0 0 36 36" className="boletim-pie" role="img" aria-label={`Faltas por bimestre: ${total} no total`}>
+    <svg
+      viewBox="0 0 36 36"
+      className="boletim-pie"
+      role="img"
+      aria-label={`Faltas por bimestre: ${total} no total`}
+    >
       {total > 0 ? slices : <circle cx="18" cy="18" r={r} fill="#eceef1" />}
       <circle cx="18" cy="18" r="7.5" fill="#fff" />
-      <text x="18" y="20.6" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#111">
+      <text
+        x="18"
+        y="20.6"
+        textAnchor="middle"
+        fontSize="7.5"
+        fontWeight="700"
+        fill="#111"
+      >
         {total}
       </text>
     </svg>
@@ -128,10 +184,17 @@ const Stars = () => (
   </span>
 );
 
-const PARTICIPATION = ["Participação em sala", "Realiza as atividades", "Interação e respeito", "Organização", "Autonomia"];
+const PARTICIPATION = [
+  "Participação em sala",
+  "Realiza as atividades",
+  "Interação e respeito",
+  "Organização",
+  "Autonomia",
+];
 
 /** Nota abaixo da média mínima sai em vermelho. */
-const lowClass = (md: number | null): string => (md !== null && md < PASSING_MD ? " boletim-low" : "");
+const lowClass = (md: number | null): string =>
+  md !== null && md < PASSING_MD ? " boletim-low" : "";
 
 /**
  * Boletim do aluno numa folha A4 deitada, no modelo "Acompanhamento do estudante": à esquerda a
@@ -139,7 +202,14 @@ const lowClass = (md: number | null): string => (md !== null && md < PASSING_MD 
  * faltas vêm do boletim da rede; foto, participação e observações saem em branco, para
  * preencher à mão.
  */
-export function ReportCardSheet({ student, classroom, report, identity, schoolYear, issuedOn }: ReportCardSheetProps) {
+export function ReportCardSheet({
+  student,
+  classroom,
+  report,
+  identity,
+  schoolYear,
+  issuedOn,
+}: ReportCardSheetProps) {
   const schoolName = identity.officialName || "Escola";
 
   return (
@@ -168,13 +238,17 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
               <dd>
                 {student.name}
                 {student.notes ? ` - ${student.notes}` : ""}
-                {student.transferred ? ` (TRF${student.transferredOn ? ` ${brDate(student.transferredOn)}` : ""})` : ""}
+                {student.transferred
+                  ? ` (TRF${student.transferredOn ? ` ${brDate(student.transferredOn)}` : ""})`
+                  : ""}
               </dd>
             </div>
             <div>
               <dt>Turma:</dt>
               <dd>
-                {classroom ? `${classDisplayName(classroom.name)} · ${classroom.shift}` : student.className.toUpperCase()}
+                {classroom
+                  ? `${classDisplayName(classroom.name)} · ${classroom.shift}`
+                  : student.className.toUpperCase()}
               </dd>
             </div>
             <div>
@@ -194,7 +268,13 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
 
         <div className="boletim-box boletim-photo">
           <div>
-            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
             </svg>
@@ -225,7 +305,12 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 </th>
                 {/* Cada bimestre com a nota e, ao lado, as faltas da matéria. */}
                 {[1, 2, 3, 4].map((term) => (
-                  <th key={term} colSpan={2} scope="colgroup" className="boletim-term-group">
+                  <th
+                    key={term}
+                    colSpan={2}
+                    scope="colgroup"
+                    className="boletim-term-group"
+                  >
                     {term}º bimestre
                   </th>
                 ))}
@@ -260,20 +345,37 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                     {subject.name}
                   </th>
                   <TermCells scores={subject.terms} absences={subject.absences} />
-                  <td className={`boletim-average boletim-term-group${lowClass(subject.average)}`}>
+                  <td
+                    className={`boletim-average boletim-term-group${lowClass(subject.average)}`}
+                  >
                     {subject.average === null ? "" : formatScore(subject.average)}
                   </td>
                   <TotalCell total={subject.absenceTotal} />
-                  <td>{subject.level ? <LevelCircle level={subject.level} /> : <span className="boletim-none">—</span>}</td>
-                  <td>{subject.average === null ? "" : <Evolution terms={subject.terms} />}</td>
+                  <td>
+                    {subject.level ? (
+                      <LevelCircle level={subject.level} />
+                    ) : (
+                      <span className="boletim-none">—</span>
+                    )}
+                  </td>
+                  <td>
+                    {subject.average === null ? "" : <Evolution terms={subject.terms} />}
+                  </td>
                 </tr>
               ))}
               {report.activities && (
                 <tr className="boletim-activities">
-                  <th scope="row" className="boletim-subject" title={report.activities.names.join(", ")}>
+                  <th
+                    scope="row"
+                    className="boletim-subject"
+                    title={report.activities.names.join(", ")}
+                  >
                     Atividades sem nota ({report.activities.names.length})
                   </th>
-                  <TermCells scores={[null, null, null, null]} absences={report.activities.absences} />
+                  <TermCells
+                    scores={[null, null, null, null]}
+                    absences={report.activities.absences}
+                  />
                   <td className="boletim-term-group" />
                   <TotalCell total={report.activities.absenceTotal} />
                   <td colSpan={2} />
@@ -292,13 +394,22 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
                 {report.absencesByTerm.map((value, i) => (
                   <div key={i}>
                     <dt>
-                      <span className="boletim-swatch" style={{ background: TERM_COLORS[i] }} aria-hidden="true" />
+                      <span
+                        className="boletim-swatch"
+                        style={{ background: TERM_COLORS[i] }}
+                        aria-hidden="true"
+                      />
                       {i + 1}º bim:
                     </dt>
                     <dd>
-                      {value === null ? "–" : `${value} ${value === 1 ? "falta" : "faltas"}`}
+                      {value === null
+                        ? "–"
+                        : `${value} ${value === 1 ? "falta" : "faltas"}`}
                       {value !== null && report.absences > 0 && (
-                        <span className="boletim-share"> ({percent(report.absenceShares[i] ?? 0)})</span>
+                        <span className="boletim-share">
+                          {" "}
+                          ({percent(report.absenceShares[i] ?? 0)})
+                        </span>
                       )}
                     </dd>
                   </div>
@@ -345,8 +456,8 @@ export function ReportCardSheet({ student, classroom, report, identity, schoolYe
         </ul>
       </div>
       <p className="boletim-note boletim-scale">
-        Média parcial = média dos bimestres já lançados. Em Desenvolvimento: abaixo de 6,0 · Satisfatório: 6,0 a 7,9 ·
-        Bom: 8,0 a 8,9 · Excelente: 9,0 ou mais.
+        Média parcial = média dos bimestres já lançados. Em Desenvolvimento: abaixo de 6,0
+        · Satisfatório: 6,0 a 7,9 · Bom: 8,0 a 8,9 · Excelente: 9,0 ou mais.
       </p>
 
       <footer className="boletim-signatures">

@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   data: null as unknown,
   grades: {} as Record<number, unknown[]>,
   classCalls: [] as string[],
+  reinforcement: [] as string[],
   savedList: [] as unknown[],
   savedGrades: [] as { plan: unknown; fileName: string; register: boolean }[],
   pdf: [] as unknown[],
@@ -34,6 +35,17 @@ vi.mock("../store/gradeApi", () => ({
   saveGradeImport: async (_school: string, _year: number, plan: unknown, fileName: string, register: boolean) => {
     api.savedGrades.push({ plan, fileName, register });
     return { data: 7, error: null };
+  },
+  saveReinforcement: async (_school: string, studentId: string, note: string) => {
+    api.reinforcement.push(`+${studentId}:${note}`);
+    return {
+      data: { studentId, note: note.trim(), addedAt: "2026-11-18T12:00:00.000Z", addedByName: "Ana Souza" },
+      error: null,
+    };
+  },
+  removeReinforcement: async (studentId: string) => {
+    api.reinforcement.push(`-${studentId}`);
+    return null;
   },
 }));
 vi.mock("../utils/pdfReader", () => ({ readPdfText: async () => api.pdf }));
@@ -203,6 +215,7 @@ const DATA: GradeData = {
     { segment: "ef1", upToTerm: 3, fileName: "EFI.pdf", rowCount: 4, importedByName: "", importedAt: "" },
     { segment: "ef2", upToTerm: 3, fileName: "EFII.pdf", rowCount: 1, importedByName: "", importedAt: "" },
   ],
+  reinforcement: [],
 };
 
 const TERM1: GradeRow[] = [
@@ -387,6 +400,7 @@ describe("tela de notas", () => {
     api.savedList = [];
     api.savedGrades = [];
     api.classCalls = [];
+    api.reinforcement = [];
     useGradeStore.setState({ status: "idle", schoolYear: null, classes: {}, students: {} });
     useAuthStore.setState({ status: "signedIn", profile: SECRETARY, error: null });
   });
@@ -541,6 +555,40 @@ describe("tela de notas", () => {
     await user.click(dialog.getByRole("button", { name: "Salvar cadastro" }));
     await waitFor(() => expect(api.savedList).toHaveLength(1));
     expect(await screen.findByText(/Cadastro atualizado/)).toBeInTheDocument();
+  });
+
+  it("põe o aluno na turma de reforço pelo perfil, marca nas tabelas, lista e tira", async () => {
+    const user = userEvent.setup();
+    render(<NotasEscolaresApp />);
+    expect(await screen.findByRole("button", { name: "Turma de reforço (0)" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /5º ANO - A/ }));
+    const section = screen.getByRole("region", { name: "5º ANO - A · LÍNGUA PORTUGUESA" });
+    await user.click(within(section).getByRole("button", { name: /LÍNGUA PORTUGUESA/ }));
+    await user.click(within(section).getByRole("button", { name: "Ver o perfil de ALUNO SEGUNDO EXEMPLO" }));
+
+    let profile = within(await screen.findByRole("dialog", { name: "ALUNO SEGUNDO EXEMPLO" }));
+    await user.click(profile.getByRole("button", { name: "Adicionar à turma de reforço" }));
+    await user.type(profile.getByLabelText(/Motivo ou foco do reforço/), "Matemática: frações");
+    await user.click(profile.getByRole("button", { name: "Adicionar ao reforço" }));
+    expect(await profile.findByText("Na turma de reforço")).toBeInTheDocument();
+    expect(profile.getByText("Matemática: frações")).toBeInTheDocument();
+    expect(api.reinforcement).toEqual(["+s2:Matemática: frações"]);
+
+    // Fora do perfil: a marca na tabela e a contagem no botão da lista.
+    await user.click(profile.getByRole("button", { name: "Fechar" }));
+    const row = within(section).getByRole("row", { name: /ALUNO SEGUNDO EXEMPLO/ });
+    expect(within(row).getByText("Reforço")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Turma de reforço (1)" }));
+    const list = within(await screen.findByRole("dialog", { name: "Turma de reforço" }));
+    expect(list.getByRole("row", { name: /ALUNO SEGUNDO EXEMPLO.*5º ANO - A.*Matemática: frações/ })).toBeInTheDocument();
+
+    // A lista leva ao perfil, onde dá para tirar do reforço (com confirmação).
+    await user.click(list.getByRole("button", { name: "Ver o perfil de ALUNO SEGUNDO EXEMPLO" }));
+    profile = within(await screen.findByRole("dialog", { name: "ALUNO SEGUNDO EXEMPLO" }));
+    await user.click(profile.getByRole("button", { name: "Tirar do reforço" }));
+    await user.click(within(profile.getByRole("group", { name: "Confirmar" })).getByRole("button", { name: "Tirar do reforço" }));
+    expect(await profile.findByRole("button", { name: "Adicionar à turma de reforço" })).toBeInTheDocument();
+    expect(api.reinforcement).toEqual(["+s2:Matemática: frações", "-s2"]);
   });
 
   it("do perfil do aluno abre o boletim, que baixa em PDF pela impressão", async () => {

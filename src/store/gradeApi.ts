@@ -1,4 +1,4 @@
-import type { GradeRow, Term } from "../types/grade";
+import type { GradeRow, ReinforcementEntry, Term } from "../types/grade";
 import type { GradeImportPlan } from "../utils/gradeImport";
 import type { GradeData } from "../utils/grades";
 import {
@@ -6,6 +6,7 @@ import {
   gradeFromRow,
   gradeImportFromRow,
   gradeStudentFromRow,
+  reinforcementFromRow,
   rowsOf,
   subjectFromRow,
 } from "../utils/gradeRows";
@@ -27,7 +28,9 @@ const LOAD_FAIL = "Não foi possível carregar as notas.";
 
 type Page = PromiseLike<{ data: unknown[] | null; error: unknown }>;
 
-async function fetchAll(query: (from: number, to: number) => Page): Promise<unknown[] | null> {
+async function fetchAll(
+  query: (from: number, to: number) => Page,
+): Promise<unknown[] | null> {
   const all: unknown[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await query(from, from + PAGE - 1);
@@ -38,12 +41,17 @@ async function fetchAll(query: (from: number, to: number) => Page): Promise<unkn
 }
 
 const chunks = <T>(items: T[], size = BATCH): T[][] =>
-  Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size));
+  Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
+    items.slice(i * size, (i + 1) * size),
+  );
 
-export async function fetchGradeData(schoolId: string, schoolYear: number): Promise<ApiResult<GradeData>> {
+export async function fetchGradeData(
+  schoolId: string,
+  schoolYear: number,
+): Promise<ApiResult<GradeData>> {
   const db = supabase;
   if (!db) return { data: null, error: LOAD_FAIL };
-  const [classrooms, subjects, imports, students] = await Promise.all([
+  const [classrooms, subjects, imports, students, reinforcement] = await Promise.all([
     db
       .from("classrooms")
       .select("id, school_year, name, segment, shift, teachers")
@@ -58,23 +66,67 @@ export async function fetchGradeData(schoolId: string, schoolYear: number): Prom
     fetchAll((from, to) =>
       db
         .from("students")
-        .select("id, class_name, name, registration, roll_number, status, transferred_on, notes")
+        .select(
+          "id, class_name, name, registration, roll_number, status, transferred_on, notes",
+        )
         .eq("school_id", schoolId)
         .eq("school_year", schoolYear)
         .order("id")
         .range(from, to),
     ),
+    db
+      .from("reinforcement_students")
+      .select("student_id, note, added_at, added_by_name")
+      .eq("school_id", schoolId),
   ]);
-  if (classrooms.error || subjects.error || imports.error || !students) return { data: null, error: LOAD_FAIL };
+  if (classrooms.error || subjects.error || imports.error || !students)
+    return { data: null, error: LOAD_FAIL };
   return {
     data: {
       classrooms: rowsOf(classrooms.data, classroomFromRow),
       subjects: rowsOf(subjects.data, subjectFromRow),
       imports: rowsOf(imports.data, gradeImportFromRow),
       students: rowsOf(students, gradeStudentFromRow),
+      // Sem a lista do reforço, as notas continuam abrindo (só a marcação some).
+      reinforcement: reinforcement.error
+        ? []
+        : rowsOf(reinforcement.data, reinforcementFromRow),
     },
     error: null,
   };
+}
+
+const REINFORCEMENT_FAIL = "Não foi possível salvar a turma de reforço. Tente de novo.";
+
+/** Põe o aluno na turma de reforço (ou só troca o motivo, se ele já estiver). */
+export async function saveReinforcement(
+  schoolId: string,
+  studentId: string,
+  note: string,
+): Promise<ApiResult<ReinforcementEntry>> {
+  if (!supabase) return { data: null, error: REINFORCEMENT_FAIL };
+  const { data, error } = await supabase
+    .from("reinforcement_students")
+    .upsert(
+      { school_id: schoolId, student_id: studentId, note: note.trim() || null },
+      { onConflict: "student_id" },
+    )
+    .select("student_id, note, added_at, added_by_name")
+    .single();
+  const entry = error ? null : reinforcementFromRow(data);
+  return entry ? { data: entry, error: null } : { data: null, error: REINFORCEMENT_FAIL };
+}
+
+/** Tira o aluno da turma de reforço (só a marcação; nada do aluno é apagado). */
+export async function removeReinforcement(studentId: string): Promise<string | null> {
+  if (!supabase) return REINFORCEMENT_FAIL;
+  const { error } = await supabase
+    .from("reinforcement_students")
+    .delete()
+    .eq("student_id", studentId);
+  return error
+    ? "Não foi possível tirar o aluno da turma de reforço. Tente de novo."
+    : null;
 }
 
 /**
@@ -103,7 +155,10 @@ export async function fetchClassGrades(
 }
 
 /** Todas as notas de um aluno (os quatro bimestres), para o boletim dele. */
-export async function fetchStudentGrades(schoolId: string, studentId: string): Promise<ApiResult<GradeRow[]>> {
+export async function fetchStudentGrades(
+  schoolId: string,
+  studentId: string,
+): Promise<ApiResult<GradeRow[]>> {
   if (!supabase) return { data: null, error: "Não foi possível carregar o boletim." };
   const { data, error } = await supabase
     .from("grades")
@@ -139,10 +194,14 @@ async function upsertClassrooms(
   return new Map(data.map((row: { id: string; name: string }) => [row.name, row.id]));
 }
 
-const SAVE_LIST_FAIL = "Não foi possível salvar o cadastro dos alunos. Nada foi perdido; tente de novo.";
+const SAVE_LIST_FAIL =
+  "Não foi possível salvar o cadastro dos alunos. Nada foi perdido; tente de novo.";
 
 /** Grava a lista de matriculados: turmas (com professores) e alunos (cria e atualiza). */
-export async function saveStudentList(schoolId: string, plan: StudentImportPlan): Promise<string | null> {
+export async function saveStudentList(
+  schoolId: string,
+  plan: StudentImportPlan,
+): Promise<string | null> {
   const db = supabase;
   if (!db) return SAVE_LIST_FAIL;
   const classes = await upsertClassrooms(schoolId, plan.schoolYear, plan.classrooms);
@@ -177,7 +236,8 @@ export async function saveStudentList(schoolId: string, plan: StudentImportPlan)
   return null;
 }
 
-const SAVE_GRADES_FAIL = "Não foi possível salvar as notas. As notas anteriores continuam como estavam.";
+const SAVE_GRADES_FAIL =
+  "Não foi possível salvar as notas. As notas anteriores continuam como estavam.";
 
 /**
  * Grava os boletins de um segmento, do 1º bimestre até o escolhido (substitui o que havia
@@ -206,11 +266,16 @@ export async function saveGradeImport(
       { onConflict: "school_id,name" },
     )
     .select("id, name");
-  if (!classes || subjectError || !Array.isArray(subjectData)) return { data: null, error: SAVE_GRADES_FAIL };
-  const subjects = new Map(subjectData.map((row: { id: string; name: string }) => [row.name, row.id]));
+  if (!classes || subjectError || !Array.isArray(subjectData))
+    return { data: null, error: SAVE_GRADES_FAIL };
+  const subjects = new Map(
+    subjectData.map((row: { id: string; name: string }) => [row.name, row.id]),
+  );
 
   const rows = [...plan.rows];
-  const toRegister = registerUnmatched ? plan.unmatched.filter((card) => !card.duplicate) : [];
+  const toRegister = registerUnmatched
+    ? plan.unmatched.filter((card) => !card.duplicate)
+    : [];
   if (toRegister.length > 0) {
     const { data, error } = await db
       .from("students")
@@ -227,10 +292,17 @@ export async function saveGradeImport(
       )
       .select("id, class_name, name");
     if (error || !Array.isArray(data)) return { data: null, error: SAVE_GRADES_FAIL };
-    const ids = new Map(data.map((row: { id: string; class_name: string; name: string }) => [`${row.class_name}|${row.name}`, row.id]));
+    const ids = new Map(
+      data.map((row: { id: string; class_name: string; name: string }) => [
+        `${row.class_name}|${row.name}`,
+        row.id,
+      ]),
+    );
     for (const card of toRegister) {
       const studentId = ids.get(`${card.className}|${card.name}`);
-      if (studentId) for (const score of card.scores) rows.push({ studentId, className: card.className, ...score });
+      if (studentId)
+        for (const score of card.scores)
+          rows.push({ studentId, className: card.className, ...score });
     }
   }
 
@@ -253,7 +325,14 @@ export async function saveGradeImport(
       s = studentIds.push(row.studentId) - 1;
       studentIndex.set(row.studentId, s);
     }
-    compactRows.push([s, indexOf(classroomIds, classroomId), indexOf(subjectIds, subjectId), row.term, row.md, row.ft]);
+    compactRows.push([
+      s,
+      indexOf(classroomIds, classroomId),
+      indexOf(subjectIds, subjectId),
+      row.term,
+      row.md,
+      row.ft,
+    ]);
   }
 
   const { data, error } = await db.rpc("save_grades", {

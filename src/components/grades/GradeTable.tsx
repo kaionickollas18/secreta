@@ -13,7 +13,9 @@ interface GradeTableProps {
   block: SubjectBlock;
   /** Começa aberta (com filtro de disciplina ou busca por nome); senão, recolhida. */
   defaultOpen?: boolean;
-  /** Abre o boletim do aluno. */
+  /** Alunos da turma de reforço (ganham a marca "Reforço"). */
+  reinforced: ReadonlySet<string>;
+  /** Abre o perfil do aluno. */
   onOpenStudent: (studentId: string) => void;
 }
 
@@ -25,6 +27,7 @@ export function GradeTable({
   classroom,
   block,
   defaultOpen = false,
+  reinforced,
   onOpenStudent,
 }: GradeTableProps) {
   const { subject, lines } = block;
@@ -126,6 +129,11 @@ export function GradeTable({
                       <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-prio-medium-tint px-2 text-2xs font-semibold text-prio-medium">
                         TRF
                         {student.transferredOn ? ` ${brDate(student.transferredOn)}` : ""}
+                      </span>
+                    )}
+                    {reinforced.has(student.id) && (
+                      <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-accent-soft px-2 text-2xs font-semibold text-accent-light">
+                        Reforço
                       </span>
                     )}
                   </td>

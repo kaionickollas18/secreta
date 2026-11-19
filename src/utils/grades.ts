@@ -3,8 +3,9 @@ import type {
   GradeResult,
   GradeRow,
   GradeStudent,
-  Segment,
   GradeImport,
+  ReinforcementEntry,
+  Segment,
   Subject,
   Term,
 } from "../types/grade";
@@ -194,6 +195,8 @@ export interface GradeData {
   subjects: Subject[];
   students: GradeStudent[];
   imports: GradeImport[];
+  /** Alunos na turma de reforço. */
+  reinforcement: ReinforcementEntry[];
 }
 
 const titleCase = (value: string): string =>

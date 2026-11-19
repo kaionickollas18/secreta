@@ -1,10 +1,17 @@
 import { useMemo } from "react";
-import type { Classroom, GradeRow, GradeStudent, Subject } from "../../types/grade";
+import type {
+  Classroom,
+  GradeRow,
+  GradeStudent,
+  ReinforcementEntry,
+  Subject,
+} from "../../types/grade";
 import { brDate, classDisplayName, formatScore, PASSING_MD } from "../../utils/grades";
 import { buildReportCard, overallAverage, termAverages } from "../../utils/reportCard";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { Skeleton } from "../ui/Skeleton";
+import { ReinforcementPanel } from "./ReinforcementPanel";
 import { AbsenceChart, AverageChart } from "./StudentEvolution";
 
 interface StudentProfileModalProps {
@@ -16,6 +23,10 @@ interface StudentProfileModalProps {
   onClose: () => void;
   onRetry: () => void;
   onOpenReportCard: () => void;
+  /** O aluno na turma de reforço, ou `null`. */
+  reinforcement: ReinforcementEntry | null;
+  onSaveReinforcement: (note: string) => Promise<string | null>;
+  onRemoveReinforcement: () => Promise<string | null>;
 }
 
 const TERMS = [0, 1, 2, 3];
@@ -52,6 +63,9 @@ export function StudentProfileModal({
   onClose,
   onRetry,
   onOpenReportCard,
+  reinforcement,
+  onSaveReinforcement,
+  onRemoveReinforcement,
 }: StudentProfileModalProps) {
   const report = useMemo(
     () => (Array.isArray(grades) ? buildReportCard(grades, subjects) : null),
@@ -125,6 +139,12 @@ export function StudentProfileModal({
             </span>
           </Button>
         </nav>
+
+        <ReinforcementPanel
+          entry={reinforcement}
+          onSave={onSaveReinforcement}
+          onRemove={onRemoveReinforcement}
+        />
 
         {grades === "error" ? (
           <p role="alert" className="text-sm text-prio-urgent">

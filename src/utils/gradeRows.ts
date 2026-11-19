@@ -1,4 +1,4 @@
-import type { Classroom, GradeImport, GradeRow, GradeStudent, Subject } from "../types/grade";
+import type { Classroom, GradeImport, GradeRow, GradeStudent, ReinforcementEntry, Subject } from "../types/grade";
 import { isTerm } from "./grades";
 
 /** Conversões das linhas do banco (dado externo). Linha incompleta é descartada (`null`). */
@@ -91,4 +91,12 @@ export function gradeImportFromRow(value: unknown): GradeImport | null {
 /** Aplica a conversão e descarta o que não serviu. */
 export function rowsOf<T>(data: unknown, convert: (row: unknown) => T | null): T[] {
   return (Array.isArray(data) ? data : []).map(convert).filter((item): item is T => item !== null);
+}
+
+export function reinforcementFromRow(value: unknown): ReinforcementEntry | null {
+  const r = asRow(value);
+  if (!r) return null;
+  const studentId = text(r.student_id);
+  if (!studentId) return null;
+  return { studentId, note: text(r.note), addedAt: text(r.added_at), addedByName: text(r.added_by_name) };
 }

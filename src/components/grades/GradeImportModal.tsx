@@ -2,7 +2,13 @@ import { useMemo, useState } from "react";
 import { saveGradeImport } from "../../store/gradeApi";
 import type { GradeImport, GradeStudent, Segment, Term } from "../../types/grade";
 import { planGradeImport } from "../../utils/gradeImport";
-import { classDisplayName, isTerm, SEGMENT_SHORT, TERMS, termLabel } from "../../utils/grades";
+import {
+  classDisplayName,
+  isTerm,
+  SEGMENT_SHORT,
+  TERMS,
+  termLabel,
+} from "../../utils/grades";
 import type { TextItem } from "../../utils/pdfText";
 import { parseReportCards, type ReportCard } from "../../utils/reportCardParser";
 import { Button } from "../ui/Button";
@@ -26,7 +32,9 @@ const SEGMENT_NAMES: Record<Segment, string> = { ef1: "EF I", ef2: "EF II" };
 /** "1º, 2º e 3º" */
 const termList = (terms: Term[]): string => {
   const names = terms.map((term) => `${term}º`);
-  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
+  return names.length <= 1
+    ? (names[0] ?? "")
+    : `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
 };
 
 /** Envio do boletim escolar de um segmento: bimestre, prévia, alunos não encontrados e gravação. */
@@ -48,7 +56,8 @@ export function GradeImportModal({
   const [saving, setSaving] = useState(false);
 
   const plan = useMemo(
-    () => (segment && term && cards ? planGradeImport(cards, segment, term, students) : null),
+    () =>
+      segment && term && cards ? planGradeImport(cards, segment, term, students) : null,
     [segment, term, cards, students],
   );
 
@@ -68,7 +77,9 @@ export function GradeImportModal({
     setRegister(false);
     if (result.cards.length === 0) {
       setCards(null);
-      setProblem("Nenhum boletim encontrado. Confira se o arquivo é o “Boletim escolar” tirado do sistema da rede.");
+      setProblem(
+        "Nenhum boletim encontrado. Confira se o arquivo é o “Boletim escolar” tirado do sistema da rede.",
+      );
       return;
     }
     setProblem(null);
@@ -101,9 +112,10 @@ export function GradeImportModal({
     <Modal open title={`Enviar notas · ${SEGMENT_SHORT[segment]}`} onClose={close}>
       <div className="flex flex-col gap-4">
         <p className="caption">
-          Envie o PDF “Boletim escolar” do {SEGMENT_NAMES[segment]}, com todas as turmas. São gravados a média (MD) e as
-          faltas (FT) de cada disciplina do 1º até o bimestre escolhido; os bimestres seguintes, mesmo que já estejam no
-          arquivo, ficam de fora. Enviar de novo substitui esses bimestres, sem duplicar.
+          Envie o PDF “Boletim escolar” do {SEGMENT_NAMES[segment]}, com todas as turmas.
+          São gravados a média (MD) e as faltas (FT) de cada disciplina do 1º até o
+          bimestre escolhido; os bimestres seguintes, mesmo que já estejam no arquivo,
+          ficam de fora. Enviar de novo substitui esses bimestres, sem duplicar.
         </p>
 
         <div>
@@ -135,11 +147,14 @@ export function GradeImportModal({
             {problem}
           </p>
         )}
-        {cards && !term && <p className="text-sm">Arquivo lido. Escolha o bimestre para ver a prévia.</p>}
+        {cards && !term && (
+          <p className="text-sm">Arquivo lido. Escolha o bimestre para ver a prévia.</p>
+        )}
 
         {plan && wrongFile && (
           <p role="alert" className="text-sm text-prio-urgent">
-            Este arquivo não tem boletins do {SEGMENT_NAMES[segment]}. Confira se não é o PDF do outro segmento.
+            Este arquivo não tem boletins do {SEGMENT_NAMES[segment]}. Confira se não é o
+            PDF do outro segmento.
           </p>
         )}
 
@@ -147,37 +162,50 @@ export function GradeImportModal({
           <section aria-label="Prévia das notas" className="flex flex-col gap-3">
             <p className="text-sm">
               <strong>{plan.cards} boletins</strong> em {plan.classes.length}{" "}
-              {plan.classes.length === 1 ? "turma" : "turmas"} ({plan.classes.map((c) => classDisplayName(c.name)).join(", ")}),{" "}
-              {plan.subjects.length} disciplinas. {plan.matched} {plan.matched === 1 ? "aluno encontrado" : "alunos encontrados"} no
-              cadastro; <strong>{plan.rows.length}</strong> lançamentos a gravar ({termList(TERMS.filter((t) => t <= plan.upToTerm))}{" "}
-              bimestre).
+              {plan.classes.length === 1 ? "turma" : "turmas"} (
+              {plan.classes.map((c) => classDisplayName(c.name)).join(", ")}),{" "}
+              {plan.subjects.length} disciplinas. {plan.matched}{" "}
+              {plan.matched === 1 ? "aluno encontrado" : "alunos encontrados"} no
+              cadastro; <strong>{plan.rows.length}</strong> lançamentos a gravar (
+              {termList(TERMS.filter((t) => t <= plan.upToTerm))} bimestre).
             </p>
             {plan.ignoredTerms.length > 0 && (
               <p className="text-sm text-prio-medium">
-                O arquivo também traz o {termList(plan.ignoredTerms)} bimestre, que não será gravado agora.
+                O arquivo também traz o {termList(plan.ignoredTerms)} bimestre, que não
+                será gravado agora.
               </p>
             )}
             {!plan.termsInFile.includes(plan.upToTerm) && (
               <p className="text-sm text-prio-medium">
-                O arquivo ainda não tem médias do {termLabel(plan.upToTerm)}: só as faltas dele serão gravadas.
+                O arquivo ainda não tem médias do {termLabel(plan.upToTerm)}: só as faltas
+                dele serão gravadas.
               </p>
             )}
             {previous && (
               <p className="caption">
-                Substitui o envio anterior ({previous.fileName || "sem nome"}, até o {termLabel(previous.upToTerm)}
-                {previous.importedByName ? `, por ${previous.importedByName}` : ""}) do 1º ao {termLabel(plan.upToTerm)}.
+                Substitui o envio anterior ({previous.fileName || "sem nome"}, até o{" "}
+                {termLabel(previous.upToTerm)}
+                {previous.importedByName ? `, por ${previous.importedByName}` : ""}) do 1º
+                ao {termLabel(plan.upToTerm)}.
               </p>
             )}
             {plan.otherSegment > 0 && (
-              <p className="caption">{plan.otherSegment} boletins de outro segmento no arquivo ficam de fora.</p>
+              <p className="caption">
+                {plan.otherSegment} boletins de outro segmento no arquivo ficam de fora.
+              </p>
             )}
-            {skipped.length > 0 && <p className="caption">Ignorados: {skipped.join("; ")}.</p>}
+            {skipped.length > 0 && (
+              <p className="caption">Ignorados: {skipped.join("; ")}.</p>
+            )}
 
             {plan.unmatched.length > 0 && (
               <div className="rounded-2xl border border-prio-urgent/40 bg-prio-urgent-tint p-3">
                 <p className="text-sm font-semibold">
                   {plan.unmatched.length}{" "}
-                  {plan.unmatched.length === 1 ? "aluno não encontrado" : "alunos não encontrados"} no cadastro
+                  {plan.unmatched.length === 1
+                    ? "aluno não encontrado"
+                    : "alunos não encontrados"}{" "}
+                  no cadastro
                 </p>
                 <ul className="mt-2 max-h-40 list-disc overflow-y-auto pl-5 text-sm">
                   {plan.unmatched.map((card) => (
@@ -189,7 +217,8 @@ export function GradeImportModal({
                   ))}
                 </ul>
                 <p className="caption mt-2">
-                  Para resolver, envie antes a lista de matriculados atualizada, ou cadastre estes alunos agora.
+                  Para resolver, envie antes a lista de matriculados atualizada, ou
+                  cadastre estes alunos agora.
                 </p>
                 {registrable.length > 0 && (
                   <label className="mt-2 flex min-h-[44px] items-center gap-2 text-sm">
@@ -199,8 +228,11 @@ export function GradeImportModal({
                       checked={register}
                       onChange={(event) => setRegister(event.target.checked)}
                     />
-                    Cadastrar {registrable.length === 1 ? "este aluno" : `estes ${registrable.length} alunos`} e gravar as
-                    notas {registrable.length === 1 ? "dele" : "deles"}
+                    Cadastrar{" "}
+                    {registrable.length === 1
+                      ? "este aluno"
+                      : `estes ${registrable.length} alunos`}{" "}
+                    e gravar as notas {registrable.length === 1 ? "dele" : "deles"}
                   </label>
                 )}
               </div>
@@ -214,7 +246,12 @@ export function GradeImportModal({
           </Button>
           <Button
             variant="primary"
-            disabled={!plan || wrongFile || saving || plan.rows.length + (register ? registrable.length : 0) === 0}
+            disabled={
+              !plan ||
+              wrongFile ||
+              saving ||
+              plan.rows.length + (register ? registrable.length : 0) === 0
+            }
             onClick={() => void save()}
           >
             {saving ? "Salvando…" : "Salvar notas"}

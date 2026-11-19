@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ClassAccordion } from "../components/grades/ClassAccordion";
 import { GradeImportModal } from "../components/grades/GradeImportModal";
 import { ReportCardModal } from "../components/grades/ReportCardModal";
+import { ReinforcementListModal } from "../components/grades/ReinforcementListModal";
 import { StudentProfileModal } from "../components/grades/StudentProfileModal";
 import { StudentListImportModal } from "../components/grades/StudentListImportModal";
 import { Button } from "../components/ui/Button";
@@ -57,6 +58,8 @@ export default function NotasEscolaresApp() {
     loadClass,
     students: studentGrades,
     loadStudent,
+    addToReinforcement,
+    removeFromReinforcement,
   } = useGradeStore();
   const identity = useSchoolStore((s) => s.identity);
   const loadIdentity = useSchoolStore((s) => s.load);
@@ -75,6 +78,12 @@ export default function NotasEscolaresApp() {
   const [reportStudentId, setReportStudentId] = useState<string | null>(null);
   /** Boletim aberto a partir do perfil do aluno. */
   const [showingReportCard, setShowingReportCard] = useState(false);
+  const [showingReinforcement, setShowingReinforcement] = useState(false);
+  /** Alunos da turma de reforço, para a marca nas tabelas. */
+  const reinforced = useMemo(
+    () => new Set(data.reinforcement.map((entry) => entry.studentId)),
+    [data.reinforcement],
+  );
 
   useEffect(() => {
     if (schoolId) void load(schoolId, schoolYear);
@@ -177,6 +186,9 @@ export default function NotasEscolaresApp() {
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button variant="depth" onClick={() => setImportingList(true)}>
                 Cadastro de alunos
+              </Button>
+              <Button variant="depth" onClick={() => setShowingReinforcement(true)}>
+                Turma de reforço ({data.reinforcement.length})
               </Button>
               {SEGMENTS.map((segment) => (
                 <Button
@@ -326,6 +338,7 @@ export default function NotasEscolaresApp() {
                       open={open}
                       content={open ? classContent(id) : "loading"}
                       subjectsOpen={subjectId !== "" || query.trim() !== ""}
+                      reinforced={reinforced}
                       onToggle={() => toggle(id)}
                       onRetry={() => schoolId && void loadClass(schoolId, id, term, true)}
                       onOpenStudent={openReport}
@@ -369,8 +382,33 @@ export default function NotasEscolaresApp() {
                 reportStudentId && void loadStudent(schoolId, reportStudentId, true)
               }
               onOpenReportCard={() => setShowingReportCard(true)}
+              reinforcement={
+                (reportStudentId &&
+                  data.reinforcement.find((e) => e.studentId === reportStudentId)) ||
+                null
+              }
+              onSaveReinforcement={(note) =>
+                reportStudentId
+                  ? addToReinforcement(schoolId, reportStudentId, note)
+                  : Promise.resolve(null)
+              }
+              onRemoveReinforcement={() =>
+                reportStudentId
+                  ? removeFromReinforcement(reportStudentId)
+                  : Promise.resolve(null)
+              }
             />
           )}
+          <ReinforcementListModal
+            open={showingReinforcement}
+            entries={data.reinforcement}
+            students={data.students}
+            onClose={() => setShowingReinforcement(false)}
+            onOpenStudent={(studentId) => {
+              setShowingReinforcement(false);
+              openReport(studentId);
+            }}
+          />
           {showingReportCard && (
             <ReportCardModal
               student={reportStudent}

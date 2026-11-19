@@ -44,11 +44,15 @@ export function StudentListImportModal({
     const list = parseStudentList(items);
     setPlan(null);
     if (list.classes.length === 0) {
-      setProblem("Nenhuma turma encontrada. Confira se o arquivo é a “Relação de alunos matriculados por turma”.");
+      setProblem(
+        "Nenhuma turma encontrada. Confira se o arquivo é a “Relação de alunos matriculados por turma”.",
+      );
       return;
     }
     if (list.schoolYear !== null && list.schoolYear !== schoolYear) {
-      setProblem(`A lista é do ano letivo ${list.schoolYear}; a página está em ${schoolYear}.`);
+      setProblem(
+        `A lista é do ano letivo ${list.schoolYear}; a página está em ${schoolYear}.`,
+      );
       return;
     }
     setProblem(null);
@@ -73,8 +77,9 @@ export function StudentListImportModal({
     <Modal open={open} title="Cadastro dos alunos matriculados" onClose={close}>
       <div className="flex flex-col gap-4">
         <p className="caption">
-          Envie o PDF “Relação de alunos matriculados por turma” do sistema da rede, com todas as turmas. Quem já está
-          no cadastro é atualizado, sem duplicar; as turmas de Atendimento Educacional Especializado ficam de fora.
+          Envie o PDF “Relação de alunos matriculados por turma” do sistema da rede, com
+          todas as turmas. Quem já está no cadastro é atualizado, sem duplicar; as turmas
+          de Atendimento Educacional Especializado ficam de fora.
         </p>
         <PdfPicker label="Arquivo PDF da lista" disabled={saving} onRead={handleRead} />
         {problem && (
@@ -86,8 +91,9 @@ export function StudentListImportModal({
         {plan && (
           <section aria-label="Prévia da lista" className="flex flex-col gap-3">
             <p className="text-sm">
-              <strong>{plan.rows.length} alunos</strong> em {plan.classrooms.length} turmas: {plan.updated} já no
-              cadastro, {plan.created} {plan.created === 1 ? "novo" : "novos"}, {plan.transferred}{" "}
+              <strong>{plan.rows.length} alunos</strong> em {plan.classrooms.length}{" "}
+              turmas: {plan.updated} já no cadastro, {plan.created}{" "}
+              {plan.created === 1 ? "novo" : "novos"}, {plan.transferred}{" "}
               {plan.transferred === 1 ? "transferido" : "transferidos"}.
             </p>
             <ul className="max-h-64 divide-y divide-line overflow-y-auto rounded-2xl border border-line text-sm">
@@ -97,13 +103,17 @@ export function StudentListImportModal({
                 return (
                   <li key={classroom.name} className="px-3 py-2">
                     <p className="font-semibold">
-                      {classDisplayName(classroom.name)} · {classroom.shift} — {rows.length} alunos
+                      {classDisplayName(classroom.name)} · {classroom.shift} —{" "}
+                      {rows.length} alunos
                     </p>
                     {transferred.length > 0 && (
                       <p className="text-muted">
                         TRF:{" "}
                         {transferred
-                          .map((row) => `${row.student.name}${row.student.transferredOn ? ` (${brDate(row.student.transferredOn)})` : ""}`)
+                          .map(
+                            (row) =>
+                              `${row.student.name}${row.student.transferredOn ? ` (${brDate(row.student.transferredOn)})` : ""}`,
+                          )
                           .join(", ")}
                       </p>
                     )}
@@ -120,11 +130,17 @@ export function StudentListImportModal({
                 );
               })}
             </ul>
-            {plan.skipped.length > 0 && <p className="caption">Ignoradas: {plan.skipped.join("; ")}.</p>}
+            {plan.skipped.length > 0 && (
+              <p className="caption">Ignoradas: {plan.skipped.join("; ")}.</p>
+            )}
             {plan.notInList.length > 0 && (
               <p className="caption">
-                {plan.notInList.length} {plan.notInList.length === 1 ? "aluno do cadastro não está" : "alunos do cadastro não estão"} na
-                lista e continuam como estão: {plan.notInList.map((s) => `${s.name} (${s.className})`).join(", ")}.
+                {plan.notInList.length}{" "}
+                {plan.notInList.length === 1
+                  ? "aluno do cadastro não está"
+                  : "alunos do cadastro não estão"}{" "}
+                na lista e continuam como estão:{" "}
+                {plan.notInList.map((s) => `${s.name} (${s.className})`).join(", ")}.
               </p>
             )}
           </section>
@@ -134,7 +150,11 @@ export function StudentListImportModal({
           <Button onClick={close} disabled={saving}>
             Cancelar
           </Button>
-          <Button variant="primary" disabled={!plan || saving} onClick={() => void save()}>
+          <Button
+            variant="primary"
+            disabled={!plan || saving}
+            onClick={() => void save()}
+          >
             {saving ? "Salvando…" : "Salvar cadastro"}
           </Button>
         </div>
