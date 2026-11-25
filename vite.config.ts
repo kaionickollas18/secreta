@@ -32,6 +32,7 @@ export default defineConfig({
         calendario: "calendario.html",
         notas: "notas.html",
         notasEscolares: "notas-escolares.html",
+        avaliacoes: "avaliacoes.html",
         documentos: "documentos.html",
         mensagens: "mensagens.html",
         frequencia: "frequencia.html",

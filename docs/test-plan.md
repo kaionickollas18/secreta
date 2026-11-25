@@ -194,6 +194,19 @@ Use quatro contas (Master, Secretário, Assistente, Professor) e, de preferênci
 9. Turma de reforço: no perfil de um aluno, "Adicionar à turma de reforço" pede um motivo opcional; depois o perfil mostra "Na turma de reforço", desde quando e por quem. Fechando o perfil, o aluno tem a marca "Reforço" nas tabelas, e o botão "Turma de reforço (1)" lista o aluno com a turma e o motivo; o nome leva ao perfil. "Tirar do reforço" pede confirmação e tira a marca. **No banco**, como professor, `select` em `reinforcement_students` volta vazio.
 10. Como assistente sem acesso de secretário: envia e reenvia notas; **no banco**, `delete` em `grades` não apaga nada. No celular (360 px), a tabela rola de lado sem a página rolar.
 
+### 12. Avaliações (cartão-resposta e descritores)
+1. Como secretário: o menu tem **Avaliações** logo depois de Notas. Como professor, o item não aparece e abrir `avaliacoes.html` leva à página inicial dele.
+2. **Nova avaliação** → título, turma do cadastro (a lista de alunos já vem, sem os transferidos); 9º ano sugere a matriz **Saeb · 9º ano** e 1º ano, **CNCA · 1º ano**. Colar o gabarito ("BDAC…", `*` anula) preenche as questões; cada questão aceita mais de um descritor; com 4 alternativas, um gabarito E deixa de existir.
+3. **Cartões** → "Imprimir N cartões" abre a impressão com folhas A4 em pé, dois cartões por folha, linha de corte no meio e os 4 quadrados pretos inteiros em cada cartão. Imprimir em 100%.
+4. **Correção pela câmera** (celular, https): permitir a câmera; com "Leitura automática", enquadrar um cartão preenchido abre a conferência em até ~1 s, com o aluno certo. Marca dupla ou fraca fica em laranja; "Salvar e próximo" volta à câmera e o mesmo cartão não é relido logo em seguida. Negar a câmera mostra a mensagem de permissão.
+5. **Enviar fotos ou PDF**: um PDF escaneado com várias folhas (dois cartões por página) gera um item por cartão; página sem cartão aparece em "imagens não lidas". Cartão de outra avaliação é recusado com o código dela. "Salvar N sem pendência" salva só os que têm aluno e nada a conferir.
+6. **Lançar à mão**: "Salvar" só habilita com o aluno escolhido. Salvar de novo o mesmo aluno substitui o cartão anterior (avisa antes).
+7. **Resultados**: média, taxas, faixas, questões mais erradas (com o distrator mais marcado e o descritor), descritores do mais frágil ao mais consolidado, alunos abaixo do limiar com os descritores não consolidados; mudar o limiar atualiza a lista; "Ver cartão" mostra questão a questão. Com outra avaliação da mesma turma e disciplina corrigida, aparece a evolução.
+8. Os dados vêm do banco: o que foi corrigido no celular aparece no computador. No Gabarito, digitar o título mostra "Salvando…" e depois "Salvo"; recarregar a página mantém o que foi digitado.
+9. Como assistente: não aparece o botão Excluir da avaliação. **No banco**, `delete` em `assessments` como assistente não apaga nada; como professor, `select` em `assessments` e `answer_sheets` volta vazio; cartões de uma escola não aparecem na outra.
+10. Turma de **8º ano**: a matriz sugerida é **SADEAM · 8º ano** e os descritores aparecem com os códigos do SADEAM (ex.: LP D02 = inferir o sentido de uma palavra).
+11. **Devolutiva** (com cartões corrigidos): leitura geral, até 5 prioridades com "onde a turma errou", "como trabalhar" e "com quem", alunos em três grupos, questões para corrigir com a turma, pontos fortes e encaminhamentos. "Imprimir ou salvar em PDF" sai em A4 em pé, em cores claras mesmo no modo escuro, com as assinaturas no fim. Cada botão de planilha baixa um CSV que abre no Excel com acentos e vírgula decimal corretos.
+
 ## Casos críticos
 Um perfil fazendo o que não pode · dados de uma escola aparecendo em outra · conclusão sem aprovação · perda do histórico · lembrete com prazo errado · nomes de alunos expostos sem login.
 

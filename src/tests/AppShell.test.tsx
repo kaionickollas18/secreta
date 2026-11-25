@@ -45,7 +45,7 @@ describe("AppShell", () => {
     const nav = within(renderShell(SECRETARY, "dashboard"));
     // Fora das páginas do Administrativo, o grupo começa fechado.
     expect(nav.getByRole("button", { name: "Administrativo" })).toHaveAttribute("aria-expanded", "false");
-    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Notas", "Conversas", "Dashboard", "Equipe", "Perfil"]);
+    expect(linkNames(screen.getByRole("navigation"))).toEqual(["Notas", "Avaliações", "Conversas", "Dashboard", "Equipe", "Perfil"]);
     expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("conteúdo")).toBeInTheDocument();
   });
@@ -66,7 +66,7 @@ describe("AppShell", () => {
     expect(window.localStorage.getItem(NAV_GROUP_KEY)).toBe("aberto");
     cleanup();
     // Deixado aberto, ele continua aberto nas outras páginas.
-    expect(linkNames(renderShell(SECRETARY, "dashboard"))).toEqual([...ADMIN, "Notas", "Conversas", "Dashboard", "Equipe", "Perfil"]);
+    expect(linkNames(renderShell(SECRETARY, "dashboard"))).toEqual([...ADMIN, "Notas", "Avaliações", "Conversas", "Dashboard", "Equipe", "Perfil"]);
   });
 
   it("com o grupo fechado, o aviso de lembretes aparece no Administrativo", () => {
@@ -78,12 +78,13 @@ describe("AppShell", () => {
   });
 
   it("assistente não vê Equipe; Master só vê Escolas", () => {
-    expect(linkNames(renderShell(ASSISTANT))).toEqual([...ADMIN, "Notas", "Conversas", "Dashboard", "Perfil"]);
+    expect(linkNames(renderShell(ASSISTANT))).toEqual([...ADMIN, "Notas", "Avaliações", "Conversas", "Dashboard", "Perfil"]);
     cleanup();
     // Mesmo com acesso de secretário, o assistente não gerencia a equipe.
     expect(linkNames(renderShell({ ...ASSISTANT, elevated: true }))).toEqual([
       ...ADMIN,
       "Notas",
+      "Avaliações",
       "Conversas",
       "Dashboard",
       "Perfil",

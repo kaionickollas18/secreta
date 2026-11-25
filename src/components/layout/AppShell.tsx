@@ -24,6 +24,7 @@ import {
   ChartIcon,
   ChatIcon,
   ChevronLeftIcon,
+  ClipboardIcon,
   FolderIcon,
   LogoutIcon,
   MoonIcon,
@@ -33,7 +34,7 @@ import {
   UsersIcon,
 } from "../ui/Icons";
 
-export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "notasEscolares" | "documentos" | "mensagens" | "dashboard" | "gestao" | "perfil";
+export type NavKey = "quadro" | "lembretes" | "calendario" | "notas" | "notasEscolares" | "avaliacoes" | "documentos" | "mensagens" | "dashboard" | "gestao" | "perfil";
 
 interface NavItem {
   key: NavKey;
@@ -257,6 +258,7 @@ export function AppShell({ active, children }: AppShellProps) {
           ],
         },
         { key: "notasEscolares", label: "Notas", href: "notas-escolares.html", icon: <BooksIcon /> },
+        { key: "avaliacoes", label: "Avaliações", href: "avaliacoes.html", icon: <ClipboardIcon /> },
         conversations,
         dashboard,
         ...(canManageAssistants(profile.role)

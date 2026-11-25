@@ -1566,3 +1566,76 @@
 .boletim-preview-inner {
   transform-origin: top left;
 }
+
+/*
+ * Cartões-resposta (Avaliações): folha A4 em pé, sem margem, dois cartões de 210 × 148 mm.
+ * Página com nome próprio, para não herdar o A4 deitado dos outros documentos.
+ */
+@page cartoes {
+  size: A4 portrait;
+  margin: 0;
+}
+@media print {
+  .cartoes-print {
+    page: cartoes;
+  }
+  .cartoes-page {
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    break-after: page;
+  }
+  .cartoes-page:last-child {
+    break-after: auto;
+  }
+  .cartoes-slot {
+    width: 210mm;
+    height: 148.5mm;
+    overflow: hidden;
+  }
+  /* Linha de corte entre os dois cartões. */
+  .cartoes-slot + .cartoes-slot {
+    border-top: 0.2mm dashed #999;
+  }
+  .cartoes-slot .answer-card {
+    width: 210mm;
+    height: 148mm;
+  }
+}
+
+/*
+ * Devolutiva pedagógica (Avaliações): A4 em pé, sempre com as cores do tema claro no papel,
+ * mesmo com o sistema no modo escuro (as classes do Tailwind leem estas variáveis).
+ */
+@page devolutiva {
+  size: A4 portrait;
+  margin: 14mm 14mm 16mm;
+}
+@media print {
+  .devolutiva-print {
+    page: devolutiva;
+    --canvas: 255 255 255;
+    --surface: 255 255 255;
+    --raised: 229 229 234;
+    --ink: 29 36 51;
+    --muted: 90 90 96;
+    --line: 60 60 67;
+    --line-alpha: 0.25;
+    --accent: 0 113 227;
+    --accent-strong: 0 98 204;
+    --accent-light: 0 64 221;
+    --prio-low: 36 138 61;
+    --prio-medium: 160 90 0;
+    --prio-high: 201 52 0;
+    --prio-urgent: 215 0 21;
+    --tint-alpha: 0.12;
+    color: rgb(29 36 51);
+    font-size: 10.5pt;
+  }
+  .devolutiva-print .devolutiva-card {
+    break-inside: avoid;
+  }
+  .devolutiva-print h3 {
+    break-after: avoid;
+  }
+}

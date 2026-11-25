@@ -95,6 +95,11 @@ export function canDeleteDocuments(role: UserRole): boolean {
   return role === "secretary";
 }
 
+/** A secretaria cria e corrige avaliações; excluir uma avaliação inteira, só o Secretário. */
+export function canDeleteAssessments(role: UserRole): boolean {
+  return role === "secretary";
+}
+
 /** O Secretário modera o mural: pode apagar mensagens de qualquer pessoa da escola. */
 export function canModerateMessages(role: UserRole): boolean {
   return role === "secretary";

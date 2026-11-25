@@ -23,6 +23,7 @@ As regras valem no banco (RLS e triggers), não só na tela. Detalhes em [docs/v
 - **Mensagens**: mural único por escola, ao vivo.
 - **Conversas**: Geral, Anônimo e mensagens diretas criptografadas, com PDFs e imagens (até 10 MB) nas diretas; `@` marca uma pessoa, `#` marca uma tarefa, e há emojis (botão ou **Win + .** no Windows). O perfil de cada colega abre pelo nome e tem o botão **Conversar**.
 - **Dashboard de frequência**: lê uma planilha do Google ou arquivos CSV enviados pelo secretário. Relatórios em PDF (documento oficial, A4 deitado) do aluno e da turma (resumo + os 10 alunos que mais faltam).
+- **Avaliações** (Língua Portuguesa e Matemática): gabarito com descritores (Saeb 9º ano, SADEAM 8º ano, CNCA 1º ano ou da escola), cartão-resposta para imprimir (nominal, com código), correção pela câmera do celular ou por fotos/PDF escaneado, com conferência manual das marcas duvidosas, e resultados da turma: média, questões mais erradas com o distrator mais marcado, descritores a reforçar e alunos em situação crítica; devolutiva pedagógica para o professor regente (o que retomar, com quem e como) e planilhas com todos os dados. Ver `docs/avaliacoes.md`.
 - **Gestão**: escolas e secretários (Master); assistentes (Secretário).
 - Interface em português, escura, responsiva (a partir de 360 px) e acessível por teclado.
 
